@@ -1,4 +1,5 @@
-import { PoundSterling, TrendingUp, AlertCircle, Car } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
 const StatCard = ({ label, value, sub, colour }) => {
   const colours = {
@@ -17,12 +18,23 @@ const StatCard = ({ label, value, sub, colour }) => {
 }
 
 export default function Dashboard() {
+  const { user, signOut } = useAuth()
+
   return (
     <div className="p-4 space-y-5">
       {/* Header */}
-      <div className="pt-2">
-        <h1 className="text-2xl font-bold text-gray-900">Good morning 👋</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Here's your money at a glance</p>
+      <div className="pt-2 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Good morning 👋</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{user?.email}</p>
+        </div>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-1.5 text-gray-400 text-sm active:text-red-500 transition-colors mt-1"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
       </div>
 
       {/* Stats grid */}
