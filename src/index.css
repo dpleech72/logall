@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* LogAll colour tokens */
+    --color-green: #16a34a;
+    --color-green-light: #dcfce7;
+    --color-amber: #d97706;
+    --color-amber-light: #fef3c7;
+    --color-red: #dc2626;
+    --color-red-light: #fee2e2;
+    --color-grey: #6b7280;
+    --color-grey-light: #f3f4f6;
+    --color-surface: #ffffff;
+    --color-bg: #f9fafb;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --nav-height: 64px;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Safe area padding for iOS home bar */
+.pb-safe {
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+}
+
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}

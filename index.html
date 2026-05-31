@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LogAll — the UK accounting app built for self-employed sole traders. Track clients, log mileage at the HMRC rate of 55p/mile, record expenses and submit to HMRC. Free forever for up to 2 clients. Just £14.99/year for full access.">
+<meta property="og:title" content="LogAll — Accounting for people who work in other people's homes">
+<meta property="og:description" content="Track clients, log mileage, record expenses and submit to HMRC. Free to start. Just £14.99/year.">
+<meta property="og:url" content="https://logall.co.uk">
+<meta name="theme-color" content="#2563EB">
+<title>LogAll — Simple accounting for UK sole traders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#2563EB;--blue-dark:#1D4ED8;--blue-light:#EFF6FF;--blue-mid:#BFDBFE;
+  --green:#16A34A;--green-dark:#15803D;--green-light:#F0FDF4;--green-mid:#BBF7D0;
+  --orange:#EA580C;--orange-light:#FFF7ED;--orange-mid:#FED7AA;
+  --purple:#7C3AED;--purple-light:#F5F3FF;--purple-mid:#DDD6FE;
+  --pink:#DB2777;--pink-light:#FDF2F8;--pink-mid:#FBCFE8;
+  --teal:#0891B2;--teal-light:#ECFEFF;--teal-mid:#A5F3FC;
+  --yellow:#CA8A04;--yellow-light:#FEFCE8;--yellow-mid:#FEF08A;
+  --red:#DC2626;--red-light:#FEF2F2;--red-mid:#FECACA;
+  --text:#111827;--text2:#4B5563;--text3:#9CA3AF;
+  --bg:#ffffff;--bg2:#F9FAFB;--border:#E5E7EB;--border2:#D1D5DB;
+  --radius:10px;--radius-lg:16px;--radius-xl:24px;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;font-size:16px;line-height:1.6;}
+.container{max-width:960px;margin:0 auto;padding:0 24px;}
+
+/* NAV */
+nav{background:#fff;border-bottom:1px solid var(--border);padding:16px 0;position:sticky;top:0;z-index:100;}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:38px;height:38px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.logo-mark i{font-size:22px;color:#fff;}
+.logo-name{font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--text);}
+.logo-name em{color:var(--blue);font-style:normal;}
+.nav-cta{background:var(--blue);color:#fff;padding:10px 22px;border-radius:var(--radius);font-size:14px;font-weight:600;text-decoration:none;font-family:'DM Sans',sans-serif;}
+.nav-cta:hover{background:var(--blue-dark);}
+
+/* HERO */
+.hero{background:#fff;padding:72px 0 64px;text-align:center;border-bottom:1px solid var(--border);}
+.founder-pill{display:inline-flex;align-items:center;gap:7px;background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA;font-size:13px;font-weight:600;padding:6px 16px;border-radius:99px;margin-bottom:28px;}
+.founder-pill i{font-size:14px;}
+h1{font-family:'Nunito',sans-serif;font-size:clamp(30px,5vw,50px);font-weight:800;line-height:1.15;max-width:720px;margin:0 auto 22px;color:var(--text);}
+h1 em{color:var(--blue);font-style:normal;position:relative;}
+.hero-sub{font-size:18px;color:var(--text2);max-width:540px;margin:0 auto 40px;line-height:1.75;}
+.cta-row{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.btn-primary{background:var(--blue);color:#fff;padding:16px 36px;border-radius:var(--radius);font-size:16px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block;max-width:340px;width:100%;text-align:center;border:none;cursor:pointer;}
+.btn-primary:hover{background:var(--blue-dark);}
+.btn-outline{background:#fff;color:var(--text2);border:1.5px solid var(--border2);padding:15px 36px;border-radius:var(--radius);font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block;max-width:340px;width:100%;text-align:center;}
+.btn-outline:hover{background:var(--bg2);}
+.cta-note{font-size:13px;color:var(--text3);}
+.badges{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:28px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:500;}
+.badge-green{background:var(--green-light);color:var(--green-dark);border:1px solid var(--green-mid);}
+.badge-blue{background:var(--blue-light);color:var(--blue-dark);border:1px solid var(--blue-mid);}
+.badge i{font-size:14px;}
+
+/* TRADES */
+.trades{padding:48px 0;border-bottom:1px solid var(--border);background:#fff;}
+.eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);text-align:center;margin-bottom:24px;}
+.trades-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;}
+@media(max-width:640px){.trades-grid{grid-template-columns:repeat(4,1fr);}}
+.trade-card{border-radius:var(--radius-lg);padding:18px 8px;text-align:center;cursor:default;}
+.trade-card span{font-size:12px;font-weight:700;color:var(--text2);}
+.tc-blue{background:var(--blue-light);} .tc-blue i{color:var(--blue);}
+.tc-green{background:var(--green-light);} .tc-green i{color:var(--green);}
+.tc-orange{background:var(--orange-light);} .tc-orange i{color:var(--orange);}
+.tc-purple{background:var(--purple-light);} .tc-purple i{color:var(--purple);}
+.tc-pink{background:var(--pink-light);} .tc-pink i{color:var(--pink);}
+.tc-teal{background:var(--teal-light);} .tc-teal i{color:var(--teal);}
+.tc-yellow{background:var(--yellow-light);} .tc-yellow i{color:var(--yellow);}
+.tc-red{background:var(--red-light);} .tc-red i{color:var(--red);}
+
+/* STATS */
+.stats{background:var(--blue);padding:48px 0;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.15);}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr;}}
+.stat{background:var(--blue);padding:28px 24px;text-align:center;}
+.stat-val{font-family:'Nunito',sans-serif;font-size:40px;font-weight:800;color:#fff;display:block;margin-bottom:6px;}
+.stat-label{font-size:14px;color:rgba(255,255,255,0.75);line-height:1.5;}
+
+/* FEATURES */
+.features{padding:64px 0;background:#fff;border-bottom:1px solid var(--border);}
+.section-head{text-align:center;margin-bottom:44px;}
+.section-head h2{font-family:'Nunito',sans-serif;font-size:32px;font-weight:800;margin-bottom:10px;}
+.section-head p{font-size:17px;color:var(--text2);max-width:480px;margin:0 auto;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:680px){.features-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:440px){.features-grid{grid-template-columns:1fr;}}
+.feat{border-radius:var(--radius-lg);padding:22px;border:1.5px solid transparent;}
+.feat-blue{background:var(--blue-light);border-color:var(--blue-mid);}
+.feat-green{background:var(--green-light);border-color:var(--green-mid);}
+.feat-orange{background:var(--orange-light);border-color:var(--orange-mid);}
+.feat-purple{background:var(--purple-light);border-color:var(--purple-mid);}
+.feat-teal{background:var(--teal-light);border-color:var(--teal-mid);}
+.feat-pink{background:var(--pink-light);border-color:var(--pink-mid);}
+.feat-yellow{background:var(--yellow-light);border-color:var(--yellow-mid);}
+.feat-red{background:var(--red-light);border-color:var(--red-mid);}
+.feat-gray{background:var(--bg2);border-color:var(--border2);}
+.feat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.feat-icon i{font-size:22px;}
+.fi-blue{background:var(--blue);} .fi-blue i{color:#fff;}
+.fi-green{background:var(--green);} .fi-green i{color:#fff;}
+.fi-orange{background:var(--orange);} .fi-orange i{color:#fff;}
+.fi-purple{background:var(--purple);} .fi-purple i{color:#fff;}
+.fi-teal{background:var(--teal);} .fi-teal i{color:#fff;}
+.fi-pink{background:var(--pink);} .fi-pink i{color:#fff;}
+.fi-yellow{background:var(--yellow);} .fi-yellow i{color:#fff;}
+.fi-red{background:var(--red);} .fi-red i{color:#fff;}
+.fi-gray{background:#6B7280;} .fi-gray i{color:#fff;}
+.feat h3{font-size:15px;font-weight:700;margin-bottom:6px;font-family:'Nunito',sans-serif;}
+.feat p{font-size:13px;color:var(--text2);line-height:1.6;}
+
+/* HOW */
+.how{padding:64px 0;background:var(--bg2);border-bottom:1px solid var(--border);}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:44px;}
+@media(max-width:600px){.steps{grid-template-columns:1fr;}}
+.step{text-align:center;}
+.step-num{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;margin:0 auto 16px;}
+.sn1{background:var(--blue-light);color:var(--blue);}
+.sn2{background:var(--green-light);color:var(--green);}
+.sn3{background:var(--orange-light);color:var(--orange);}
+.step h3{font-family:'Nunito',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px;}
+.step p{font-size:14px;color:var(--text2);line-height:1.65;}
+
+/* PRICING */
+.pricing{padding:64px 0;background:#fff;border-bottom:1px solid var(--border);}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px;}
+@media(max-width:640px){.plans{grid-template-columns:1fr;}}
+.plan{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-xl);padding:26px;position:relative;}
+.plan.featured{border-color:var(--blue);border-width:2.5px;}
+.plan-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:99px;white-space:nowrap;font-family:'Nunito',sans-serif;}
+.plan-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:12px;}
+.plan-price{font-family:'Nunito',sans-serif;font-size:36px;font-weight:800;margin-bottom:4px;color:var(--text);}
+.plan-price .per{font-size:15px;font-weight:500;color:var(--text3);}
+.plan-tagline{font-size:13px;color:var(--text3);margin-bottom:18px;line-height:1.5;}
+.plan-hr{height:1px;background:var(--border);margin-bottom:18px;}
+.plan-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:20px;}
+.plan-list li{font-size:13px;display:flex;align-items:flex-start;gap:8px;color:var(--text2);}
+.plan-list li i{font-size:16px;flex-shrink:0;margin-top:1px;}
+.plan-list li.no{color:var(--text3);}
+.plan-cta{width:100%;padding:12px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:'Nunito',sans-serif;border:1.5px solid var(--border2);background:#fff;color:var(--text);}
+.plan-cta:hover{background:var(--bg2);}
+.plan-cta.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.plan-cta.primary:hover{background:var(--blue-dark);}
+.founder-callout{background:var(--orange-light);border:1.5px solid var(--orange-mid);border-radius:var(--radius-lg);padding:16px 20px;margin-top:24px;font-size:14px;color:var(--orange);line-height:1.6;display:flex;gap:12px;align-items:flex-start;}
+.founder-callout i{font-size:20px;flex-shrink:0;margin-top:1px;}
+
+/* QUOTE */
+.quote-section{padding:64px 0;background:var(--blue);border-bottom:1px solid var(--border);}
+.quote-section .section-head h2{color:#fff;}
+.quote-section .section-head p{color:rgba(255,255,255,0.75);}
+.quote-card{background:#fff;border-radius:var(--radius-xl);padding:32px;max-width:640px;margin:0 auto;}
+.quote-text{font-size:18px;line-height:1.75;color:var(--text);font-style:italic;margin-bottom:22px;}
+.quote-author{display:flex;align-items:center;gap:14px;}
+.quote-av{width:46px;height:46px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--blue);font-family:'Nunito',sans-serif;flex-shrink:0;}
+.quote-name{font-size:15px;font-weight:700;font-family:'Nunito',sans-serif;}
+.quote-role{font-size:13px;color:var(--text3);margin-top:2px;}
+
+/* SIGNUP */
+.signup-section{padding:72px 0;background:#fff;text-align:center;}
+.signup-section h2{font-family:'Nunito',sans-serif;font-size:34px;font-weight:800;margin-bottom:12px;}
+.signup-section>div>p{font-size:17px;color:var(--text2);max-width:460px;margin:0 auto 36px;line-height:1.7;}
+.signup-form{display:flex;flex-direction:column;gap:13px;max-width:420px;margin:0 auto;}
+.fi{padding:14px 16px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;width:100%;}
+.fi:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.sel{padding:13px 16px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;width:100%;cursor:pointer;appearance:none;}
+.fnote{font-size:13px;color:var(--text3);}
+.success{display:none;background:var(--green-light);border:1.5px solid var(--green-mid);border-radius:var(--radius);padding:16px;font-size:15px;color:var(--green-dark);line-height:1.6;}
+.success i{font-size:20px;vertical-align:-4px;margin-right:8px;}
+
+/* FOOTER */
+footer{background:var(--text);padding:32px 0;}
+.foot-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.foot-logo{font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:#fff;}
+.foot-logo em{color:#93C5FD;font-style:normal;}
+.foot-links{display:flex;gap:20px;}
+.foot-links a{font-size:13px;color:#9CA3AF;text-decoration:none;}
+.foot-links a:hover{color:#fff;}
+.foot-copy{font-size:12px;color:#6B7280;width:100%;}
+
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr;}
+  .trades-grid{grid-template-columns:repeat(4,1fr);}
+  h1{font-size:28px;}
+  .hero-sub{font-size:16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-mark"><i class="ti ti-books"></i></div>
+        <div class="logo-name">Log<em>All</em></div>
+      </a>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:13px;font-weight:600;color:#4B5563;background:#F3F4F6;padding:5px 12px;border-radius:99px;border:1px solid #E5E7EB;">🇬🇧 UK only</span>
+        <a href="#signup" class="nav-cta">Get early access</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="founder-pill"><i class="ti ti-flame"></i> Founder pricing — first 100 customers locked in at £9.99/year for life</div>
+    <h1>The UK accounting app built for people who <em>work in other people's homes</em></h1>
+    <p class="hero-sub">Track your clients, log miles at the UK HMRC rate of 55p/mile, record expenses and know exactly what you owe HMRC — all from your phone. No jargon. No accountant needed.</p>
+    <div class="cta-row">
+      <a href="#signup" class="btn-primary">Start free — no card needed</a>
+      <a href="#features" class="btn-outline">See what's included</a>
+      <div class="cta-note">Free forever for up to 2 clients &nbsp;·&nbsp; Full access from just £14.99/year</div>
+    </div>
+    <div class="badges">
+      <span class="badge badge-green"><i class="ti ti-building-government"></i> HMRC Making Tax Digital compliant</span>
+      <span class="badge badge-blue"><i class="ti ti-device-mobile"></i> Works on any device</span>
+      <span class="badge badge-green"><i class="ti ti-lock"></i> Your data, safe and private</span>
+      <span class="badge" style="background:#F3F4F6;color:#374151;border:1px solid #E5E7EB;">🇬🇧 UK sole traders only</span>
+    </div>
+  </div>
+</section>
+
+<section class="trades">
+  <div class="container">
+    <div class="eyebrow">Built for UK sole traders like you</div>
+    <div class="trades-grid">
+      <div class="trade-card tc-blue">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+        <span>Cleaners</span>
+      </div>
+      <div class="trade-card tc-green">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M12 8v4m0 0h2m-2 0H10" stroke-width="1.5"/></svg>
+        <span>Carers</span>
+      </div>
+      <div class="trade-card tc-orange">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M12 2a3 3 0 0 1 3 3c0 1.5-1 2.5-1.5 3.5S13 11 13 12"/><path d="M12 2C10 4 8 6.5 8.5 9.5 9 12 11 13 12 14"/><path d="M12 14c0 2 0 5-1 7"/><path d="M12 14c0 2 1 5 1 7"/><path d="M10 21h4"/><path d="M8 10c-2 0-4 .5-5 2"/></svg>
+        <span>Gardeners</span>
+      </div>
+      <div class="trade-card tc-purple">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><ellipse cx="9" cy="10" rx="5" ry="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M18 8c1.5 0 3 1 3 3s-1.5 3-3 3"/><path d="M21 21c0-2.5-1.5-4-3-4.5"/></svg>
+        <span>Dog walkers</span>
+      </div>
+      <div class="trade-card tc-pink">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DB2777" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+        <span>Hairdressers</span>
+      </div>
+      <div class="trade-card tc-teal">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><circle cx="12" cy="7" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/><path d="M12 14v2m-2 2h4"/></svg>
+        <span>Childminders</span>
+      </div>
+      <div class="trade-card tc-yellow">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#CA8A04" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M6 3h12l1 9H5L6 3z"/><path d="M5 12l1 9h12l1-9"/><path d="M9 12v9m6-9v9"/><path d="M3 12h18"/></svg>
+        <span>Ironing</span>
+      </div>
+      <div class="trade-card tc-red">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M12 3c-1 2-3 3-3 6a3 3 0 0 0 6 0c0-3-2-4-3-6z"/><path d="M6.6 10.6C4 12 3 14 3 16a5 5 0 0 0 10 0"/><path d="M17.4 10.6C20 12 21 14 21 16a5 5 0 0 1-10 0"/></svg>
+        <span>Beauticians</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat"><span class="stat-val">5.5m</span><div class="stat-label">UK sole traders underserved by existing accounting software</div></div>
+      <div class="stat"><span class="stat-val">20×</span><div class="stat-label">cheaper than Xero per year — same HMRC compliance</div></div>
+      <div class="stat"><span class="stat-val">55p</span><div class="stat-label">per mile — the new HMRC approved rate, logged automatically</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-head">
+      <h2>Everything you need. Nothing you don't.</h2>
+      <p>Xero costs £16 a month. LogAll costs £14.99 a year. Here's what you get.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat feat-blue">
+        <div class="feat-icon fi-blue"><i class="ti ti-calendar"></i></div>
+        <h3>Client schedule</h3>
+        <p>Set up recurring visits — weekly, fortnightly, monthly. Tap to mark done and paid in one go.</p>
+      </div>
+      <div class="feat feat-green">
+        <div class="feat-icon fi-green"><i class="ti ti-car"></i></div>
+        <h3>Mileage logger</h3>
+        <p>Log journeys at the new HMRC rate of 55p/mile. Works for electric and petrol cars alike.</p>
+      </div>
+      <div class="feat feat-orange">
+        <div class="feat-icon fi-orange"><i class="ti ti-receipt"></i></div>
+        <h3>Expenses & receipts</h3>
+        <p>Photograph receipts, categorise spending, and claim equipment in full via Annual Investment Allowance.</p>
+      </div>
+      <div class="feat feat-purple">
+        <div class="feat-icon fi-purple"><i class="ti ti-building-government"></i></div>
+        <h3>HMRC submission</h3>
+        <p>Submit VAT returns directly to HMRC via Making Tax Digital. No extra software needed.</p>
+      </div>
+      <div class="feat feat-teal">
+        <div class="feat-icon fi-teal"><i class="ti ti-calculator"></i></div>
+        <h3>Live tax estimate</h3>
+        <p>Your estimated tax bill updates in real time all year. Know what to set aside. No January surprises.</p>
+      </div>
+      <div class="feat feat-pink">
+        <div class="feat-icon fi-pink"><i class="ti ti-send"></i></div>
+        <h3>Payment reminders</h3>
+        <p>Some clients take days to pay. LogAll sends polite reminders so you never feel awkward chasing.</p>
+      </div>
+      <div class="feat feat-yellow">
+        <div class="feat-icon fi-yellow"><i class="ti ti-clock-dollar"></i></div>
+        <h3>Outstanding tracker</h3>
+        <p>See who owes you money and for how long. One tap sends a polite chase message on your behalf.</p>
+      </div>
+      <div class="feat feat-green">
+        <div class="feat-icon fi-green"><i class="ti ti-chart-bar"></i></div>
+        <h3>Income vs expenses</h3>
+        <p>Clear charts showing income and spending month by month. Know exactly how your business is doing.</p>
+      </div>
+      <div class="feat feat-blue">
+        <div class="feat-icon fi-blue"><i class="ti ti-device-mobile"></i></div>
+        <h3>Any device, anywhere</h3>
+        <p>Phone, tablet or computer — LogAll works everywhere. Add it to your home screen like a native app.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <div class="container">
+    <div class="section-head">
+      <h2>Up and running in minutes</h2>
+      <p>No accountancy knowledge needed. If you can use WhatsApp, you can use LogAll.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num sn1">1</div>
+        <h3>Sign up free</h3>
+        <p>Create your account, pick your trade, and add your first clients. Takes about 3 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num sn2">2</div>
+        <h3>Log as you go</h3>
+        <p>After each job, tap to mark it done and paid. Log mileage, snap receipts, track what you've earned.</p>
+      </div>
+      <div class="step">
+        <div class="step-num sn3">3</div>
+        <h3>Tax sorts itself</h3>
+        <p>LogAll calculates your tax bill in real time and tells you what to set aside each month. Come January, it's all ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-head">
+      <h2>Simple, honest pricing</h2>
+      <p>Start free. Upgrade when you're ready. No hidden fees, ever.</p>
+    </div>
+    <div class="plans">
+
+      <div class="plan">
+        <div class="plan-type">Free forever</div>
+        <div class="plan-price">£0 <span class="per">/ always</span></div>
+        <div class="plan-tagline">Try LogAll with your first couple of clients, free forever</div>
+        <div class="plan-hr"></div>
+        <ul class="plan-list">
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Up to 2 clients</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Mileage logging</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Income tracking</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Expense recording</li>
+          <li class="no"><i class="ti ti-x" style="color:var(--text3);"></i>VAT returns</li>
+          <li class="no"><i class="ti ti-x" style="color:var(--text3);"></i>Tax summary</li>
+          <li class="no"><i class="ti ti-x" style="color:var(--text3);"></i>HMRC submission</li>
+          <li class="no"><i class="ti ti-x" style="color:var(--text3);"></i>Payment reminders</li>
+        </ul>
+        <button class="plan-cta" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Get started free</button>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-badge">Founder offer — 100 spots only</div>
+        <div class="plan-type">Founder</div>
+        <div class="plan-price">£9.99 <span class="per">/ year</span></div>
+        <div class="plan-tagline">Locked in for life — even when the standard price rises</div>
+        <div class="plan-hr"></div>
+        <ul class="plan-list">
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Unlimited clients</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Mileage logging</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Income tracking</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Expense recording</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>VAT returns</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Tax summary</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>HMRC submission</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Payment reminders</li>
+        </ul>
+        <button class="plan-cta primary" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Claim founder price</button>
+      </div>
+
+      <div class="plan">
+        <div class="plan-type">Standard</div>
+        <div class="plan-price">£14.99 <span class="per">/ year</span></div>
+        <div class="plan-tagline">Full access to everything — less than £1.25 a month</div>
+        <div class="plan-hr"></div>
+        <ul class="plan-list">
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Unlimited clients</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Mileage logging</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Income tracking</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Expense recording</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>VAT returns</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Tax summary</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>HMRC submission</li>
+          <li><i class="ti ti-check" style="color:var(--green);"></i>Payment reminders</li>
+        </ul>
+        <button class="plan-cta" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Get full access</button>
+      </div>
+
+    </div>
+    <div class="founder-callout">
+      <i class="ti ti-clock"></i>
+      <div><strong>Founder pricing closes at 100 customers.</strong> Early supporters get £9.99/year locked in permanently — even when the standard price rises to £14.99. Join the waitlist now to secure your rate before spots run out.</div>
+    </div>
+  </div>
+</section>
+
+<section class="quote-section">
+  <div class="container">
+    <div class="section-head" style="margin-bottom:32px;">
+      <h2>What beta users are saying</h2>
+    </div>
+    <div class="quote-card">
+      <div class="quote-text">"I used to dread doing my tax return every January. Now I just open LogAll and everything's already there — my mileage, my cleaning products, all my clients. It even tells me what to put aside each month so the bill doesn't come as a shock. I honestly can't believe it's less than £15 a year."</div>
+      <div class="quote-author">
+        <div class="quote-av">SC</div>
+        <div>
+          <div class="quote-name">Sarah C.</div>
+          <div class="quote-role">Self-employed cleaner · Nuneaton · Beta user</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="signup-section" id="signup">
+  <div class="container">
+    <h2>Get early access to LogAll</h2>
+    <p>Join the waiting list and we'll let you know the moment LogAll is ready. Waitlist members get first access to founder pricing. <strong>LogAll is designed exclusively for UK sole traders.</strong></p>
+    <div class="signup-form">
+      <input class="fi" type="text" placeholder="Your name" id="name-in">
+      <input class="fi" type="email" placeholder="Your email address" id="email-in">
+      <select class="sel" id="trade-in">
+        <option value="">What do you do? (optional)</option>
+        <option>Cleaner</option>
+        <option>Carer</option>
+        <option>Gardener</option>
+        <option>Dog walker</option>
+        <option>Mobile hairdresser</option>
+        <option>Childminder</option>
+        <option>Mobile beautician</option>
+        <option>Ironing service</option>
+        <option>Window cleaner</option>
+        <option>Other</option>
+      </select>
+      <button class="btn-primary" onclick="doSignup()">Join the waitlist</button>
+      <div class="success" id="ok-msg"><i class="ti ti-circle-check"></i> You're on the list! We'll be in touch very soon with early access details.</div>
+      <div class="fnote">No spam. No card required. Unsubscribe anytime.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-inner">
+      <div class="foot-logo">Log<em>All</em></div>
+      <div class="foot-links">
+        <a href="#">Privacy policy</a>
+        <a href="#">Terms of service</a>
+        <a href="mailto:hello@logall.co.uk">Contact</a>
+      </div>
+      <div class="foot-copy">© 2026 LogAll. Built for UK sole traders. HMRC Making Tax Digital compliant.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function doSignup(){
+  var name=document.getElementById('name-in').value.trim();
+  var email=document.getElementById('email-in').value.trim();
+  var trade=document.getElementById('trade-in').value;
+  if(!name){document.getElementById('name-in').style.borderColor='#DC2626';document.getElementById('name-in').focus();return;}
+  if(!email||!email.includes('@')||!email.includes('.')){document.getElementById('email-in').style.borderColor='#DC2626';document.getElementById('email-in').focus();return;}
+  document.getElementById('name-in').style.display='none';
+  document.getElementById('email-in').style.display='none';
+  document.getElementById('trade-in').style.display='none';
+  document.querySelector('.signup-form .btn-primary').style.display='none';
+  document.querySelector('.fnote').style.display='none';
+  document.getElementById('ok-msg').style.display='block';
+  console.log('Signup:',{name,email,trade});
+}
+</script>
+</body>
+</html>
