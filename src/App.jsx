@@ -14,6 +14,9 @@ import Schedule from './pages/Schedule'
 import Income from './pages/Income'
 import Mileage from './pages/Mileage'
 import Expenses from './pages/Expenses'
+import Clients from './pages/Clients'
+import ClientForm from './pages/ClientForm'
+import ClientDetail from './pages/ClientDetail'
 
 function AppShell() {
   return (
@@ -26,6 +29,10 @@ function AppShell() {
           <Route path="/income" element={<Income />} />
           <Route path="/mileage" element={<Mileage />} />
           <Route path="/expenses" element={<Expenses />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/add" element={<ClientForm />} />
+          <Route path="/clients/:id" element={<ClientDetail />} />
+          <Route path="/clients/:id/edit" element={<ClientForm />} />
         </Routes>
       </main>
       <BottomNav />
@@ -38,12 +45,9 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public auth routes */}
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-
-          {/* Protected app routes */}
           <Route
             path="/*"
             element={
