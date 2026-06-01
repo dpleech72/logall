@@ -29,7 +29,8 @@ export default function ClientForm() {
 
   const [form, setForm] = useState({
     name: '',
-    phone: '',
+    mobile: '',
+    home_phone: '',
     email: '',
     address: '',
     postcode: '',
@@ -51,7 +52,8 @@ export default function ClientForm() {
     if (data) {
       setForm({
         name: data.name || '',
-        phone: data.phone || '',
+        mobile: data.mobile || '',
+        home_phone: data.home_phone || '',
         email: data.email || '',
         address: data.address || '',
         postcode: data.postcode || '',
@@ -150,12 +152,21 @@ export default function ClientForm() {
           />
         </Field>
 
-        <Field label="Phone number">
+        <Field label="Mobile number">
           <Input
             type="tel"
             placeholder="e.g. 07700 900123"
-            value={form.phone}
-            onChange={set('phone')}
+            value={form.mobile}
+            onChange={set('mobile')}
+          />
+        </Field>
+
+        <Field label="Home phone (optional)">
+          <Input
+            type="tel"
+            placeholder="e.g. 01234 567890"
+            value={form.home_phone}
+            onChange={set('home_phone')}
           />
         </Field>
 
