@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle } from 'lucide-react'
 
 function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
@@ -111,13 +111,22 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">{greeting()} 👋</h1>
           <p className="text-gray-500 text-sm mt-0.5">{user?.email}</p>
         </div>
-        <button
-          onClick={signOut}
-          className="flex items-center gap-1.5 text-gray-400 text-sm active:text-red-500 transition-colors mt-1"
-        >
-          <LogOut size={16} />
-          Sign out
-        </button>
+        <div className="flex items-center gap-3 mt-1">
+          <button
+            onClick={() => navigate('/profile')}
+            className="flex items-center gap-1.5 text-gray-400 text-sm active:text-green-500 transition-colors"
+          >
+            <UserCircle size={16} />
+            Profile
+          </button>
+          <button
+            onClick={signOut}
+            className="flex items-center gap-1.5 text-gray-400 text-sm active:text-red-500 transition-colors"
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
+        </div>
       </div>
 
       {/* Jobs today banner */}

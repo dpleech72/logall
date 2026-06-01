@@ -18,6 +18,7 @@ import ClientDetail from './pages/ClientDetail'
 import VisitForm from './pages/VisitForm'
 import VisitEditForm from './pages/VisitEditForm'
 import TaxSummary from './pages/TaxSummary'
+import Profile from './pages/Profile'
 
 function AppShell() {
   return (
@@ -37,6 +38,7 @@ function AppShell() {
           <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/clients/:id/edit" element={<ClientForm />} />
           <Route path="/tax" element={<TaxSummary />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
       <BottomNav />
