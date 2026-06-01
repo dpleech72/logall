@@ -16,6 +16,7 @@ import Clients from './pages/Clients'
 import ClientForm from './pages/ClientForm'
 import ClientDetail from './pages/ClientDetail'
 import VisitForm from './pages/VisitForm'
+import TaxSummary from './pages/TaxSummary'
 
 function AppShell() {
   return (
@@ -33,6 +34,7 @@ function AppShell() {
           <Route path="/clients/add" element={<ClientForm />} />
           <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/clients/:id/edit" element={<ClientForm />} />
+          <Route path="/tax" element={<TaxSummary />} />
         </Routes>
       </main>
       <BottomNav />

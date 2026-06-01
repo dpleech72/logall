@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, Pencil } from 'lucide-react'
 
@@ -36,6 +36,26 @@ async function getCurrentCoords() {
   })
 }
 
+async function reverseGeocode(lng, lat) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+      { headers: { 'User-Agent': 'LogAll/1.0' } }
+    )
+    const data = await res.json()
+    // Build a friendly address from the result
+    const a = data.address || {}
+    const parts = [
+      a.house_number && a.road ? `${a.house_number} ${a.road}` : a.road,
+      a.town || a.city || a.village || a.suburb,
+      a.postcode,
+    ].filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : data.display_name?.split(',').slice(0, 3).join(',').trim()
+  } catch {
+    return null
+  }
+}
+
 function groupByMonth(journeys) {
   const groups = {}
   journeys.forEach(item => {
@@ -60,6 +80,7 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
     notes: journey?.notes || '',
   })
   const [coordsCache, setCoordsCache] = useState({}) // cache by location string
+  const fromLocationRef = useRef('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [calculating, setCalculating] = useState(false)
@@ -94,7 +115,12 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
       }
 
       const miles = await calcDistance(resolvedFrom, resolvedTo)
-      setForm(f => ({ ...f, miles }))
+      setForm(f => ({ 
+        ...f, 
+        miles,
+        from_location: fromLocationRef.current || f.from_location 
+      }))
+      fromLocationRef.current = ''
     } catch (err) {
       setError(err.message)
     }

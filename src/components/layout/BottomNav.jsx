@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, PoundSterling, Car, Receipt } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, PoundSterling, Car, Receipt, Calculator } from 'lucide-react'
 
 const tabs = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
@@ -7,6 +7,7 @@ const tabs = [
   { to: '/income',    icon: PoundSterling,   label: 'Income' },
   { to: '/mileage',   icon: Car,             label: 'Mileage' },
   { to: '/expenses',  icon: Receipt,         label: 'Expenses' },
+  { to: '/tax',       icon: Calculator,      label: 'Tax' },
 ]
 
 export default function BottomNav() {
@@ -28,8 +29,8 @@ export default function BottomNav() {
           >
             {({ isActive }) => (
               <>
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
-                <span className={isActive ? 'font-semibold' : 'font-normal'}>
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
+                <span className={`${isActive ? 'font-semibold' : 'font-normal'} text-xs`}>
                   {label}
                 </span>
               </>
