@@ -90,37 +90,45 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
     setError('')
     setCalculating(true)
     try {
-      // Resolve FROM coords
+      // Resolve FROM
       let resolvedFrom
-      const fromKey = form.from_location.trim() || 'gps'
-      if (coordsCache[fromKey]) {
-        resolvedFrom = coordsCache[fromKey]
-      } else if (!form.from_location.trim()) {
+      if (!form.from_location.trim()) {
         resolvedFrom = await getCurrentCoords()
-        setForm(f => ({ ...f, from_location: 'Current location' }))
-        setCoordsCache(c => ({ ...c, 'Current location': resolvedFrom, gps: resolvedFrom }))
+        // Try reverse geocode — if it works, fill in the address
+        try {
+          const res = await fetch(
+            `https://api.openrouteservice.org/geocode/reverse?api_key=${ORS_KEY}&point.lon=${resolvedFrom[0]}&point.lat=${resolvedFrom[1]}&size=1`
+          )
+          const data = await res.json()
+          const props = data.features?.[0]?.properties
+          if (props) {
+            const parts = [
+              props.housenumber && props.street ? `${props.housenumber} ${props.street}` : props.street,
+              props.locality || props.county,
+              props.postalcode,
+            ].filter(Boolean)
+            const name = parts.join(', ')
+            if (name) setForm(f => ({ ...f, from_location: name }))
+          }
+        } catch (_) {}
+      } else if (coordsCache[form.from_location.trim()]) {
+        resolvedFrom = coordsCache[form.from_location.trim()]
       } else {
         resolvedFrom = await getCoords(form.from_location)
         setCoordsCache(c => ({ ...c, [form.from_location]: resolvedFrom }))
       }
 
-      // Resolve TO coords
+      // Resolve TO
       let resolvedTo
-      const toKey = form.to_location.trim()
-      if (coordsCache[toKey]) {
-        resolvedTo = coordsCache[toKey]
+      if (coordsCache[form.to_location.trim()]) {
+        resolvedTo = coordsCache[form.to_location.trim()]
       } else {
         resolvedTo = await getCoords(form.to_location)
-        setCoordsCache(c => ({ ...c, [toKey]: resolvedTo }))
+        setCoordsCache(c => ({ ...c, [form.to_location]: resolvedTo }))
       }
 
       const miles = await calcDistance(resolvedFrom, resolvedTo)
-      setForm(f => ({ 
-        ...f, 
-        miles,
-        ...(fromLocationRef.current ? { from_location: fromLocationRef.current } : {})
-      }))
-      fromLocationRef.current = ''
+      setForm(f => ({ ...f, miles }))
     } catch (err) {
       setError(err.message)
     }
