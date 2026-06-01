@@ -26,7 +26,11 @@ function isSameDay(a, b) {
 }
 
 function formatDate(date) {
-  return date.toISOString().split('T')[0]
+  // Use local date to avoid UTC offset shifting the day
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
