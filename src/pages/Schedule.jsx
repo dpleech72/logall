@@ -63,8 +63,10 @@ export default function Schedule() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const [viewMode, setViewMode] = useState('week') // 'week' or 'month'
   const [weekStart, setWeekStart] = useState(getMonday(today))
   const [selectedDay, setSelectedDay] = useState(today)
+  const [monthDate, setMonthDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [visits, setVisits] = useState([])
   const [clients, setClients] = useState({})
   const [loading, setLoading] = useState(true)
@@ -75,12 +77,19 @@ export default function Schedule() {
 
   useEffect(() => {
     fetchData()
-  }, [weekStart])
+  }, [weekStart, monthDate, viewMode])
 
   async function fetchData() {
     setLoading(true)
-    const from = formatDate(weekStart)
-    const to = formatDate(addDays(weekStart, 6))
+    let from, to
+    if (viewMode === 'month') {
+      from = formatDate(monthDate)
+      const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
+      to = formatDate(lastDay)
+    } else {
+      from = formatDate(weekStart)
+      to = formatDate(addDays(weekStart, 6))
+    }
 
     const [{ data: visitData }, { data: clientData }] = await Promise.all([
       supabase.from('visits').select('*').gte('scheduled_date', from).lte('scheduled_date', to).order('scheduled_time'),
@@ -177,60 +186,161 @@ export default function Schedule() {
           </div>
         </div>
 
-        {/* Week navigation */}
+        {/* View toggle */}
         <div className="flex items-center gap-2 mb-3">
-          <button
-            onClick={() => { setWeekStart(addDays(weekStart, -7)); setSelectedDay(addDays(weekStart, -7)) }}
-            className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <div className="flex-1 grid grid-cols-7 gap-1">
-            {weekDays.map((day, i) => {
-              const isSelected = isSameDay(day, selectedDay)
-              const isToday = isSameDay(day, today)
-              const dots = dotsForDay(day)
-              return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedDay(day)}
-                  className={`flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${
-                    isSelected ? 'bg-green-600' : isToday ? 'bg-green-50' : 'bg-transparent'
-                  }`}
-                >
-                  <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400'}`}>
-                    {DAY_LABELS[i]}
-                  </span>
-                  <span className={`text-sm font-bold ${
-                    isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800'
-                  }`}>
-                    {day.getDate()}
-                  </span>
-                  {/* Dots */}
-                  <div className="flex gap-0.5 mt-1 h-1.5">
-                    {dots.slice(0, 3).map((dot, j) => (
-                      <div key={j} className={`w-1.5 h-1.5 rounded-full ${dot} ${isSelected ? 'opacity-80' : ''}`} />
-                    ))}
-                  </div>
-                </button>
-              )
-            })}
+          <div className="flex bg-gray-100 rounded-xl p-1 flex-1">
+            <button
+              onClick={() => setViewMode('week')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                viewMode === 'week' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setViewMode('month')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                viewMode === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Month
+            </button>
           </div>
-          <button
-            onClick={() => { setWeekStart(addDays(weekStart, 7)); setSelectedDay(addDays(weekStart, 7)) }}
-            className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
-          >
-            <ChevronRight size={18} />
-          </button>
         </div>
 
-        {/* Selected day label */}
-        <p className="text-sm font-semibold text-gray-700 mb-3">
-          {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-          <span className="text-gray-400 font-normal ml-2">
-            {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
-          </span>
-        </p>
+        {/* Week view */}
+        {viewMode === 'week' && (
+          <>
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                onClick={() => { setWeekStart(addDays(weekStart, -7)); setSelectedDay(addDays(weekStart, -7)) }}
+                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex-1 grid grid-cols-7 gap-1">
+                {weekDays.map((day, i) => {
+                  const isSelected = isSameDay(day, selectedDay)
+                  const isToday = isSameDay(day, today)
+                  const dots = dotsForDay(day)
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedDay(day)}
+                      className={`flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${
+                        isSelected ? 'bg-green-600' : isToday ? 'bg-green-50' : 'bg-transparent'
+                      }`}
+                    >
+                      <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400'}`}>
+                        {DAY_LABELS[i]}
+                      </span>
+                      <span className={`text-sm font-bold ${
+                        isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800'
+                      }`}>
+                        {day.getDate()}
+                      </span>
+                      <div className="flex gap-0.5 mt-1 h-1.5">
+                        {dots.slice(0, 3).map((dot, j) => (
+                          <div key={j} className={`w-1.5 h-1.5 rounded-full ${dot} ${isSelected ? 'opacity-80' : ''}`} />
+                        ))}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              <button
+                onClick={() => { setWeekStart(addDays(weekStart, 7)); setSelectedDay(addDays(weekStart, 7)) }}
+                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-gray-700 mb-3">
+              {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              <span className="text-gray-400 font-normal ml-2">
+                {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
+              </span>
+            </p>
+          </>
+        )}
+
+        {/* Month view */}
+        {viewMode === 'month' && (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}
+                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <p className="text-sm font-semibold text-gray-700">
+                {MONTH_NAMES[monthDate.getMonth()]} {monthDate.getFullYear()}
+              </p>
+              <button
+                onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
+                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* Day of week headers */}
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {DAY_LABELS.map(d => (
+                <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+              ))}
+            </div>
+
+            {/* Month grid */}
+            <div className="grid grid-cols-7 gap-1 mb-3">
+              {(() => {
+                const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
+                const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
+                // Start from Monday before first day
+                const startPad = (firstDay.getDay() + 6) % 7
+                const cells = []
+                for (let i = 0; i < startPad; i++) cells.push(null)
+                for (let d = 1; d <= lastDay.getDate(); d++) {
+                  cells.push(new Date(monthDate.getFullYear(), monthDate.getMonth(), d))
+                }
+                return cells.map((day, i) => {
+                  if (!day) return <div key={i} />
+                  const isSelected = isSameDay(day, selectedDay)
+                  const isToday = isSameDay(day, today)
+                  const dots = dotsForDay(day)
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => { setSelectedDay(day); setViewMode('week'); setWeekStart(getMonday(day)) }}
+                      className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${
+                        isSelected ? 'bg-green-600' : isToday ? 'bg-green-50' : 'bg-transparent'
+                      }`}
+                    >
+                      <span className={`text-xs font-bold ${
+                        isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800'
+                      }`}>
+                        {day.getDate()}
+                      </span>
+                      <div className="flex gap-0.5 mt-0.5 h-1.5">
+                        {dots.slice(0, 3).map((dot, j) => (
+                          <div key={j} className={`w-1 h-1 rounded-full ${dot}`} />
+                        ))}
+                      </div>
+                    </button>
+                  )
+                })
+              })()}
+            </div>
+
+            <p className="text-sm font-semibold text-gray-700 mb-3">
+              {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              <span className="text-gray-400 font-normal ml-2">
+                {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
+              </span>
+            </p>
+          </>
+        )}
       </div>
 
       {/* Job cards */}

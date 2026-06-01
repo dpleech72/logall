@@ -51,6 +51,12 @@ export default function VisitForm() {
     notes: '',
     recurrence_rule: 'none',
   })
+  const [selectedClientRate, setSelectedClientRate] = useState(null)
+
+  function calcAmount(rate, mins) {
+    if (!rate || !mins) return ''
+    return (parseFloat(rate) * (parseInt(mins) / 60)).toFixed(2)
+  }
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -140,12 +146,15 @@ export default function VisitForm() {
               <button
                 key={client.id}
                 type="button"
-                onClick={() => setForm(f => ({
-                  ...f,
-                  client_id: client.id,
-                  payment_method: client.payment_method,
-                  amount: client.hourly_rate ? String(client.hourly_rate) : f.amount,
-                }))}
+                onClick={() => {
+                  setSelectedClientRate(client.hourly_rate || null)
+                  setForm(f => ({
+                    ...f,
+                    client_id: client.id,
+                    payment_method: client.payment_method,
+                    amount: calcAmount(client.hourly_rate, f.duration_minutes) || (client.hourly_rate ? String(client.hourly_rate) : f.amount),
+                  }))
+                }}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
                   form.client_id === client.id
                     ? 'border-green-500 bg-green-50'
@@ -214,7 +223,14 @@ export default function VisitForm() {
                 step="0.5"
                 placeholder="e.g. 2.5"
                 value={form.duration_minutes ? form.duration_minutes / 60 : ''}
-                onChange={(e) => setForm(f => ({ ...f, duration_minutes: e.target.value ? Math.round(parseFloat(e.target.value) * 60) : '' }))}
+                onChange={(e) => {
+                  const mins = e.target.value ? Math.round(parseFloat(e.target.value) * 60) : ''
+                  setForm(f => ({
+                    ...f,
+                    duration_minutes: mins,
+                    amount: calcAmount(selectedClientRate, mins) || f.amount,
+                  }))
+                }}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-16"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">hours</span>
