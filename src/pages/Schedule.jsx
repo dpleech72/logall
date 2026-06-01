@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus } from 'lucide-react'
+import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus, MapPin } from 'lucide-react'
 
 // --- Date helpers ---
 function getMonday(date) {
@@ -80,7 +80,7 @@ export default function Schedule() {
 
     const [{ data: visitData }, { data: clientData }] = await Promise.all([
       supabase.from('visits').select('*').gte('scheduled_date', from).lte('scheduled_date', to).order('scheduled_time'),
-      supabase.from('clients').select('id, name, colour, payment_method'),
+      supabase.from('clients').select('id, name, colour, payment_method, address'),
     ])
 
     setVisits(visitData || [])
@@ -261,33 +261,82 @@ export default function Schedule() {
                 className="w-full p-4 text-left flex items-center gap-3"
                 onClick={() => setExpandedId(isExpanded ? null : visit.id)}
               >
-                {/* Client colour bar */}
+                {/* Initials avatar */}
                 <div
-                  className="w-1 self-stretch rounded-full flex-shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                   style={{ backgroundColor: client?.colour || '#16a34a' }}
-                />
+                >
+                  {client?.name ? client.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() : '?'}
+                </div>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-gray-900">{client?.name || 'Unknown client'}</p>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>
-                      {s.label}
-                    </span>
+                    {visit.amount && (
+                      <p className="font-bold text-green-600 text-sm">£{parseFloat(visit.amount).toFixed(2)}</p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5">
+
+                  {/* Time and duration */}
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {visit.scheduled_time && (
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Clock size={11} />
                         {visit.scheduled_time.slice(0, 5)}
                       </span>
                     )}
-                    {visit.amount && (
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
-                        <PoundSterling size={11} />
-                        {parseFloat(visit.amount).toFixed(2)}
+                    {visit.duration_minutes && (
+                      <span className="text-xs text-gray-400">
+                        · {visit.duration_minutes >= 60
+                          ? `${Math.floor(visit.duration_minutes/60)}${visit.duration_minutes%60 ? `.${visit.duration_minutes%60}` : ''} hrs`
+                          : `${visit.duration_minutes} mins`}
                       </span>
                     )}
-                    {visit.duration_minutes && (
-                      <span className="text-xs text-gray-400">{visit.duration_minutes} mins</span>
+                  </div>
+
+                  {/* Address with map button */}
+                  {(client?.address || client?.postcode) && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-gray-400 flex-1">
+                        {[client.address, client.postcode].filter(Boolean).join(', ')}
+                      </span>
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent([client.address, client.postcode].filter(Boolean).join(', '))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-lg active:bg-blue-100 flex-shrink-0"
+                      >
+                        <MapPin size={11} />
+                        Map
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Tags row */}
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>
+                      {s.label}
+                    </span>
+                    {visit.recurrence_rule && visit.recurrence_rule !== 'none' && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-1">
+                        🔄 {visit.recurrence_rule === 'weekly' ? 'Weekly' : visit.recurrence_rule === 'biweekly' ? 'Bi-weekly' : 'Monthly'}
+                      </span>
+                    )}
+                    {visit.payment_method === 'cash' && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-600">
+                        💵 Cash
+                      </span>
+                    )}
+                    {visit.payment_method === 'bank_transfer' && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                        🏦 Bank transfer
+                      </span>
+                    )}
+                    {visit.notes && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                        📝 {visit.notes.length > 20 ? visit.notes.slice(0, 20) + '…' : visit.notes}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -327,7 +376,7 @@ export default function Schedule() {
                     {visit.status !== 'scheduled' && (
                       <button
                         onClick={() => updateStatus(visit.id, 'scheduled', visit.status)}
-                        className="flex items-center justify-center gap-1.5 bg-red-50 border border-red-200 text-red-600 font-semibold py-2.5 rounded-xl text-xs active:bg-red-100 transition-colors"
+                        className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
                       >
                         <Clock size={14} />
                         Reschedule
