@@ -28,7 +28,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
     client_id: income?.client_id || '',
     amount: income?.amount ? String(income.amount) : '',
     payment_method: income?.payment_method || 'cash',
-    received_date: income?.received_date || new Date().toISOString().split('T')[0],
+    received_date: income?.received_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
     description: income?.description || '',
   })
   const [error, setError] = useState('')
@@ -107,7 +107,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
 
                 // Try to find today's visit and calculate hours x rate
                 if (client?.hourly_rate && e.target.value) {
-                  const today = new Date().toISOString().split('T')[0]
+                  const today = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
                   const { data: visits } = await supabase
                     .from('visits')
                     .select('duration_minutes')

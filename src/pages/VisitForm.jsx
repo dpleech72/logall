@@ -35,7 +35,9 @@ const QUICK_DURATIONS = [
 export default function VisitForm() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const prefillDate = searchParams.get('date') || new Date().toISOString().split('T')[0]
+  const today = new Date()
+  const localToday = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+  const prefillDate = searchParams.get('date') || localToday
 
   const [clients, setClients] = useState([])
   const [form, setForm] = useState({

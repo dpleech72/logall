@@ -73,7 +73,7 @@ function groupByMonth(journeys) {
 function LogJourneySheet({ clients, journey, onClose, onSaved }) {
   const [form, setForm] = useState({
     client_id: journey?.client_id || '',
-    journey_date: journey?.journey_date || new Date().toISOString().split('T')[0],
+    journey_date: journey?.journey_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
     from_location: journey?.from_location || '',
     to_location: journey?.to_location || '',
     miles: journey?.miles ? String(journey.miles) : '',

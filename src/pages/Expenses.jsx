@@ -65,7 +65,7 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
     category: expense?.category || '',
     description: expense?.description || '',
     amount: expense?.amount ? String(expense.amount) : '',
-    expense_date: expense?.expense_date || new Date().toISOString().split('T')[0],
+    expense_date: expense?.expense_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
     is_aia: expense?.is_aia || false,
     notes: expense?.notes || '',
   })
