@@ -318,22 +318,22 @@ export default function Schedule() {
                     {visit.status !== 'cancelled' && (
                       <button
                         onClick={() => updateStatus(visit.id, 'cancelled', visit.status)}
-                        className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
+                        className="flex items-center justify-center gap-1.5 bg-red-50 border border-red-200 text-red-600 font-semibold py-2.5 rounded-xl text-xs active:bg-red-100 transition-colors"
                       >
                         <X size={14} />
-                        Cancel
+                        Cancel job
                       </button>
                     )}
                     {visit.status !== 'scheduled' && (
                       <button
                         onClick={() => updateStatus(visit.id, 'scheduled', visit.status)}
-                        className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
+                        className="flex items-center justify-center gap-1.5 bg-red-50 border border-red-200 text-red-600 font-semibold py-2.5 rounded-xl text-xs active:bg-red-100 transition-colors"
                       >
                         <Clock size={14} />
                         Reschedule
                       </button>
                     )}
-                    <button className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
+                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
                       <Pencil size={14} />
                       Edit visit
                     </button>

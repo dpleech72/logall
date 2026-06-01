@@ -353,6 +353,14 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
           </div>
 
           <button
+            type="button"
+            onClick={onClose}
+            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+
+          <button
             type="submit"
             disabled={loading}
             className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"

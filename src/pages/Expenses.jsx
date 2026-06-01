@@ -228,6 +228,14 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
           </div>
 
           <button
+            type="button"
+            onClick={onClose}
+            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+
+          <button
             type="submit"
             disabled={loading}
             className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
@@ -362,7 +370,7 @@ export default function Expenses() {
                     <p className="font-bold text-gray-800">£{parseFloat(expense.amount).toFixed(2)}</p>
                     <p className="text-xs text-green-600">saves £{(parseFloat(expense.amount) * TAX_RATE).toFixed(2)}</p>
                   </div>
-                  <div className="flex flex-row gap-1 flex-shrink-0">
+                  <div className="flex flex-col gap-1 flex-shrink-0">
                     <button onClick={() => setEditExpense(expense)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-400 active:bg-blue-100">
                       <Pencil size={20} />
                     </button>

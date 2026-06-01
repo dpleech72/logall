@@ -1,8 +1,10 @@
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight } from 'lucide-react'
 
-const StatCard = ({ label, value, sub, colour }) => {
+function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
     green: 'bg-green-50 text-green-700',
     amber: 'bg-amber-50 text-amber-700',
@@ -10,7 +12,10 @@ const StatCard = ({ label, value, sub, colour }) => {
     grey:  'bg-gray-50 text-gray-600',
   }
   return (
-    <div className={`rounded-2xl p-4 ${colours[colour] || colours.grey}`}>
+    <div
+      className={`rounded-2xl p-4 ${colours[colour] || colours.grey} ${onClick ? 'active:opacity-80 cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       <p className="text-xs font-medium opacity-70 mb-1">{label}</p>
       <p className="text-2xl font-bold">{value}</p>
       {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
@@ -22,12 +27,80 @@ export default function Dashboard() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
+  const [stats, setStats] = useState({
+    incomeThisMonth: 0,
+    expensesThisMonth: 0,
+    outstanding: 0,
+    taxSetAside: 0,
+    jobsToday: 0,
+    recentIncome: [],
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => { fetchStats() }, [])
+
+  async function fetchStats() {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+    const today = now.toISOString().split('T')[0]
+    const taxYearStart = new Date(
+      now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6
+    ).toISOString().split('T')[0]
+
+    const [
+      { data: incomeMonth },
+      { data: expensesMonth },
+      { data: outstanding },
+      { data: incomeYear },
+      { data: expensesYear },
+      { data: mileageYear },
+      { data: jobsToday },
+      { data: recentIncome },
+    ] = await Promise.all([
+      supabase.from('income').select('amount').gte('received_date', monthStart),
+      supabase.from('expenses').select('amount').gte('expense_date', monthStart),
+      supabase.from('visits').select('amount').eq('status', 'awaiting_payment'),
+      supabase.from('income').select('amount').gte('received_date', taxYearStart),
+      supabase.from('expenses').select('amount').gte('expense_date', taxYearStart),
+      supabase.from('mileage').select('claimable_amount').gte('journey_date', taxYearStart),
+      supabase.from('visits').select('id').eq('scheduled_date', today).neq('status', 'cancelled'),
+      supabase.from('income')
+        .select('amount, received_date, description, client_id')
+        .order('received_date', { ascending: false })
+        .limit(3),
+    ])
+
+    // Calculate estimated tax
+    const totalIncome = (incomeYear || []).reduce((s, i) => s + parseFloat(i.amount), 0)
+    const totalExpenses = (expensesYear || []).reduce((s, i) => s + parseFloat(i.amount), 0)
+    const totalMileage = (mileageYear || []).reduce((s, i) => s + parseFloat(i.claimable_amount), 0)
+    const profit = Math.max(0, totalIncome - totalExpenses - totalMileage)
+    const taxableIncome = Math.max(0, profit - 12570)
+    const estimatedTax = (taxableIncome * 0.20) + (Math.min(Math.max(0, profit - 12570), 37700) * 0.09) + (profit > 12570 ? 3.45 * 52 : 0)
+
+    setStats({
+      incomeThisMonth: (incomeMonth || []).reduce((s, i) => s + parseFloat(i.amount), 0),
+      expensesThisMonth: (expensesMonth || []).reduce((s, i) => s + parseFloat(i.amount), 0),
+      outstanding: (outstanding || []).reduce((s, i) => s + parseFloat(i.amount || 0), 0),
+      taxSetAside: Math.round(estimatedTax / 12),
+      jobsToday: jobsToday?.length || 0,
+      recentIncome: recentIncome || [],
+    })
+    setLoading(false)
+  }
+
+  const greeting = () => {
+    const h = new Date().getHours()
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
   const quickActions = [
-    { icon: PoundSterling, label: 'Log a payment',    colour: 'text-green-600 bg-green-50',  to: '/income' },
-    { icon: Car,           label: 'Log a journey',    colour: 'text-blue-600 bg-blue-50',    to: '/mileage' },
-    { icon: TrendingUp,    label: 'Log an expense',   colour: 'text-purple-600 bg-purple-50', to: '/expenses' },
-    { icon: Users,         label: 'Manage clients',   colour: 'text-teal-600 bg-teal-50',    to: '/clients' },
-    { icon: AlertCircle,   label: 'View outstanding', colour: 'text-amber-600 bg-amber-50',  to: '/schedule' },
+    { icon: PoundSterling, label: 'Log a payment',  colour: 'text-green-600 bg-green-50',  to: '/income' },
+    { icon: Car,           label: 'Log a journey',  colour: 'text-blue-600 bg-blue-50',    to: '/mileage' },
+    { icon: TrendingUp,    label: 'Log an expense', colour: 'text-purple-600 bg-purple-50', to: '/expenses' },
+    { icon: Users,         label: 'Manage clients', colour: 'text-teal-600 bg-teal-50',    to: '/clients' },
   ]
 
   return (
@@ -35,7 +108,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="pt-2 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Good morning 👋</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{greeting()} 👋</h1>
           <p className="text-gray-500 text-sm mt-0.5">{user?.email}</p>
         </div>
         <button
@@ -47,12 +120,47 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* Jobs today banner */}
+      {!loading && stats.jobsToday > 0 && (
+        <button
+          onClick={() => navigate('/schedule')}
+          className="w-full bg-green-600 text-white rounded-2xl p-3.5 flex items-center justify-between active:bg-green-700"
+        >
+          <p className="font-semibold text-sm">
+            📅 You have {stats.jobsToday} job{stats.jobsToday > 1 ? 's' : ''} today
+          </p>
+          <ChevronRight size={16} className="text-green-200" />
+        </button>
+      )}
+
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Income this month" value="£0.00" colour="green" />
-        <StatCard label="Expenses this month" value="£0.00" colour="grey" />
-        <StatCard label="Outstanding" value="£0.00" sub="awaiting payment" colour="amber" />
-        <StatCard label="Tax set aside" value="£0.00" sub="estimated" colour="grey" />
+        <StatCard
+          label="Income this month"
+          value={loading ? '...' : `£${stats.incomeThisMonth.toFixed(2)}`}
+          colour="green"
+          onClick={() => navigate('/income')}
+        />
+        <StatCard
+          label="Expenses this month"
+          value={loading ? '...' : `£${stats.expensesThisMonth.toFixed(2)}`}
+          colour="grey"
+          onClick={() => navigate('/expenses')}
+        />
+        <StatCard
+          label="Outstanding"
+          value={loading ? '...' : `£${stats.outstanding.toFixed(2)}`}
+          sub="awaiting payment"
+          colour={stats.outstanding > 0 ? 'amber' : 'grey'}
+          onClick={() => navigate('/schedule')}
+        />
+        <StatCard
+          label="Set aside/month"
+          value={loading ? '...' : `£${stats.taxSetAside}`}
+          sub="estimated tax"
+          colour="grey"
+          onClick={() => navigate('/tax')}
+        />
       </div>
 
       {/* Quick actions */}
@@ -60,29 +168,57 @@ export default function Dashboard() {
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Quick actions
         </h2>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {quickActions.map(({ icon: Icon, label, colour, to }) => (
             <button
               key={label}
               onClick={() => navigate(to)}
-              className="w-full flex items-center gap-3 bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 text-left active:bg-gray-50 transition-colors"
+              className="flex items-center gap-2.5 bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 text-left active:bg-gray-50 transition-colors"
             >
-              <span className={`p-2 rounded-lg ${colour}`}>
-                <Icon size={18} />
+              <span className={`p-2 rounded-lg ${colour} flex-shrink-0`}>
+                <Icon size={16} />
               </span>
-              <span className="font-medium text-gray-800">{label}</span>
+              <span className="font-medium text-gray-800 text-sm leading-tight">{label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Placeholder for chart */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 mb-3">Income vs Expenses</h2>
-        <div className="h-32 flex items-center justify-center text-gray-300 text-sm">
-          Chart will appear here once you start logging
+      {/* Recent income */}
+      {!loading && stats.recentIncome.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Recent payments</h2>
+            <button onClick={() => navigate('/income')} className="text-xs text-green-600 font-medium">See all</button>
+          </div>
+          <div className="space-y-2">
+            {stats.recentIncome.map((item, i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{item.description || 'Payment'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(item.received_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </p>
+                </div>
+                <p className="font-bold text-green-600">£{parseFloat(item.amount).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && stats.incomeThisMonth === 0 && stats.recentIncome.length === 0 && (
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm text-center">
+          <p className="text-gray-400 text-sm">No activity yet — start by adding a client and logging your first job.</p>
+          <button
+            onClick={() => navigate('/clients/add')}
+            className="mt-3 bg-green-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm"
+          >
+            Add a client
+          </button>
+        </div>
+      )}
     </div>
   )
 }

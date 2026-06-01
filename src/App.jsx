@@ -16,6 +16,7 @@ import Clients from './pages/Clients'
 import ClientForm from './pages/ClientForm'
 import ClientDetail from './pages/ClientDetail'
 import VisitForm from './pages/VisitForm'
+import VisitEditForm from './pages/VisitEditForm'
 import TaxSummary from './pages/TaxSummary'
 
 function AppShell() {
@@ -27,6 +28,7 @@ function AppShell() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/schedule/add" element={<VisitForm />} />
+          <Route path="/schedule/:id/edit" element={<VisitEditForm />} />
           <Route path="/income" element={<Income />} />
           <Route path="/mileage" element={<Mileage />} />
           <Route path="/expenses" element={<Expenses />} />

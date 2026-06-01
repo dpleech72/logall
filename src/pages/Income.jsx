@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, PoundSterling, Trash2, AlertCircle, X, Check } from 'lucide-react'
+import { Plus, PoundSterling, Trash2, AlertCircle, X, Check, Pencil } from 'lucide-react'
 
 const paymentLabel = { cash: 'Cash', bank_transfer: 'Bank transfer', cheque: 'Cheque' }
 const paymentColour = {
@@ -23,13 +23,13 @@ function groupByMonth(income) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v)
 }
 
-function LogPaymentSheet({ clients, onClose, onSaved }) {
+function LogPaymentSheet({ clients, income, onClose, onSaved }) {
   const [form, setForm] = useState({
-    client_id: '',
-    amount: '',
-    payment_method: 'cash',
-    received_date: new Date().toISOString().split('T')[0],
-    description: '',
+    client_id: income?.client_id || '',
+    amount: income?.amount ? String(income.amount) : '',
+    payment_method: income?.payment_method || 'cash',
+    received_date: income?.received_date || new Date().toISOString().split('T')[0],
+    description: income?.description || '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -45,14 +45,16 @@ function LogPaymentSheet({ clients, onClose, onSaved }) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const selectedClient = clients.find(c => c.id === form.client_id)
-    const { error } = await supabase.from('income').insert({
-      user_id: user.id,
+    const payload = {
       client_id: form.client_id || null,
       amount: parseFloat(form.amount),
       payment_method: form.payment_method,
       received_date: form.received_date,
       description: form.description || (selectedClient ? `Payment — ${selectedClient.name}` : 'Payment'),
-    })
+    }
+    const { error } = income
+      ? await supabase.from('income').update(payload).eq('id', income.id)
+      : await supabase.from('income').insert({ ...payload, user_id: user.id })
 
     if (error) { setError(error.message); setLoading(false) }
     else { onSaved() }
@@ -65,7 +67,7 @@ function LogPaymentSheet({ clients, onClose, onSaved }) {
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
 
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">Log a payment</h2>
+          <h2 className="text-lg font-bold text-gray-900">{income ? 'Edit payment' : 'Log a payment'}</h2>
           <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
         </div>
 
@@ -184,12 +186,20 @@ function LogPaymentSheet({ clients, onClose, onSaved }) {
           </div>
 
           <button
+            type="button"
+            onClick={onClose}
+            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+
+          <button
             type="submit"
             disabled={loading}
             className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
           >
             <Check size={16} />
-            {loading ? 'Saving...' : 'Log payment'}
+{loading ? 'Saving...' : income ? 'Save changes' : 'Log payment'}
           </button>
         </form>
       </div>
@@ -204,6 +214,7 @@ export default function Income() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+  const [editIncome, setEditIncome] = useState(null)
 
   useEffect(() => { fetchData() }, [])
 
@@ -311,13 +322,15 @@ export default function Income() {
                     </div>
                   </div>
 
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right flex-shrink-0 mr-1">
                     <p className="font-bold text-green-600">£{parseFloat(item.amount).toFixed(2)}</p>
-                    <button
-                      onClick={() => setDeleteId(item.id)}
-                      className="text-gray-300 active:text-red-400 mt-1"
-                    >
-                      <Trash2 size={13} />
+                  </div>
+                  <div className="flex flex-row gap-1 flex-shrink-0">
+                    <button onClick={() => setEditIncome(item)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-400 active:bg-blue-100">
+                      <Pencil size={20} />
+                    </button>
+                    <button onClick={() => setDeleteId(item.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 active:bg-red-100">
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 </div>
@@ -347,6 +360,14 @@ export default function Income() {
           clients={clients}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); fetchData() }}
+        />
+      )}
+      {editIncome && (
+        <LogPaymentSheet
+          clients={clients}
+          income={editIncome}
+          onClose={() => setEditIncome(null)}
+          onSaved={() => { setEditIncome(null); fetchData() }}
         />
       )}
     </div>
