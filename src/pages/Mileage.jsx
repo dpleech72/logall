@@ -118,7 +118,7 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
       setForm(f => ({ 
         ...f, 
         miles,
-        from_location: fromLocationRef.current || f.from_location 
+        ...(fromLocationRef.current ? { from_location: fromLocationRef.current } : {})
       }))
       fromLocationRef.current = ''
     } catch (err) {
