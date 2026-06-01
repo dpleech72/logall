@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight } from 'lucide-react'
+import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, Pencil } from 'lucide-react'
 
 const RATE = 0.55
 const THRESHOLD = 10000
@@ -50,14 +50,14 @@ function groupByMonth(journeys) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v)
 }
 
-function LogJourneySheet({ clients, onClose, onSaved }) {
+function LogJourneySheet({ clients, journey, onClose, onSaved }) {
   const [form, setForm] = useState({
-    client_id: '',
-    journey_date: new Date().toISOString().split('T')[0],
-    from_location: '',
-    to_location: '',
-    miles: '',
-    notes: '',
+    client_id: journey?.client_id || '',
+    journey_date: journey?.journey_date || new Date().toISOString().split('T')[0],
+    from_location: journey?.from_location || '',
+    to_location: journey?.to_location || '',
+    miles: journey?.miles ? String(journey.miles) : '',
+    notes: journey?.notes || '',
   })
   const [coordsCache, setCoordsCache] = useState({}) // cache by location string
   const [error, setError] = useState('')
@@ -127,8 +127,7 @@ function LogJourneySheet({ clients, onClose, onSaved }) {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { error } = await supabase.from('mileage').insert({
-      user_id: user.id,
+    const payload = {
       client_id: form.client_id || null,
       journey_date: form.journey_date,
       from_location: form.from_location,
@@ -136,7 +135,10 @@ function LogJourneySheet({ clients, onClose, onSaved }) {
       miles: parseFloat(form.miles),
       rate_per_mile: RATE,
       notes: form.notes || null,
-    })
+    }
+    const { error } = journey
+      ? await supabase.from('mileage').update(payload).eq('id', journey.id)
+      : await supabase.from('mileage').insert({ ...payload, user_id: user.id })
 
     if (error) { setError(error.message); setLoading(false) }
     else { onSaved() }
@@ -148,7 +150,7 @@ function LogJourneySheet({ clients, onClose, onSaved }) {
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
 
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">Log a journey</h2>
+          <h2 className="text-lg font-bold text-gray-900">{journey ? 'Edit journey' : 'Log a journey'}</h2>
           <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
         </div>
 
@@ -297,10 +299,7 @@ function LogJourneySheet({ clients, onClose, onSaved }) {
               disabled={calculating}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold active:bg-blue-100 disabled:opacity-60 transition-colors"
             >
-              {calculating
-                ? <><Loader size={14} className="animate-spin" /> Calculating...</>
-                : <><Navigation size={14} /> Calculate distance automatically</>
-              }
+              {calculating ? <><Loader size={14} className="animate-spin" /> Calculating...</> : <><Navigation size={14} /> Calculate distance automatically</>}
             </button>
             <p className="text-xs text-gray-400 mt-1.5 text-center">
               Uses your current location if "From" is empty
@@ -325,7 +324,7 @@ function LogJourneySheet({ clients, onClose, onSaved }) {
             className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
           >
             <Check size={16} />
-            {loading ? 'Saving...' : 'Log journey'}
+{loading ? 'Saving...' : journey ? 'Save changes' : 'Log journey'}
           </button>
         </form>
       </div>
@@ -340,6 +339,7 @@ export default function Mileage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+  const [editJourney, setEditJourney] = useState(null)
 
   useEffect(() => { fetchData() }, [])
 
@@ -472,10 +472,15 @@ export default function Mileage() {
                       )}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right flex-shrink-0 mr-1">
                     <p className="font-bold text-blue-600">£{parseFloat(journey.claimable_amount).toFixed(2)}</p>
-                    <button onClick={() => setDeleteId(journey.id)} className="text-gray-300 active:text-red-400 mt-1">
-                      <Trash2 size={13} />
+                  </div>
+                  <div className="flex flex-row gap-1 flex-shrink-0">
+                    <button onClick={() => setEditJourney(journey)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-400 active:bg-blue-100">
+                      <Pencil size={20} />
+                    </button>
+                    <button onClick={() => setDeleteId(journey.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 active:bg-red-100">
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 </div>
@@ -505,6 +510,14 @@ export default function Mileage() {
           clients={clients}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); fetchData() }}
+        />
+      )}
+      {editJourney && (
+        <LogJourneySheet
+          clients={clients}
+          journey={editJourney}
+          onClose={() => setEditJourney(null)}
+          onSaved={() => { setEditJourney(null); fetchData() }}
         />
       )}
     </div>
