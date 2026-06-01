@@ -1,5 +1,6 @@
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
 const StatCard = ({ label, value, sub, colour }) => {
   const colours = {
@@ -19,6 +20,15 @@ const StatCard = ({ label, value, sub, colour }) => {
 
 export default function Dashboard() {
   const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const quickActions = [
+    { icon: PoundSterling, label: 'Log a payment',    colour: 'text-green-600 bg-green-50',  to: '/income' },
+    { icon: Car,           label: 'Log a journey',    colour: 'text-blue-600 bg-blue-50',    to: '/mileage' },
+    { icon: TrendingUp,    label: 'Log an expense',   colour: 'text-purple-600 bg-purple-50', to: '/expenses' },
+    { icon: Users,         label: 'Manage clients',   colour: 'text-teal-600 bg-teal-50',    to: '/clients' },
+    { icon: AlertCircle,   label: 'View outstanding', colour: 'text-amber-600 bg-amber-50',  to: '/schedule' },
+  ]
 
   return (
     <div className="p-4 space-y-5">
@@ -51,14 +61,10 @@ export default function Dashboard() {
           Quick actions
         </h2>
         <div className="space-y-2">
-          {[
-            { icon: PoundSterling, label: 'Log a payment', colour: 'text-green-600 bg-green-50' },
-            { icon: Car,           label: 'Log a journey', colour: 'text-blue-600 bg-blue-50' },
-            { icon: TrendingUp,    label: 'Log an expense', colour: 'text-purple-600 bg-purple-50' },
-            { icon: AlertCircle,   label: 'View outstanding', colour: 'text-amber-600 bg-amber-50' },
-          ].map(({ icon: Icon, label, colour }) => (
+          {quickActions.map(({ icon: Icon, label, colour, to }) => (
             <button
               key={label}
+              onClick={() => navigate(to)}
               className="w-full flex items-center gap-3 bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 text-left active:bg-gray-50 transition-colors"
             >
               <span className={`p-2 rounded-lg ${colour}`}>
