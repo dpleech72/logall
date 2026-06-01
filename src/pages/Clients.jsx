@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, ChevronRight, Phone, CreditCard, User } from 'lucide-react'
+import { Plus, ChevronRight, Phone, CreditCard, User, ArrowLeft } from 'lucide-react'
 
 const paymentLabel = {
   cash: 'Cash',
@@ -52,11 +52,16 @@ export default function Clients() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-          </p>
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {clients.length} {clients.length === 1 ? 'client' : 'clients'}
+            </p>
+          </div>
         </div>
         <button
           onClick={() => navigate('/clients/add')}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling } from 'lucide-react'
+import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus } from 'lucide-react'
 
 // --- Date helpers ---
 function getMonday(date) {
@@ -155,13 +155,22 @@ export default function Schedule() {
             <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
             <p className="text-gray-500 text-sm">{monthLabel()}</p>
           </div>
-          <button
-            onClick={() => navigate('/clients')}
-            className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors shadow-sm"
-          >
-            <Users size={15} />
-            Clients
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
+              className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors shadow-sm"
+            >
+              <Plus size={15} />
+              Add job
+            </button>
+            <button
+              onClick={() => navigate('/clients')}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
+            >
+              <Users size={15} />
+              Clients
+            </button>
+          </div>
         </div>
 
         {/* Week navigation */}
@@ -231,7 +240,10 @@ export default function Schedule() {
         {!loading && dayVisits.length === 0 && (
           <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center mt-2">
             <p className="text-gray-400 text-sm">No jobs scheduled</p>
-            <button className="mt-3 text-green-600 font-semibold text-sm">
+            <button
+              onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
+              className="mt-3 text-green-600 font-semibold text-sm"
+            >
               + Add a job
             </button>
           </div>
