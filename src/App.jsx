@@ -3,12 +3,10 @@ import { AuthProvider } from './hooks/useAuth'
 import ProtectedRoute from './components/ui/ProtectedRoute'
 import BottomNav from './components/layout/BottomNav'
 
-// Auth pages
 import SignIn from './pages/auth/SignIn'
 import SignUp from './pages/auth/SignUp'
 import ForgotPassword from './pages/auth/ForgotPassword'
 
-// App pages
 import Dashboard from './pages/Dashboard'
 import Schedule from './pages/Schedule'
 import Income from './pages/Income'
@@ -17,6 +15,7 @@ import Expenses from './pages/Expenses'
 import Clients from './pages/Clients'
 import ClientForm from './pages/ClientForm'
 import ClientDetail from './pages/ClientDetail'
+import VisitForm from './pages/VisitForm'
 
 function AppShell() {
   return (
@@ -26,6 +25,7 @@ function AppShell() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/schedule" element={<Schedule />} />
+          <Route path="/schedule/add" element={<VisitForm />} />
           <Route path="/income" element={<Income />} />
           <Route path="/mileage" element={<Mileage />} />
           <Route path="/expenses" element={<Expenses />} />
