@@ -113,7 +113,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
                     .select('duration_minutes')
                     .eq('client_id', e.target.value)
                     .eq('scheduled_date', today)
-                    .in('status', ['scheduled', 'awaiting_payment'])
+                    .neq('status', 'cancelled')
                     .order('scheduled_time')
                     .limit(1)
 
