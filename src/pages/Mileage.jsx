@@ -70,7 +70,7 @@ function groupByMonth(journeys) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v)
 }
 
-function LogJourneySheet({ clients, journey, onClose, onSaved }) {
+function LogJourneySheet({ clients, journey, homeAddress, onClose, onSaved }) {
   const [form, setForm] = useState({
     client_id: journey?.client_id || '',
     journey_date: journey?.journey_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
@@ -236,31 +236,37 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
               onChange={set('from_location')}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
             />
-            {/* Client quick-fill buttons */}
-            {clients.filter(c => c.address).length > 0 && (
-              <div>
-                <p className="text-xs text-gray-400 mb-1.5">Quick fill from client:</p>
-                <div className="flex flex-wrap gap-2">
-                  {clients.filter(c => c.address).map(c => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setForm(f => ({
-                        ...f,
-                        from_location: `${c.address}${c.postcode ? ', ' + c.postcode : ''}`,
-                      }))}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: c.colour || '#16a34a' }}
-                      />
-                      {c.name}
-                    </button>
-                  ))}
-                </div>
+            {/* Quick-fill buttons */}
+            <div>
+              <p className="text-xs text-gray-400 mb-1.5">Quick fill:</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, from_location: homeAddress || 'Home' }))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors"
+                  title={homeAddress || 'Add your address in Profile'}
+                >
+                  🏠 Home
+                </button>
+                {clients.filter(c => c.address).map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setForm(f => ({
+                      ...f,
+                      from_location: `${c.address}${c.postcode ? ', ' + c.postcode : ''}`,
+                    }))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: c.colour || '#16a34a' }}
+                    />
+                    {c.name}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Swap button */}
@@ -284,32 +290,38 @@ function LogJourneySheet({ clients, journey, onClose, onSaved }) {
               onChange={set('to_location')}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
             />
-            {/* Client quick-fill buttons */}
-            {clients.filter(c => c.address).length > 0 && (
-              <div>
-                <p className="text-xs text-gray-400 mb-1.5">Quick fill from client:</p>
-                <div className="flex flex-wrap gap-2">
-                  {clients.filter(c => c.address).map(c => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setForm(f => ({
-                        ...f,
-                        to_location: `${c.address}${c.postcode ? ', ' + c.postcode : ''}`,
-                        client_id: f.client_id || c.id,
-                      }))}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: c.colour || '#16a34a' }}
-                      />
-                      {c.name}
-                    </button>
-                  ))}
-                </div>
+            {/* Quick-fill buttons */}
+            <div>
+              <p className="text-xs text-gray-400 mb-1.5">Quick fill:</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, to_location: homeAddress || 'Home' }))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors"
+                  title={homeAddress || 'Add your address in Profile'}
+                >
+                  🏠 Home
+                </button>
+                {clients.filter(c => c.address).map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setForm(f => ({
+                      ...f,
+                      to_location: `${c.address}${c.postcode ? ', ' + c.postcode : ''}`,
+                      client_id: f.client_id || c.id,
+                    }))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: c.colour || '#16a34a' }}
+                    />
+                    {c.name}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Miles */}
@@ -378,6 +390,7 @@ export default function Mileage() {
   const [journeys, setJourneys] = useState([])
   const [clients, setClients] = useState([])
   const [clientMap, setClientMap] = useState({})
+  const [homeAddress, setHomeAddress] = useState('')
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
@@ -386,10 +399,15 @@ export default function Mileage() {
   useEffect(() => { fetchData() }, [])
 
   async function fetchData() {
-    const [{ data: mileageData }, { data: clientData }] = await Promise.all([
+    const [{ data: mileageData }, { data: clientData }, { data: profileData }] = await Promise.all([
       supabase.from('mileage').select('*').order('journey_date', { ascending: false }),
       supabase.from('clients').select('id, name, colour, address, postcode').eq('is_active', true).order('name'),
+      supabase.from('profiles').select('address, postcode').single(),
     ])
+    if (profileData) {
+      const parts = [profileData.address, profileData.postcode].filter(Boolean)
+      setHomeAddress(parts.join(', '))
+    }
     setJourneys(mileageData || [])
     setClients(clientData || [])
     const map = {}
@@ -550,6 +568,7 @@ export default function Mileage() {
       {showForm && (
         <LogJourneySheet
           clients={clients}
+          homeAddress={homeAddress}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); fetchData() }}
         />
@@ -557,6 +576,7 @@ export default function Mileage() {
       {editJourney && (
         <LogJourneySheet
           clients={clients}
+          homeAddress={homeAddress}
           journey={editJourney}
           onClose={() => setEditJourney(null)}
           onSaved={() => { setEditJourney(null); fetchData() }}
