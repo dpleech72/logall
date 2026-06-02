@@ -741,6 +741,17 @@ export default function Schedule() {
                         📝 {visit.notes.length > 20 ? visit.notes.slice(0, 20) + '…' : visit.notes}
                       </span>
                     )}
+                    {(() => {
+                      const h = getHolidayInfo(visit.scheduled_date)
+                      if (!h) return null
+                      return (
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          h.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                        }`}>
+                          🏖️ {h.name}
+                        </span>
+                      )
+                    })()}
                   </div>
                 </div>
               </button>
