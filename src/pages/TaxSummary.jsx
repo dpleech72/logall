@@ -178,7 +178,17 @@ export default function TaxSummary() {
 
       {/* Income slider */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <p className="font-semibold text-gray-900 mb-1">What if my income changes?</p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="font-semibold text-gray-900">What if my income changes?</p>
+          {sliderIncome !== Math.round(income) && (
+            <button
+              onClick={() => setSliderIncome(Math.round(income))}
+              className="text-xs text-green-600 font-medium active:opacity-60"
+            >
+              Reset
+            </button>
+          )}
+        </div>
         <p className="text-xs text-gray-400 mb-4">Drag the slider to see how your tax bill changes</p>
 
         <div className="flex items-center justify-between mb-2">
