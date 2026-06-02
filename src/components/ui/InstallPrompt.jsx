@@ -75,8 +75,8 @@ export default function InstallPrompt() {
     >
       {showAndroid && (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg">
-            L
+          <div className="w-10 h-10 bg-white border-2 border-green-600 rounded-xl flex items-center justify-center flex-shrink-0 text-green-600 font-bold text-sm">
+            LA
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">Install LogAll</p>
