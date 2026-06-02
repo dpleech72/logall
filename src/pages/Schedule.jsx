@@ -257,7 +257,7 @@ export default function Schedule() {
           amount: visit.amount,
           payment_method: visit.payment_method || clients[visit.client_id]?.payment_method || 'cash',
           received_date: visit.scheduled_date,
-          description: `Visit â€” ${clients[visit.client_id]?.name || 'Client'}`,
+          description: `Visit — ${clients[visit.client_id]?.name || 'Client'}`,
         })
       }
     }
@@ -285,7 +285,7 @@ export default function Schedule() {
     if (weekStart.getMonth() === end.getMonth()) {
       return `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getFullYear()}`
     }
-    return `${MONTH_NAMES[weekStart.getMonth()]} â€” ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`
+    return `${MONTH_NAMES[weekStart.getMonth()]} — ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`
   }
 
   async function bulkDeleteVisits() {
@@ -543,7 +543,7 @@ export default function Schedule() {
 
           return (
             <div key={visit.id} className={`bg-white rounded-2xl border-2 ${s.border} shadow-sm overflow-hidden transition-all`}>
-              {/* Card header â€” always visible */}
+              {/* Card header — always visible */}
               <button
                 className="w-full p-4 text-left flex items-center gap-3"
                 onClick={() => {
@@ -576,7 +576,7 @@ export default function Schedule() {
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-gray-900">{client?.name || 'Unknown client'}</p>
                     {visit.amount && (
-                      <p className="font-bold text-green-600 text-sm">Â£{parseFloat(visit.amount).toFixed(2)}</p>
+                      <p className="font-bold text-green-600 text-sm">£{parseFloat(visit.amount).toFixed(2)}</p>
                     )}
                   </div>
 
@@ -590,7 +590,7 @@ export default function Schedule() {
                     )}
                     {visit.duration_minutes && (
                       <span className="text-xs text-gray-400">
-                        Â· {visit.duration_minutes >= 60
+                        · {visit.duration_minutes >= 60
                           ? `${Math.floor(visit.duration_minutes/60)}${visit.duration_minutes%60 ? `.${visit.duration_minutes%60}` : ''} hrs`
                           : `${visit.duration_minutes} mins`}
                       </span>
@@ -623,22 +623,22 @@ export default function Schedule() {
                     </span>
                     {visit.recurrence_rule && visit.recurrence_rule !== 'none' && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-1">
-                        ðŸ”„ {visit.recurrence_rule === 'weekly' ? 'Weekly' : visit.recurrence_rule === 'biweekly' ? 'Bi-weekly' : 'Monthly'}
+                        🔄 {visit.recurrence_rule === 'weekly' ? 'Weekly' : visit.recurrence_rule === 'biweekly' ? 'Bi-weekly' : 'Monthly'}
                       </span>
                     )}
                     {visit.payment_method === 'cash' && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-600">
-                        ðŸ’µ Cash
+                        💵 Cash
                       </span>
                     )}
                     {visit.payment_method === 'bank_transfer' && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
-                        ðŸ¦ Bank transfer
+                        🏦 Bank transfer
                       </span>
                     )}
                     {visit.notes && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                        ðŸ“ {visit.notes.length > 20 ? visit.notes.slice(0, 20) + 'â€¦' : visit.notes}
+                        📝 {visit.notes.length > 20 ? visit.notes.slice(0, 20) + '…' : visit.notes}
                       </span>
                     )}
                   </div>
@@ -660,7 +660,7 @@ export default function Schedule() {
                     )}
                     {visit.status === 'done_paid' && new Date(visit.scheduled_date) > today && (
                       <div className="col-span-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700 text-center font-medium">
-                        â° Paid in advance â€” remember to do this job!
+                        ⏰ Paid in advance — remember to do this job!
                       </div>
                     )}
                     {visit.status !== 'awaiting_payment' && (
@@ -700,7 +700,7 @@ export default function Schedule() {
             </div>
           )
         })}
-        {/* Action buttons â€” scroll with content */}
+        {/* Action buttons — scroll with content */}
         {!loading && (
           <div className="space-y-2 pt-2">
             <button
@@ -713,7 +713,7 @@ export default function Schedule() {
               onClick={() => navigate('/schedule/bulk')}
               className="w-full bg-blue-50 text-blue-600 border border-blue-200 font-semibold py-3 rounded-xl text-sm active:bg-blue-100 transition-colors"
             >
-              Add past jobs in bulk â†’
+              Add past jobs in bulk
             </button>
           </div>
         )}
