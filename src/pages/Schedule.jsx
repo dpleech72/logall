@@ -500,11 +500,18 @@ export default function Schedule() {
                   {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
                 </span>
               </div>
-              {!selecting && (
-                <button onClick={() => setSelecting(true)} className="p-1.5 text-gray-400 active:text-gray-600">
-                  <CheckSquare size={18} />
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (selecting) { setSelecting(false); setSelectedVisits(new Set()) }
+                  else setSelecting(true)
+                }}
+                className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
+                  selecting ? 'bg-green-50 text-green-600 active:bg-green-100' : 'text-gray-400 active:text-gray-600'
+                }`}
+              >
+                <CheckSquare size={14} />
+                {selecting ? 'Done' : 'Select jobs'}
+              </button>
             </div>
           </>
         )}
@@ -623,11 +630,18 @@ export default function Schedule() {
                   </span>
                 )}
               </div>
-              {!selecting && (
-                <button onClick={() => setSelecting(true)} className="p-1.5 text-gray-400 active:text-gray-600">
-                  <CheckSquare size={18} />
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (selecting) { setSelecting(false); setSelectedVisits(new Set()) }
+                  else setSelecting(true)
+                }}
+                className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
+                  selecting ? 'bg-green-50 text-green-600 active:bg-green-100' : 'text-gray-400 active:text-gray-600'
+                }`}
+              >
+                <CheckSquare size={14} />
+                {selecting ? 'Done' : 'Select jobs'}
+              </button>
             </div>
           </>
         )}
