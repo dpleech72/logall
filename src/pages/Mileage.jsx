@@ -144,9 +144,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
     setForm(f => ({
       ...f,
       client_id: e.target.value,
-      to_location: client?.address
-        ? `${client.address}${client.postcode ? ', ' + client.postcode : ''}`
-        : f.to_location,
+      to_location: client?.postcode || (client?.address ? client.address : f.to_location),
     }))
   }
 
@@ -255,7 +253,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                     type="button"
                     onClick={() => setForm(f => ({
                       ...f,
-                      from_location: `${c.address}${c.postcode ? ', ' + c.postcode : ''}`,
+                      from_location: c.postcode || `${c.address}`,
                     }))}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
                   >
@@ -309,7 +307,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                     type="button"
                     onClick={() => setForm(f => ({
                       ...f,
-                      to_location: `${c.address}${c.postcode ? ', ' + c.postcode : ''}`,
+                      to_location: c.postcode || `${c.address}`,
                       client_id: f.client_id || c.id,
                     }))}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
