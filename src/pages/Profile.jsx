@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut } from 'lucide-react'
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -37,7 +37,7 @@ function formatHolidayDates(startDate, endDate) {
 }
 
 export default function Profile() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
   const [form, setForm] = useState({
@@ -393,6 +393,18 @@ export default function Profile() {
         ) : (
           <p className="text-sm text-gray-400 text-center py-1">No personal holidays added yet</p>
         )}
+      </div>
+      </div>
+
+      {/* Sign out */}
+      <div className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <button
+          onClick={signOut}
+          className="w-full flex items-center justify-center gap-2 text-red-500 font-semibold py-2 text-sm active:opacity-70 transition-colors"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, Bell, X, HelpCircle } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, HelpCircle, X } from 'lucide-react'
 
 function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
@@ -188,42 +188,20 @@ export default function Dashboard() {
   }
 
   const quickActions = [
-    { icon: PoundSterling, label: 'Log a payment',  colour: 'text-green-600 bg-green-50',  to: '/income' },
-    { icon: Car,           label: 'Log a journey',  colour: 'text-blue-600 bg-blue-50',    to: '/mileage' },
+    { icon: PoundSterling, label: 'Log a payment',  colour: 'text-green-600 bg-green-50',   to: '/income' },
+    { icon: Car,           label: 'Log a journey',  colour: 'text-blue-600 bg-blue-50',     to: '/mileage' },
     { icon: TrendingUp,    label: 'Log an expense', colour: 'text-purple-600 bg-purple-50', to: '/expenses' },
-    { icon: Users,         label: 'Manage clients', colour: 'text-teal-600 bg-teal-50',    to: '/clients' },
+    { icon: Users,         label: 'Manage clients', colour: 'text-teal-600 bg-teal-50',     to: '/clients' },
+    { icon: UserCircle,    label: 'My profile',     colour: 'text-gray-600 bg-gray-100',    to: '/profile' },
+    { icon: HelpCircle,    label: 'Help',           colour: 'text-amber-600 bg-amber-50',   to: '/help' },
   ]
 
   return (
     <div className="p-4 md:p-8 md:max-w-4xl md:mx-auto space-y-5">
       {/* Header */}
-      <div className="pt-2 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
-          {firstName && <p className="text-gray-500 text-sm mt-0.5">Welcome back!</p>}
-        </div>
-        <div className="flex flex-col items-end gap-2 mt-1">
-          <button
-            onClick={signOut}
-            className="flex items-center gap-1 text-gray-400 text-xs active:text-red-500 transition-colors whitespace-nowrap"
-          >
-            <LogOut size={13} />
-            Sign out
-          </button>
-          <button
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-1 text-gray-400 text-xs active:text-green-500 transition-colors whitespace-nowrap"
-          >
-            <UserCircle size={13} />
-            Profile
-          </button>
-          <button
-            onClick={() => navigate('/help')}
-            className="text-gray-300 active:text-green-500 transition-colors"
-          >
-            <HelpCircle size={22} />
-          </button>
-        </div>
+      <div className="pt-2">
+        <h1 className="text-2xl font-bold text-gray-900">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
+        {firstName && <p className="text-gray-500 text-sm mt-0.5">Welcome back!</p>}
       </div>
 
       {/* Jobs today banner */}
@@ -303,17 +281,17 @@ export default function Dashboard() {
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Quick actions
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {quickActions.map(({ icon: Icon, label, colour, to }) => (
             <button
               key={label}
               onClick={() => navigate(to)}
-              className="flex items-center gap-2.5 bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 text-left active:bg-gray-50 transition-colors"
+              className="flex flex-col items-center gap-2 bg-white rounded-xl p-3 shadow-sm border border-gray-100 text-center active:bg-gray-50 transition-colors"
             >
-              <span className={`p-2 rounded-lg ${colour} flex-shrink-0`}>
-                <Icon size={16} />
+              <span className={`p-2.5 rounded-xl ${colour} flex-shrink-0`}>
+                <Icon size={18} />
               </span>
-              <span className="font-medium text-gray-800 text-sm leading-tight">{label}</span>
+              <span className="font-medium text-gray-700 text-xs leading-tight">{label}</span>
             </button>
           ))}
         </div>
