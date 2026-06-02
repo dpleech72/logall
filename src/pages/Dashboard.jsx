@@ -149,6 +149,9 @@ export default function Dashboard() {
   async function doBackfill() {
     setBackfilling(true)
     const { data: { user } } = await supabase.auth.getUser()
+    const { data: clientData } = await supabase.from('clients').select('id, name')
+    const clientMap = {}
+    ;(clientData || []).forEach(c => { clientMap[c.id] = c.name })
     const records = backfillVisits.map(v => ({
       user_id: user.id,
       client_id: v.client_id,
@@ -156,7 +159,7 @@ export default function Dashboard() {
       amount: parseFloat(v.amount),
       payment_method: v.payment_method || 'cash',
       received_date: v.scheduled_date,
-      description: 'Visit',
+      description: `Visit — ${clientMap[v.client_id] || 'Client'}`,
     }))
     await supabase.from('income').insert(records)
     setBackfillVisits([])
