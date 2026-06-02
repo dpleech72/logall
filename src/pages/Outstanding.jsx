@@ -79,8 +79,15 @@ function ReminderSheet({ visit, client, onClose, onMarkPaid }) {
             </a>
           )}
           {!client.mobile && !client.home_phone && (
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
-              No phone number saved for {client.name}. Add one in their client profile.
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700 flex items-center justify-between gap-2">
+              <span>No phone number saved for {client.name}.</span>
+              <a
+                href={`/clients/${client.id}/edit`}
+                className="font-semibold underline whitespace-nowrap"
+                onClick={onClose}
+              >
+                Add one →
+              </a>
             </div>
           )}
         </div>
