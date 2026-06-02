@@ -340,7 +340,7 @@ export default function Profile() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">To <span className="text-gray-300 font-normal">(leave blank for one day)</span></label>
+              <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">To</label>
               <input
                 type="date"
                 value={newHolidayEnd}
@@ -350,6 +350,7 @@ export default function Profile() {
               />
             </div>
           </div>
+          <p className="text-xs text-gray-400 ml-1">Leave "To" blank for a single day.</p>
           <div className="flex gap-2">
             <input
               type="text"
