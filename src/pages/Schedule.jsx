@@ -109,13 +109,15 @@ export default function Schedule() {
   }
 
   async function generateRecurringVisits() {
-    // Look 8 weeks ahead
     const { data: { user } } = await supabase.auth.getUser()
     const now = new Date()
+    now.setHours(0, 0, 0, 0)
     const lookahead = new Date(now)
-    lookahead.setDate(lookahead.getDate() + 56) // 8 weeks
+    lookahead.setDate(lookahead.getDate() + 56) // 8 weeks ahead
 
-    // Get all recurring visits
+    const localStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+
+    // Get ALL recurring visits (past and future)
     const { data: recurring } = await supabase
       .from('visits')
       .select('*')
@@ -127,46 +129,45 @@ export default function Schedule() {
 
     if (!recurring || recurring.length === 0) return
 
-    // Group by client_id + recurrence_rule to get the latest visit per recurring series
+    // Build a set of all existing dates per client to avoid duplicates
+    const existingDates = new Set(
+      recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
+    )
+
+    // Get the most recent visit per series (client + recurrence_rule)
     const seriesMap = {}
     recurring.forEach(v => {
       const key = `${v.client_id}_${v.recurrence_rule}`
-      if (!seriesMap[key]) seriesMap[key] = v
+      if (!seriesMap[key]) seriesMap[key] = v // already sorted desc so first = latest
     })
 
     const toInsert = []
+    const insertedDates = new Set() // track what we're about to insert
 
     for (const [, latestVisit] of Object.entries(seriesMap)) {
-      let nextDate = new Date(latestVisit.scheduled_date + 'T12:00:00')
-
-      // Step forward until we're in the future
       const intervalDays = latestVisit.recurrence_rule === 'weekly' ? 7
         : latestVisit.recurrence_rule === 'biweekly' ? 14
-        : latestVisit.recurrence_rule === 'monthly' ? 30
         : null
-      if (!intervalDays) continue
+      const isMonthly = latestVisit.recurrence_rule === 'monthly'
+      if (!intervalDays && !isMonthly) continue
 
-      // Advance to next occurrence after today
-      while (nextDate <= now) {
-        nextDate = new Date(nextDate)
-        if (latestVisit.recurrence_rule === 'monthly') {
-          nextDate.setMonth(nextDate.getMonth() + 1)
-        } else {
-          nextDate.setDate(nextDate.getDate() + intervalDays)
-        }
+      // Start from the latest visit date and step forward
+      let nextDate = new Date(latestVisit.scheduled_date + 'T12:00:00')
+      
+      // Advance by one interval to get the next occurrence
+      if (isMonthly) {
+        nextDate.setMonth(nextDate.getMonth() + 1)
+      } else {
+        nextDate.setDate(nextDate.getDate() + intervalDays)
       }
 
-      // Generate all missing visits up to lookahead
+      // Generate visits up to lookahead
       while (nextDate <= lookahead) {
-        const dateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth()+1).padStart(2,'0')}-${String(nextDate.getDate()).padStart(2,'0')}`
+        const dateStr = localStr(nextDate)
+        const key = `${latestVisit.client_id}_${dateStr}`
 
-        // Check if visit already exists for this date and client
-        const exists = recurring.some(v =>
-          v.client_id === latestVisit.client_id &&
-          v.scheduled_date === dateStr
-        )
-
-        if (!exists) {
+        if (!existingDates.has(key) && !insertedDates.has(key)) {
+          insertedDates.add(key)
           toInsert.push({
             user_id: user.id,
             client_id: latestVisit.client_id,
@@ -182,7 +183,7 @@ export default function Schedule() {
           })
         }
 
-        if (latestVisit.recurrence_rule === 'monthly') {
+        if (isMonthly) {
           nextDate.setMonth(nextDate.getMonth() + 1)
         } else {
           nextDate.setDate(nextDate.getDate() + intervalDays)
@@ -192,7 +193,7 @@ export default function Schedule() {
 
     if (toInsert.length > 0) {
       await supabase.from('visits').insert(toInsert)
-      fetchData() // Refresh the schedule
+      fetchData()
     }
   }
 
