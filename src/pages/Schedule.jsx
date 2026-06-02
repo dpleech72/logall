@@ -362,20 +362,8 @@ export default function Schedule() {
         )}
 
         {!loading && dayVisits.length === 0 && (
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center mt-2 space-y-2">
-            <p className="text-gray-400 text-sm mb-3">No jobs scheduled</p>
-            <button
-              onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
-              className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 transition-colors"
-            >
-              + Add a job
-            </button>
-            <button
-              onClick={() => navigate('/schedule/bulk')}
-              className="w-full bg-blue-50 text-blue-600 border border-blue-200 font-semibold py-3 rounded-xl text-sm active:bg-blue-100 transition-colors"
-            >
-              Add past jobs in bulk →
-            </button>
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 text-center mt-2">
+            <p className="text-gray-400 text-sm">No jobs scheduled</p>
           </div>
         )}
 
@@ -527,6 +515,22 @@ export default function Schedule() {
             </div>
           )
         })}
+      </div>
+
+      {/* Action buttons — always visible */}
+      <div className="px-4 pb-4 space-y-2">
+        <button
+          onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
+          className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 transition-colors"
+        >
+          + Add a job
+        </button>
+        <button
+          onClick={() => navigate('/schedule/bulk')}
+          className="w-full bg-blue-50 text-blue-600 border border-blue-200 font-semibold py-3 rounded-xl text-sm active:bg-blue-100 transition-colors"
+        >
+          Add past jobs in bulk →
+        </button>
       </div>
 
       {/* Undo toast */}
