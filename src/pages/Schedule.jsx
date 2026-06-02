@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus, MapPin } from 'lucide-react'
+import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus, MapPin, Calendar } from 'lucide-react'
 
 // --- Date helpers ---
 function getMonday(date) {
@@ -362,13 +362,19 @@ export default function Schedule() {
         )}
 
         {!loading && dayVisits.length === 0 && (
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center mt-2">
-            <p className="text-gray-400 text-sm">No jobs scheduled</p>
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center mt-2 space-y-2">
+            <p className="text-gray-400 text-sm mb-3">No jobs scheduled</p>
             <button
               onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
-              className="mt-3 text-green-600 font-semibold text-sm"
+              className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 transition-colors"
             >
               + Add a job
+            </button>
+            <button
+              onClick={() => navigate('/schedule/bulk')}
+              className="w-full bg-blue-50 text-blue-600 border border-blue-200 font-semibold py-3 rounded-xl text-sm active:bg-blue-100 transition-colors"
+            >
+              Add past jobs in bulk →
             </button>
           </div>
         )}

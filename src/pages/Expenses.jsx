@@ -387,7 +387,7 @@ export default function Expenses() {
 
       {/* Delete confirmation */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-24">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
             <p className="font-semibold text-gray-900 mb-1">Delete this expense?</p>
             <p className="text-sm text-gray-500 mb-4">This can't be undone.</p>
