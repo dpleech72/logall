@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import ProtectedRoute from './components/ui/ProtectedRoute'
 import BottomNav from './components/layout/BottomNav'
+import Sidebar from './components/layout/Sidebar'
 import InstallPrompt from './components/ui/InstallPrompt'
 
 import SignIn from './pages/auth/SignIn'
@@ -27,29 +28,35 @@ import Outstanding from './pages/Outstanding'
 
 function AppShell() {
   return (
-    <div className="flex flex-col h-full">
-      <main className="flex-1 overflow-y-auto pb-safe">
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/schedule/add" element={<VisitForm />} />
-          <Route path="/schedule/:id/edit" element={<VisitEditForm />} />
-          <Route path="/income" element={<Income />} />
-          <Route path="/mileage" element={<Mileage />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/add" element={<ClientForm />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/clients/:id/edit" element={<ClientForm />} />
-          <Route path="/tax" element={<TaxSummary />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/schedule/bulk" element={<BulkVisits />} />
-          <Route path="/outstanding" element={<Outstanding />} />
-        </Routes>
-      </main>
-      <InstallPrompt />
-      <BottomNav />
+    <div className="flex h-full">
+      {/* Sidebar — desktop only */}
+      <Sidebar />
+
+      {/* Main content */}
+      <div className="flex flex-col flex-1 min-w-0">
+        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/schedule/add" element={<VisitForm />} />
+            <Route path="/schedule/:id/edit" element={<VisitEditForm />} />
+            <Route path="/income" element={<Income />} />
+            <Route path="/mileage" element={<Mileage />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/add" element={<ClientForm />} />
+            <Route path="/clients/:id" element={<ClientDetail />} />
+            <Route path="/clients/:id/edit" element={<ClientForm />} />
+            <Route path="/tax" element={<TaxSummary />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/schedule/bulk" element={<BulkVisits />} />
+            <Route path="/outstanding" element={<Outstanding />} />
+          </Routes>
+        </main>
+        <InstallPrompt />
+        <BottomNav />
+      </div>
     </div>
   )
 }

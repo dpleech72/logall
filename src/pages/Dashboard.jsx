@@ -195,7 +195,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="p-4 space-y-5">
+    <div className="p-4 md:p-8 md:max-w-4xl md:mx-auto space-y-5">
       {/* Header */}
       <div className="pt-2 flex items-start justify-between">
         <div>
@@ -263,7 +263,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           label="Income this month"
           value={loading ? '...' : `£${stats.incomeThisMonth.toFixed(2)}`}
@@ -297,7 +297,7 @@ export default function Dashboard() {
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Quick actions
         </h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {quickActions.map(({ icon: Icon, label, colour, to }) => (
             <button
               key={label}

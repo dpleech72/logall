@@ -355,9 +355,11 @@ export default function Schedule() {
   const selectedDayHoliday = getHolidayInfo(formatDate(selectedDay))
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full md:flex-row">
+      {/* Left panel — calendar */}
+      <div className="md:w-[380px] md:shrink-0 md:border-r md:border-gray-100 md:overflow-y-auto md:h-full">
       {/* Header */}
-      <div className="p-4 pt-6 pb-0">
+      <div className="p-4 pt-6 pb-0 md:pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
@@ -652,9 +654,34 @@ export default function Schedule() {
           </>
         )}
       </div>
+      </div>{/* end left panel */}
 
-      {/* Job cards */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
+      {/* Right panel — job cards */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 md:px-6 md:pt-6 md:pb-6">
+        {/* Desktop day heading */}
+        <div className="hidden md:flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-bold text-gray-900">
+              {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h2>
+            {selectedDayHoliday && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+              }`}>
+                {selectedDayHoliday.name}
+              </span>
+            )}
+            {showIncome && dailyIncome[formatDate(selectedDay)] && (
+              <span className="text-green-600 text-sm font-semibold">
+                · £{dailyIncome[formatDate(selectedDay)].toFixed(2)} received
+              </span>
+            )}
+          </div>
+          <span className="text-gray-400 text-sm">
+            {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
+          </span>
+        </div>
+
         {loading && (
           <div className="space-y-2">
             {[1,2].map(i => <div key={i} className="h-20 bg-gray-100 rounded-2xl animate-pulse" />)}
