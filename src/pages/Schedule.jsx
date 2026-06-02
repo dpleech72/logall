@@ -117,7 +117,7 @@ export default function Schedule() {
 
     const localStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
-    // Get ALL recurring visits (past and future)
+    // Get all recurring visits
     const { data: recurring } = await supabase
       .from('visits')
       .select('*')
@@ -126,6 +126,10 @@ export default function Schedule() {
       .neq('recurrence_rule', 'none')
       .neq('status', 'cancelled')
       .order('scheduled_date', { ascending: false })
+    
+    // Only use future scheduled visits to determine the active series
+    // This prevents old completed biweekly visits from generating new visits
+    // when the rule has been changed to weekly
 
     if (!recurring || recurring.length === 0) return
 
@@ -134,11 +138,23 @@ export default function Schedule() {
       recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
     )
 
-    // Get the most recent visit per series (client + recurrence_rule)
+    // Get the most recent FUTURE scheduled visit per client as the template
+    // This ensures if Rachel changes weekly->biweekly, only the new rule is used
     const seriesMap = {}
+    const today = localStr(now)
+    
+    // First try: find the latest future scheduled visit per client
     recurring.forEach(v => {
-      const key = `${v.client_id}_${v.recurrence_rule}`
-      if (!seriesMap[key]) seriesMap[key] = v // already sorted desc so first = latest
+      if (v.scheduled_date >= today && v.status === 'scheduled') {
+        const key = v.client_id
+        if (!seriesMap[key]) seriesMap[key] = v
+      }
+    })
+    
+    // Fallback: if no future scheduled visit, use the most recent any visit
+    recurring.forEach(v => {
+      const key = v.client_id
+      if (!seriesMap[key]) seriesMap[key] = v
     })
 
     const toInsert = []
