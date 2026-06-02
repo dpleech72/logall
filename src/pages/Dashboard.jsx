@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, Bell } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, Bell, X } from 'lucide-react'
 
 function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
@@ -37,10 +37,14 @@ export default function Dashboard() {
   })
   const [firstName, setFirstName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [backfillVisits, setBackfillVisits] = useState([])
+  const [backfillDismissed, setBackfillDismissed] = useState(false)
+  const [backfilling, setBackfilling] = useState(false)
 
   useEffect(() => {
     fetchStats()
     checkDailyReminder()
+    checkBackfill()
   }, [])
 
   async function checkDailyReminder() {
@@ -130,6 +134,36 @@ export default function Dashboard() {
     setLoading(false)
   }
 
+  async function checkBackfill() {
+    if (sessionStorage.getItem('logall_backfill_dismissed')) return
+    const [{ data: incomeLinks }, { data: paidVisits }] = await Promise.all([
+      supabase.from('income').select('visit_id').not('visit_id', 'is', null),
+      supabase.from('visits').select('id, client_id, amount, payment_method, scheduled_date')
+        .eq('status', 'done_paid').not('amount', 'is', null).gt('amount', 0),
+    ])
+    const linked = new Set((incomeLinks || []).map(i => i.visit_id))
+    const missing = (paidVisits || []).filter(v => !linked.has(v.id))
+    setBackfillVisits(missing)
+  }
+
+  async function doBackfill() {
+    setBackfilling(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const records = backfillVisits.map(v => ({
+      user_id: user.id,
+      client_id: v.client_id,
+      visit_id: v.id,
+      amount: parseFloat(v.amount),
+      payment_method: v.payment_method || 'cash',
+      received_date: v.scheduled_date,
+      description: 'Visit',
+    }))
+    await supabase.from('income').insert(records)
+    setBackfillVisits([])
+    setBackfilling(false)
+    fetchStats()
+  }
+
   const greeting = () => {
     const h = new Date().getHours()
     if (h < 12) return 'Good morning'
@@ -181,6 +215,35 @@ export default function Dashboard() {
           </p>
           <ChevronRight size={16} className="text-green-200" />
         </button>
+      )}
+
+      {/* Income backfill banner */}
+      {backfillVisits.length > 0 && !backfillDismissed && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800">
+                {backfillVisits.length} paid visit{backfillVisits.length > 1 ? 's' : ''} missing from income
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                Marked as paid but not recorded in income — tap to fix in one go.
+              </p>
+            </div>
+            <button
+              onClick={() => { setBackfillDismissed(true); sessionStorage.setItem('logall_backfill_dismissed', '1') }}
+              className="text-amber-400 active:text-amber-600 flex-shrink-0 p-1"
+            >
+              <X size={15} />
+            </button>
+          </div>
+          <button
+            onClick={doBackfill}
+            disabled={backfilling}
+            className="w-full bg-amber-500 text-white font-semibold py-2.5 rounded-xl text-sm active:bg-amber-600 disabled:opacity-60 transition-colors"
+          >
+            {backfilling ? 'Adding records...' : `Add ${backfillVisits.length} missing income record${backfillVisits.length > 1 ? 's' : ''}`}
+          </button>
+        </div>
       )}
 
       {/* Stats grid */}
