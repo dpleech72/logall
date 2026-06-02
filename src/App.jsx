@@ -25,6 +25,7 @@ import TaxReport from './pages/TaxReport'
 import Profile from './pages/Profile'
 import BulkVisits from './pages/BulkVisits'
 import Outstanding from './pages/Outstanding'
+import Help from './pages/Help'
 
 function AppShell() {
   return (
@@ -52,6 +53,7 @@ function AppShell() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/schedule/bulk" element={<BulkVisits />} />
             <Route path="/outstanding" element={<Outstanding />} />
+            <Route path="/help" element={<Help />} />
           </Routes>
         </main>
         <InstallPrompt />

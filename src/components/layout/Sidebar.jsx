@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { House, CalendarDays, Banknote, Car, PoundSterling, FileText } from 'lucide-react'
+import { House, CalendarDays, Banknote, Car, PoundSterling, FileText, HelpCircle } from 'lucide-react'
 
 const tabs = [
   { to: '/dashboard', icon: House,         label: 'Home' },
@@ -49,8 +49,23 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-gray-100">
-        <p className="text-xs text-gray-300">logall.co.uk</p>
+      <div className="px-3 py-4 border-t border-gray-100 space-y-0.5">
+        <NavLink
+          to="/help"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              isActive ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <HelpCircle size={18} strokeWidth={isActive ? 2.5 : 1.8} />
+              Help
+            </>
+          )}
+        </NavLink>
+        <p className="text-xs text-gray-300 px-3 pt-1">logall.co.uk</p>
       </div>
     </aside>
   )

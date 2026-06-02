@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, Bell, X } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, Bell, X, HelpCircle } from 'lucide-react'
 
 function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
@@ -203,6 +203,12 @@ export default function Dashboard() {
           {firstName && <p className="text-gray-500 text-sm mt-0.5">Welcome back!</p>}
         </div>
         <div className="flex items-center gap-3 mt-1">
+          <button
+            onClick={() => navigate('/help')}
+            className="flex items-center gap-1.5 text-gray-400 text-sm active:text-green-500 transition-colors"
+          >
+            <HelpCircle size={16} />
+          </button>
           <button
             onClick={() => navigate('/profile')}
             className="flex items-center gap-1.5 text-gray-400 text-sm active:text-green-500 transition-colors"
