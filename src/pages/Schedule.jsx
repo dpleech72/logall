@@ -82,13 +82,9 @@ export default function Schedule() {
     fetchData()
   }, [weekStart, monthDate, viewMode])
 
-  // Generate recurring visits on load and when returning to the page
+  // Generate recurring visits once on mount only
   useEffect(() => {
     generateRecurringVisits()
-
-    const handleFocus = () => generateRecurringVisits()
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   async function fetchData() {
@@ -203,13 +199,13 @@ export default function Schedule() {
     }
 
     if (toInsert.length > 0) {
-      // Final dedup check - query DB again to catch any recently added visits
+      // Final dedup check - query ALL visits (not just recurring) for these dates
       const { data: freshCheck } = await supabase
         .from('visits')
         .select('client_id, scheduled_date')
         .eq('user_id', user.id)
         .neq('status', 'cancelled')
-        .in('scheduled_date', toInsert.map(v => v.scheduled_date))
+        .in('scheduled_date', [...new Set(toInsert.map(v => v.scheduled_date))])
 
       const freshDates = new Set(
         (freshCheck || []).map(v => `${v.client_id}_${v.scheduled_date}`)
