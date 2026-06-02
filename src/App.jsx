@@ -1,9 +1,9 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import ProtectedRoute from './components/ui/ProtectedRoute'
 import BottomNav from './components/layout/BottomNav'
 import InstallPrompt from './components/ui/InstallPrompt'
-import PullToRefresh from './components/ui/PullToRefresh'
 
 import SignIn from './pages/auth/SignIn'
 import SignUp from './pages/auth/SignUp'
@@ -48,7 +48,6 @@ function AppShell() {
           <Route path="/outstanding" element={<Outstanding />} />
         </Routes>
       </main>
-      <PullToRefresh />
       <InstallPrompt />
       <BottomNav />
     </div>
@@ -56,6 +55,28 @@ function AppShell() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Reload when a new service worker takes control — picks up fresh deploys
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload()
+      })
+    }
+
+    // Reload if the app has been in the background for 10+ minutes —
+    // catches stale sessions when tapping the home screen icon
+    let hiddenAt = null
+    const onVisibility = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now()
+      } else if (hiddenAt && Date.now() - hiddenAt > 10 * 60 * 1000) {
+        window.location.reload()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
   return (
     <AuthProvider>
       <BrowserRouter>
