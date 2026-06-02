@@ -81,7 +81,7 @@ export default function Schedule() {
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(null)
   const [userHolidays, setUserHolidays] = useState([])
   const [dailyIncome, setDailyIncome] = useState({})
-  const [showIncome, setShowIncome] = useState(false)
+  const [showIncome, setShowIncome] = useState(() => localStorage.getItem('logall_show_income') === 'true')
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -525,7 +525,7 @@ export default function Schedule() {
                 </p>
                 {/* Income toggle */}
                 <button
-                  onClick={() => setShowIncome(v => !v)}
+                  onClick={() => setShowIncome(v => { const next = !v; localStorage.setItem('logall_show_income', next); return next })}
                   className={`text-xs font-bold px-2 py-0.5 rounded-full border transition-colors ${
                     showIncome
                       ? 'bg-green-600 text-white border-green-600'
