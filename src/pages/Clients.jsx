@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, ChevronRight, Phone, CreditCard, User, ArrowLeft } from 'lucide-react'
+import { Plus, ChevronRight, Phone, CreditCard, User } from 'lucide-react'
 
 const paymentLabel = {
   cash: 'Cash',
@@ -18,6 +18,9 @@ const paymentColour = {
 export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selecting, setSelecting] = useState(false)
+  const [selected, setSelected] = useState(new Set())
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -33,6 +36,16 @@ export default function Clients() {
 
     if (!error) setClients(data)
     setLoading(false)
+  }
+
+  async function bulkDelete() {
+    for (const id of selected) {
+      await supabase.from('clients').update({ is_active: false }).eq('id', id)
+    }
+    setSelected(new Set())
+    setSelecting(false)
+    setConfirmDelete(false)
+    fetchClients()
   }
 
   if (loading) {
@@ -52,16 +65,11 @@ export default function Clients() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-            <p className="text-gray-500 text-sm mt-0.5">
-              {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            {clients.length} {clients.length === 1 ? 'client' : 'clients'}
+          </p>
         </div>
         <button
           onClick={() => navigate('/clients/add')}
@@ -92,25 +100,44 @@ export default function Clients() {
         {clients.map(client => (
           <button
             key={client.id}
-            onClick={() => navigate(`/clients/${client.id}`)}
-            className="w-full bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-left active:bg-gray-50 transition-colors flex items-center gap-3"
+            onClick={() => {
+              if (selecting) {
+                const next = new Set(selected)
+                next.has(client.id) ? next.delete(client.id) : next.add(client.id)
+                setSelected(next)
+              } else {
+                navigate(`/clients/${client.id}`)
+              }
+            }}
+            className={`w-full bg-white rounded-2xl p-4 border shadow-sm text-left transition-colors flex items-center gap-3 ${
+              selected.has(client.id) ? 'border-red-300 bg-red-50' : 'border-gray-100 active:bg-gray-50'
+            }`}
           >
-            {/* Avatar */}
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg"
-              style={{ backgroundColor: client.colour || '#16a34a' }}
-            >
-              {client.name.charAt(0).toUpperCase()}
-            </div>
+            {/* Checkbox or Avatar */}
+            {selecting ? (
+              <div className="w-11 h-11 flex items-center justify-center flex-shrink-0">
+                {selected.has(client.id)
+                  ? <CheckSquare size={24} className="text-red-500" />
+                  : <Square size={24} className="text-gray-300" />
+                }
+              </div>
+            ) : (
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg"
+                style={{ backgroundColor: client.colour || '#16a34a' }}
+              >
+                {client.name.charAt(0).toUpperCase()}
+              </div>
+            )}
 
             {/* Details */}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900">{client.name}</p>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {client.phone && (
+                {client.mobile && (
                   <span className="flex items-center gap-1 text-xs text-gray-400">
                     <Phone size={11} />
-                    {client.phone}
+                    {client.mobile}
                   </span>
                 )}
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${paymentColour[client.payment_method]}`}>
@@ -122,10 +149,23 @@ export default function Clients() {
               </div>
             </div>
 
-            <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+            {!selecting && <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />}
           </button>
         ))}
       </div>
+      {/* Confirm delete modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 mb-1">Delete {selected.size} client{selected.size > 1 ? 's' : ''}?</p>
+            <p className="text-sm text-gray-500 mb-4">Their history will be kept but they'll be removed from your client list.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
+              <button onClick={bulkDelete} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
