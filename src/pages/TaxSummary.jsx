@@ -231,7 +231,7 @@ export default function TaxSummary() {
       </button>
 
       {/* HMRC link */}
-      <
+      <a
         href="https://www.gov.uk/self-assessment-tax-returns"
         target="_blank"
         rel="noopener noreferrer"
