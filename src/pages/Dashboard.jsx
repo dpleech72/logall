@@ -162,7 +162,7 @@ export default function Dashboard() {
           value={loading ? '...' : `£${stats.outstanding.toFixed(2)}`}
           sub="awaiting payment"
           colour={stats.outstanding > 0 ? 'amber' : 'grey'}
-          onClick={() => navigate('/schedule')}
+          onClick={() => navigate('/outstanding')}
         />
         <StatCard
           label="Set aside/month"
