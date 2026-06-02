@@ -63,7 +63,7 @@ export default function Schedule() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [viewMode, setViewMode] = useState('week') // 'week' or 'month'
+  const [viewMode, setViewMode] = useState('month') // 'week' or 'month'
   const [weekStart, setWeekStart] = useState(getMonday(today))
   const [selectedDay, setSelectedDay] = useState(today)
   const [monthDate, setMonthDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -186,7 +186,7 @@ export default function Schedule() {
           </div>
         </div>
 
-        {/* View toggle */}
+        {/* View toggle + Today button */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex bg-gray-100 rounded-xl p-1 flex-1">
             <button
@@ -206,6 +206,16 @@ export default function Schedule() {
               Month
             </button>
           </div>
+          <button
+            onClick={() => {
+              setSelectedDay(today)
+              setWeekStart(getMonday(today))
+              setMonthDate(new Date(today.getFullYear(), today.getMonth(), 1))
+            }}
+            className="px-3 py-2 rounded-xl bg-green-600 text-white text-xs font-semibold active:bg-green-700 transition-colors flex-shrink-0"
+          >
+            Today
+          </button>
         </div>
 
         {/* Week view */}
@@ -466,8 +476,13 @@ export default function Schedule() {
                         className="flex items-center justify-center gap-1.5 bg-green-600 text-white font-semibold py-2.5 rounded-xl text-xs active:bg-green-700 transition-colors"
                       >
                         <Check size={14} />
-                        Done & paid
+                        {new Date(visit.scheduled_date) > today ? 'Paid in advance' : 'Done & paid'}
                       </button>
+                    )}
+                    {visit.status === 'done_paid' && new Date(visit.scheduled_date) > today && (
+                      <div className="col-span-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700 text-center font-medium">
+                        ⏰ Paid in advance — remember to do this job!
+                      </div>
                     )}
                     {visit.status !== 'awaiting_payment' && (
                       <button
