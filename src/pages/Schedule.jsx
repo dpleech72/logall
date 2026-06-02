@@ -74,7 +74,7 @@ export default function Schedule() {
   const [toast, setToast] = useState(null)
   const [selecting, setSelecting] = useState(false)
   const [selectedVisits, setSelectedVisits] = useState(new Set())
-  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(null)
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -288,13 +288,23 @@ export default function Schedule() {
     return `${MONTH_NAMES[weekStart.getMonth()]} — ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`
   }
 
-  async function bulkDeleteVisits() {
+  async function bulkCancelVisits() {
     for (const id of selectedVisits) {
       await supabase.from('visits').update({ status: 'cancelled' }).eq('id', id)
     }
     setSelectedVisits(new Set())
     setSelecting(false)
-    setConfirmBulkDelete(false)
+    setConfirmBulkDelete(null)
+    fetchData()
+  }
+
+  async function bulkDeleteVisits() {
+    for (const id of selectedVisits) {
+      await supabase.from('visits').delete().eq('id', id)
+    }
+    setSelectedVisits(new Set())
+    setSelecting(false)
+    setConfirmBulkDelete(null)
     fetchData()
   }
 
@@ -313,13 +323,22 @@ export default function Schedule() {
             {selecting ? (
               <>
                 {selectedVisits.size > 0 && (
-                  <button
-                    onClick={() => setConfirmBulkDelete(true)}
-                    className="flex items-center gap-1.5 bg-red-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-red-700 transition-colors"
-                  >
-                    <Trash2 size={15} />
-                    Cancel {selectedVisits.size}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setConfirmBulkDelete('cancel')}
+                      className="flex items-center gap-1.5 bg-amber-500 text-white font-semibold px-3 py-2.5 rounded-xl text-sm active:bg-amber-600 transition-colors"
+                    >
+                      <X size={15} />
+                      Cancel {selectedVisits.size}
+                    </button>
+                    <button
+                      onClick={() => setConfirmBulkDelete('delete')}
+                      className="flex items-center gap-1.5 bg-red-600 text-white font-semibold px-3 py-2.5 rounded-xl text-sm active:bg-red-700 transition-colors"
+                    >
+                      <Trash2 size={15} />
+                      Delete {selectedVisits.size}
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => { setSelecting(false); setSelectedVisits(new Set()) }}
@@ -723,11 +742,22 @@ export default function Schedule() {
       {confirmBulkDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <p className="font-semibold text-gray-900 mb-1">Cancel {selectedVisits.size} job{selectedVisits.size > 1 ? 's' : ''}?</p>
-            <p className="text-sm text-gray-500 mb-4">They'll be marked as cancelled. You can still see them in the schedule.</p>
+            <p className="font-semibold text-gray-900 mb-1">
+              {confirmBulkDelete === 'delete' ? 'Delete' : 'Cancel'} {selectedVisits.size} job{selectedVisits.size > 1 ? 's' : ''}?
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              {confirmBulkDelete === 'delete'
+                ? 'This cannot be undone — the jobs will be permanently removed.'
+                : 'They will be marked as cancelled. You can still see them in the schedule.'}
+            </p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmBulkDelete(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Keep them</button>
-              <button onClick={bulkDeleteVisits} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Cancel jobs</button>
+              <button onClick={() => setConfirmBulkDelete(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Keep them</button>
+              <button
+                onClick={confirmBulkDelete === 'delete' ? bulkDeleteVisits : bulkCancelVisits}
+                className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium"
+              >
+                {confirmBulkDelete === 'delete' ? 'Delete' : 'Cancel'} jobs
+              </button>
             </div>
           </div>
         </div>
