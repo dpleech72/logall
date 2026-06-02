@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus, MapPin, Calendar } from 'lucide-react'
+import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus, MapPin, Calendar, CheckSquare, Square, Trash2 } from 'lucide-react'
 
 // --- Date helpers ---
 function getMonday(date) {
@@ -72,6 +72,9 @@ export default function Schedule() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState(null)
   const [toast, setToast] = useState(null)
+  const [selecting, setSelecting] = useState(false)
+  const [selectedVisits, setSelectedVisits] = useState(new Set())
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -208,8 +211,26 @@ export default function Schedule() {
     }
 
     if (toInsert.length > 0) {
-      await supabase.from('visits').insert(toInsert)
-      fetchData()
+      // Final dedup check - query DB again to catch any recently added visits
+      const { data: freshCheck } = await supabase
+        .from('visits')
+        .select('client_id, scheduled_date')
+        .eq('user_id', user.id)
+        .neq('status', 'cancelled')
+        .in('scheduled_date', toInsert.map(v => v.scheduled_date))
+
+      const freshDates = new Set(
+        (freshCheck || []).map(v => `${v.client_id}_${v.scheduled_date}`)
+      )
+
+      const safeInsert = toInsert.filter(v =>
+        !freshDates.has(`${v.client_id}_${v.scheduled_date}`)
+      )
+
+      if (safeInsert.length > 0) {
+        await supabase.from('visits').insert(safeInsert)
+        fetchData()
+      }
     }
   }
 
@@ -265,6 +286,16 @@ export default function Schedule() {
       return `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getFullYear()}`
     }
     return `${MONTH_NAMES[weekStart.getMonth()]} — ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`
+  }
+
+  async function bulkDeleteVisits() {
+    for (const id of selectedVisits) {
+      await supabase.from('visits').update({ status: 'cancelled' }).eq('id', id)
+    }
+    setSelectedVisits(new Set())
+    setSelecting(false)
+    setConfirmBulkDelete(false)
+    fetchData()
   }
 
   const dayVisits = visitsForDay(selectedDay)
@@ -487,8 +518,24 @@ export default function Schedule() {
               {/* Card header — always visible */}
               <button
                 className="w-full p-4 text-left flex items-center gap-3"
-                onClick={() => setExpandedId(isExpanded ? null : visit.id)}
+                onClick={() => {
+                  if (selecting) {
+                    const next = new Set(selectedVisits)
+                    next.has(visit.id) ? next.delete(visit.id) : next.add(visit.id)
+                    setSelectedVisits(next)
+                  } else {
+                    setExpandedId(isExpanded ? null : visit.id)
+                  }
+                }}
               >
+                {selecting && (
+                  <div className="flex-shrink-0">
+                    {selectedVisits.has(visit.id)
+                      ? <CheckSquare size={22} className="text-red-500" />
+                      : <Square size={22} className="text-gray-300" />
+                    }
+                  </div>
+                )}
                 {/* Initials avatar */}
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
@@ -643,6 +690,20 @@ export default function Schedule() {
           </div>
         )}
       </div>
+
+      {/* Bulk delete confirm */}
+      {confirmBulkDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 mb-1">Cancel {selectedVisits.size} job{selectedVisits.size > 1 ? 's' : ''}?</p>
+            <p className="text-sm text-gray-500 mb-4">They'll be marked as cancelled. You can still see them in the schedule.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmBulkDelete(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Keep them</button>
+              <button onClick={bulkDeleteVisits} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Cancel jobs</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Undo toast */}
       {toast && (
