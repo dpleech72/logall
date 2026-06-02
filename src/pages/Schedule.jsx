@@ -468,9 +468,9 @@ export default function Schedule() {
                       }`}>
                         {day.getDate()}
                       </span>
-                      <div className="flex gap-0.5 mt-1 h-1.5">
+                      <div className="flex gap-0.5 mt-1 h-2">
                         {dots.slice(0, 3).map((dot, j) => (
-                          <div key={j} className={`w-1.5 h-1.5 rounded-full ${dot} ${isSelected ? 'opacity-80' : ''}`} />
+                          <div key={j} className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white opacity-90' : dot}`} />
                         ))}
                       </div>
                     </button>
@@ -588,9 +588,9 @@ export default function Schedule() {
                       }`}>
                         {day.getDate()}
                       </span>
-                      <div className="flex gap-0.5 mt-0.5 h-1.5">
+                      <div className="flex gap-0.5 mt-0.5 h-2">
                         {dots.slice(0, 3).map((dot, j) => (
-                          <div key={j} className={`w-1 h-1 rounded-full ${dot}`} />
+                          <div key={j} className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white opacity-90' : dot}`} />
                         ))}
                       </div>
                       {/* Income amount — space always reserved when toggle is on */}
