@@ -59,8 +59,8 @@ export default function TaxSummary() {
   async function fetchData() {
     const taxYearStart = new Date()
     const now = new Date()
-    const start = new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6)
-      .toISOString().split('T')[0]
+    const _d = new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6)
+    const start = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`
 
     const [{ data: incomeData }, { data: expenseData }, { data: mileageData }] = await Promise.all([
       supabase.from('income').select('amount').gte('received_date', start),
