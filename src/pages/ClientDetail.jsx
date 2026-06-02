@@ -13,16 +13,32 @@ export default function ClientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [client, setClient] = useState(null)
+  const [visits, setVisits] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchClient()
+    fetchVisits()
   }, [id])
 
   async function fetchClient() {
     const { data } = await supabase.from('clients').select('*').eq('id', id).single()
     setClient(data)
     setLoading(false)
+  }
+
+  async function fetchVisits() {
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+    const { data } = await supabase
+      .from('visits')
+      .select('*')
+      .eq('client_id', id)
+      .gte('scheduled_date', today)
+      .neq('status', 'cancelled')
+      .order('scheduled_date')
+      .limit(10)
+    setVisits(data || [])
   }
 
   if (loading) {
@@ -122,6 +138,47 @@ export default function ClientDetail() {
           </div>
         )}
       </div>
+
+      {/* Upcoming visits */}
+      {visits.length > 0 && (
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Upcoming jobs</h2>
+          <div className="space-y-2">
+            {visits.map(visit => (
+              <div key={visit.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {new Date(visit.scheduled_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {visit.scheduled_time && ` · ${visit.scheduled_time.slice(0,5)}`}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {visit.duration_minutes && (
+                      <span className="text-xs text-gray-400">
+                        {visit.duration_minutes >= 60 ? `${Math.floor(visit.duration_minutes/60)}${visit.duration_minutes%60 ? `.${visit.duration_minutes%60}` : ''}hr` : `${visit.duration_minutes}m`}
+                      </span>
+                    )}
+                    {visit.recurrence_rule && visit.recurrence_rule !== 'none' && (
+                      <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                        {visit.recurrence_rule === 'weekly' ? 'Weekly' : visit.recurrence_rule === 'biweekly' ? 'Bi-weekly' : 'Monthly'}
+                      </span>
+                    )}
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                      visit.status === 'done_paid' ? 'bg-green-50 text-green-700' :
+                      visit.status === 'awaiting_payment' ? 'bg-amber-50 text-amber-700' :
+                      'bg-blue-50 text-blue-700'
+                    }`}>
+                      {visit.status === 'done_paid' ? 'Paid' : visit.status === 'awaiting_payment' ? 'Awaiting payment' : 'Scheduled'}
+                    </span>
+                  </div>
+                </div>
+                {visit.amount && (
+                  <p className="font-bold text-green-600 text-sm">£{parseFloat(visit.amount).toFixed(2)}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-2">
