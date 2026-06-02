@@ -38,7 +38,42 @@ export default function Dashboard() {
   const [firstName, setFirstName] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { fetchStats() }, [])
+  useEffect(() => {
+    fetchStats()
+    checkDailyReminder()
+  }, [])
+
+  async function checkDailyReminder() {
+    const now = new Date()
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+
+    // Only fire once per day
+    if (localStorage.getItem('logall_reminder_date') === todayStr) return
+
+    // Check for overdue visits
+    const { data: overdue } = await supabase
+      .from('visits')
+      .select('id')
+      .eq('status', 'awaiting_payment')
+      .lt('scheduled_date', todayStr)
+
+    if (!overdue || overdue.length === 0) return
+
+    // Mark as shown for today so we don't repeat
+    localStorage.setItem('logall_reminder_date', todayStr)
+
+    if (!('Notification' in window)) return
+    let permission = Notification.permission
+    if (permission === 'default') permission = await Notification.requestPermission()
+    if (permission !== 'granted') return
+
+    const n = new Notification('LogAll — Payments overdue', {
+      body: `${overdue.length} client${overdue.length > 1 ? 's' : ''} still owe${overdue.length === 1 ? 's' : ''} you money — tap to view`,
+      icon: '/pwa-192x192.png',
+      tag: 'logall-overdue',
+    })
+    n.onclick = () => { window.focus(); navigate('/outstanding'); n.close() }
+  }
 
   async function fetchStats() {
     const now = new Date()

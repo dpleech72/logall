@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, MessageCircle, Phone, CheckCircle, PoundSterling } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Phone, CheckCircle, PoundSterling, X } from 'lucide-react'
 
 function daysSince(dateStr) {
   const d = new Date(dateStr + 'T12:00:00')
@@ -112,12 +112,93 @@ function ReminderSheet({ visit, client, onClose, onMarkPaid }) {
   )
 }
 
+function RemindAllSheet({ visits, clientMap, onClose, onMarkPaid }) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
+      <div className="bg-white rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Remind all</h2>
+            <p className="text-sm text-gray-400">{visits.length} outstanding payment{visits.length > 1 ? 's' : ''}</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
+        </div>
+        <div className="space-y-3">
+          {visits.map(visit => {
+            const client = clientMap[visit.client_id]
+            if (!client) return null
+            const days = daysSince(visit.scheduled_date)
+            const amount = visit.amount ? `£${parseFloat(visit.amount).toFixed(2)}` : 'the payment'
+            const dateStr = new Date(visit.scheduled_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
+            const message = `Hi ${client.name.split(' ')[0]}, just a friendly reminder that ${amount} is due for your visit on ${dateStr}. Thank you! 😊`
+            const whatsappUrl = client.mobile
+              ? `https://wa.me/44${client.mobile.replace(/^0/, '').replace(/\s/g, '')}?text=${encodeURIComponent(message)}`
+              : null
+            const smsUrl = client.mobile ? `sms:${client.mobile}?body=${encodeURIComponent(message)}` : null
+
+            return (
+              <div key={visit.id} className="bg-gray-50 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: client.colour || '#16a34a' }}
+                    >
+                      {client.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{client.name}</p>
+                      <p className="text-xs text-gray-400">{days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`} · {visit.amount ? `£${parseFloat(visit.amount).toFixed(2)}` : 'no amount'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onMarkPaid(visit)}
+                    className="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1.5 rounded-lg active:bg-green-100 flex items-center gap-1"
+                  >
+                    <CheckCircle size={12} />
+                    Paid
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  {whatsappUrl ? (
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 text-white font-semibold py-2.5 rounded-xl text-xs active:bg-green-600"
+                    >
+                      <MessageCircle size={13} />
+                      WhatsApp
+                    </a>
+                  ) : smsUrl ? (
+                    <a
+                      href={smsUrl}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-blue-500 text-white font-semibold py-2.5 rounded-xl text-xs active:bg-blue-600"
+                    >
+                      <Phone size={13} />
+                      SMS
+                    </a>
+                  ) : (
+                    <p className="flex-1 text-center text-xs text-gray-400 py-2.5">No phone number saved</p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Outstanding() {
   const navigate = useNavigate()
   const [visits, setVisits] = useState([])
   const [clientMap, setClientMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [showRemindAll, setShowRemindAll] = useState(false)
 
   useEffect(() => { fetchData() }, [])
 
@@ -172,10 +253,19 @@ export default function Outstanding() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400">
           <ArrowLeft size={20} />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-bold text-gray-900">Outstanding payments</h1>
           <p className="text-gray-500 text-sm mt-0.5">Clients who still owe you money</p>
         </div>
+        {visits.length > 1 && (
+          <button
+            onClick={() => setShowRemindAll(true)}
+            className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-sm active:bg-green-700 flex-shrink-0"
+          >
+            <MessageCircle size={14} />
+            Remind all
+          </button>
+        )}
       </div>
 
       {/* Total */}
@@ -256,6 +346,15 @@ export default function Outstanding() {
           client={clientMap[selected.client_id]}
           onClose={() => setSelected(null)}
           onMarkPaid={() => markPaid(selected)}
+        />
+      )}
+
+      {showRemindAll && (
+        <RemindAllSheet
+          visits={visits}
+          clientMap={clientMap}
+          onClose={() => setShowRemindAll(false)}
+          onMarkPaid={(visit) => { markPaid(visit); if (visits.length <= 1) setShowRemindAll(false) }}
         />
       )}
     </div>
