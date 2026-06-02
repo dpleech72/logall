@@ -67,7 +67,7 @@ export default function Schedule() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [viewMode, setViewMode] = useState('month')
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('logall_view_mode') || 'month')
   const [weekStart, setWeekStart] = useState(getMonday(today))
   const [selectedDay, setSelectedDay] = useState(today)
   const [monthDate, setMonthDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -93,6 +93,10 @@ export default function Schedule() {
     generateRecurringVisits()
     fetchUserHolidays()
   }, [])
+
+  useEffect(() => {
+    localStorage.setItem('logall_view_mode', viewMode)
+  }, [viewMode])
 
   async function fetchData() {
     setLoading(true)
@@ -244,7 +248,9 @@ export default function Schedule() {
     visits.filter(v => v.scheduled_date === formatDate(date))
 
   const dotsForDay = (date) =>
-    visitsForDay(date).map(v => STATUS[v.status]?.dot || 'bg-gray-300')
+    visitsForDay(date).map(v =>
+      (selecting && selectedVisits.has(v.id)) ? 'bg-red-500' : STATUS[v.status]?.dot || 'bg-gray-300'
+    )
 
   const getHolidayInfo = (dateStr) => {
     const match = userHolidays.find(h => dateStr >= h.date && dateStr <= (h.end_date || h.date))
