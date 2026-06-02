@@ -80,6 +80,8 @@ export default function Schedule() {
   const [selectedVisits, setSelectedVisits] = useState(new Set())
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(null)
   const [userHolidays, setUserHolidays] = useState([])
+  const [dailyIncome, setDailyIncome] = useState({})
+  const [showIncome, setShowIncome] = useState(false)
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -104,15 +106,26 @@ export default function Schedule() {
       to = formatDate(addDays(weekStart, 6))
     }
 
-    const [{ data: visitData }, { data: clientData }] = await Promise.all([
+    const [{ data: visitData }, { data: clientData }, { data: incomeData }] = await Promise.all([
       supabase.from('visits').select('*').gte('scheduled_date', from).lte('scheduled_date', to).order('scheduled_time'),
       supabase.from('clients').select('id, name, colour, payment_method, address'),
+      viewMode === 'month'
+        ? supabase.from('income').select('received_date, amount').gte('received_date', from).lte('received_date', to)
+        : Promise.resolve({ data: [] }),
     ])
 
     setVisits(visitData || [])
     const clientMap = {}
     ;(clientData || []).forEach(c => { clientMap[c.id] = c })
     setClients(clientMap)
+
+    // Build daily income map for the month
+    const incomeMap = {}
+    ;(incomeData || []).forEach(i => {
+      incomeMap[i.received_date] = (incomeMap[i.received_date] || 0) + parseFloat(i.amount)
+    })
+    setDailyIncome(incomeMap)
+
     setLoading(false)
   }
 
@@ -125,103 +138,103 @@ export default function Schedule() {
     if (_generatingRecurring) return
     _generatingRecurring = true
     try {
-    const { data: { user } } = await supabase.auth.getUser()
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    const lookahead = new Date(now)
-    lookahead.setDate(lookahead.getDate() + 56)
+      const { data: { user } } = await supabase.auth.getUser()
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      const lookahead = new Date(now)
+      lookahead.setDate(lookahead.getDate() + 56)
 
-    const localStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+      const localStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
-    const { data: recurring } = await supabase
-      .from('visits')
-      .select('*')
-      .eq('user_id', user.id)
-      .not('recurrence_rule', 'is', null)
-      .neq('recurrence_rule', 'none')
-      .neq('status', 'cancelled')
-      .order('scheduled_date', { ascending: false })
+      const { data: recurring } = await supabase
+        .from('visits')
+        .select('*')
+        .eq('user_id', user.id)
+        .not('recurrence_rule', 'is', null)
+        .neq('recurrence_rule', 'none')
+        .neq('status', 'cancelled')
+        .order('scheduled_date', { ascending: false })
 
-    if (!recurring || recurring.length === 0) return
+      if (!recurring || recurring.length === 0) return
 
-    const existingDates = new Set(
-      recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
-    )
+      const existingDates = new Set(
+        recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
+      )
 
-    const seriesMap = {}
-    recurring.forEach(v => {
-      const key = `${v.client_id}_${v.recurrence_rule}`
-      if (!seriesMap[key]) seriesMap[key] = v
-    })
+      const seriesMap = {}
+      recurring.forEach(v => {
+        const key = `${v.client_id}_${v.recurrence_rule}`
+        if (!seriesMap[key]) seriesMap[key] = v
+      })
 
-    const toInsert = []
-    const insertedDates = new Set()
+      const toInsert = []
+      const insertedDates = new Set()
 
-    for (const [, latestVisit] of Object.entries(seriesMap)) {
-      const intervalDays = latestVisit.recurrence_rule === 'weekly' ? 7
-        : latestVisit.recurrence_rule === 'biweekly' ? 14
-        : null
-      const isMonthly = latestVisit.recurrence_rule === 'monthly'
-      if (!intervalDays && !isMonthly) continue
+      for (const [, latestVisit] of Object.entries(seriesMap)) {
+        const intervalDays = latestVisit.recurrence_rule === 'weekly' ? 7
+          : latestVisit.recurrence_rule === 'biweekly' ? 14
+          : null
+        const isMonthly = latestVisit.recurrence_rule === 'monthly'
+        if (!intervalDays && !isMonthly) continue
 
-      let nextDate = new Date(latestVisit.scheduled_date + 'T12:00:00')
-
-      if (isMonthly) {
-        nextDate.setMonth(nextDate.getMonth() + 1)
-      } else {
-        nextDate.setDate(nextDate.getDate() + intervalDays)
-      }
-
-      while (nextDate <= lookahead) {
-        const dateStr = localStr(nextDate)
-        const key = `${latestVisit.client_id}_${dateStr}`
-
-        if (!existingDates.has(key) && !insertedDates.has(key)) {
-          insertedDates.add(key)
-          toInsert.push({
-            user_id: user.id,
-            client_id: latestVisit.client_id,
-            scheduled_date: dateStr,
-            scheduled_time: latestVisit.scheduled_time,
-            duration_minutes: latestVisit.duration_minutes,
-            amount: latestVisit.amount,
-            payment_method: latestVisit.payment_method,
-            notes: latestVisit.notes,
-            status: 'scheduled',
-            is_recurring: true,
-            recurrence_rule: latestVisit.recurrence_rule,
-          })
-        }
+        let nextDate = new Date(latestVisit.scheduled_date + 'T12:00:00')
 
         if (isMonthly) {
           nextDate.setMonth(nextDate.getMonth() + 1)
         } else {
           nextDate.setDate(nextDate.getDate() + intervalDays)
         }
+
+        while (nextDate <= lookahead) {
+          const dateStr = localStr(nextDate)
+          const key = `${latestVisit.client_id}_${dateStr}`
+
+          if (!existingDates.has(key) && !insertedDates.has(key)) {
+            insertedDates.add(key)
+            toInsert.push({
+              user_id: user.id,
+              client_id: latestVisit.client_id,
+              scheduled_date: dateStr,
+              scheduled_time: latestVisit.scheduled_time,
+              duration_minutes: latestVisit.duration_minutes,
+              amount: latestVisit.amount,
+              payment_method: latestVisit.payment_method,
+              notes: latestVisit.notes,
+              status: 'scheduled',
+              is_recurring: true,
+              recurrence_rule: latestVisit.recurrence_rule,
+            })
+          }
+
+          if (isMonthly) {
+            nextDate.setMonth(nextDate.getMonth() + 1)
+          } else {
+            nextDate.setDate(nextDate.getDate() + intervalDays)
+          }
+        }
       }
-    }
 
-    if (toInsert.length > 0) {
-      const { data: freshCheck } = await supabase
-        .from('visits')
-        .select('client_id, scheduled_date')
-        .eq('user_id', user.id)
-        .neq('status', 'cancelled')
-        .in('scheduled_date', [...new Set(toInsert.map(v => v.scheduled_date))])
+      if (toInsert.length > 0) {
+        const { data: freshCheck } = await supabase
+          .from('visits')
+          .select('client_id, scheduled_date')
+          .eq('user_id', user.id)
+          .neq('status', 'cancelled')
+          .in('scheduled_date', [...new Set(toInsert.map(v => v.scheduled_date))])
 
-      const freshDates = new Set(
-        (freshCheck || []).map(v => `${v.client_id}_${v.scheduled_date}`)
-      )
+        const freshDates = new Set(
+          (freshCheck || []).map(v => `${v.client_id}_${v.scheduled_date}`)
+        )
 
-      const safeInsert = toInsert.filter(v =>
-        !freshDates.has(`${v.client_id}_${v.scheduled_date}`)
-      )
+        const safeInsert = toInsert.filter(v =>
+          !freshDates.has(`${v.client_id}_${v.scheduled_date}`)
+        )
 
-      if (safeInsert.length > 0) {
-        await supabase.from('visits').insert(safeInsert)
-        fetchData()
+        if (safeInsert.length > 0) {
+          await supabase.from('visits').insert(safeInsert)
+          fetchData()
+        }
       }
-    }
     } finally {
       _generatingRecurring = false
     }
@@ -505,9 +518,24 @@ export default function Schedule() {
               >
                 <ChevronLeft size={18} />
               </button>
-              <p className="text-sm font-semibold text-gray-700">
-                {MONTH_NAMES[monthDate.getMonth()]} {monthDate.getFullYear()}
-              </p>
+
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-700">
+                  {MONTH_NAMES[monthDate.getMonth()]} {monthDate.getFullYear()}
+                </p>
+                {/* Income toggle */}
+                <button
+                  onClick={() => setShowIncome(v => !v)}
+                  className={`text-xs font-bold px-2 py-0.5 rounded-full border transition-colors ${
+                    showIncome
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white text-gray-400 border-gray-200 active:bg-gray-50'
+                  }`}
+                >
+                  £
+                </button>
+              </div>
+
               <button
                 onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
                 className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
@@ -540,6 +568,7 @@ export default function Schedule() {
                   const isToday = isSameDay(day, today)
                   const dots = dotsForDay(day)
                   const holiday = getHolidayInfo(formatDate(day))
+                  const dayIncome = dailyIncome[formatDate(day)]
                   return (
                     <button
                       key={i}
@@ -556,6 +585,16 @@ export default function Schedule() {
                           <div key={j} className={`w-1 h-1 rounded-full ${dot}`} />
                         ))}
                       </div>
+                      {/* Income amount — space always reserved when toggle is on */}
+                      {showIncome && (
+                        <span className={`text-xs font-semibold leading-none mt-1 h-3 ${
+                          dayIncome
+                            ? isSelected ? 'text-green-100' : 'text-green-600'
+                            : 'text-transparent'
+                        }`}>
+                          {dayIncome ? `£${Math.round(dayIncome)}` : '£0'}
+                        </span>
+                      )}
                     </button>
                   )
                 })
@@ -576,6 +615,11 @@ export default function Schedule() {
               <span className="text-gray-400 text-sm font-normal">
                 {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
               </span>
+              {showIncome && dailyIncome[formatDate(selectedDay)] && (
+                <span className="text-green-600 text-sm font-semibold">
+                  · £{dailyIncome[formatDate(selectedDay)].toFixed(2)} received
+                </span>
+              )}
             </div>
           </>
         )}
