@@ -67,12 +67,21 @@ export default function ClientDetail() {
 
       {/* Details card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50 mb-4">
-        {client.phone && (
+        {client.mobile && (
           <div className="flex items-center gap-3 p-4">
             <Phone size={16} className="text-gray-400 flex-shrink-0" />
             <div>
-              <p className="text-xs text-gray-400 mb-0.5">Phone</p>
-              <a href={`tel:${client.phone}`} className="text-sm font-medium text-green-600">{client.phone}</a>
+              <p className="text-xs text-gray-400 mb-0.5">Mobile</p>
+              <a href={`tel:${client.mobile}`} className="text-sm font-medium text-green-600">{client.mobile}</a>
+            </div>
+          </div>
+        )}
+        {client.home_phone && (
+          <div className="flex items-center gap-3 p-4">
+            <Phone size={16} className="text-gray-400 flex-shrink-0" />
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Home phone</p>
+              <a href={`tel:${client.home_phone}`} className="text-sm font-medium text-green-600">{client.home_phone}</a>
             </div>
           </div>
         )}
