@@ -82,9 +82,13 @@ export default function Schedule() {
     fetchData()
   }, [weekStart, monthDate, viewMode])
 
-  // Generate recurring visits on first load only
+  // Generate recurring visits on load and when returning to the page
   useEffect(() => {
     generateRecurringVisits()
+
+    const handleFocus = () => generateRecurringVisits()
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   async function fetchData() {
@@ -141,20 +145,9 @@ export default function Schedule() {
       recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
     )
 
-    // Get the most recent FUTURE scheduled visit per client as the template
-    // This ensures if Rachel changes weekly->biweekly, only the new rule is used
+    // Get the most recent recurring visit per client as the template
+    // Sorted descending so first match = latest
     const seriesMap = {}
-    const today = localStr(now)
-    
-    // First try: find the latest future scheduled visit per client
-    recurring.forEach(v => {
-      if (v.scheduled_date >= today && v.status === 'scheduled') {
-        const key = v.client_id
-        if (!seriesMap[key]) seriesMap[key] = v
-      }
-    })
-    
-    // Fallback: if no future scheduled visit, use the most recent any visit
     recurring.forEach(v => {
       const key = v.client_id
       if (!seriesMap[key]) seriesMap[key] = v
