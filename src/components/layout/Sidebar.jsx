@@ -14,9 +14,14 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white border-r border-gray-100 h-full">
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5 border-b border-gray-100">
-        <p className="text-2xl font-bold text-green-600">LogAll</p>
-        <p className="text-xs text-gray-400 mt-0.5">Log all. Worry none.</p>
+      <div className="px-4 pt-6 pb-5 border-b border-gray-100 flex items-center gap-3">
+        <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+          L
+        </div>
+        <div>
+          <p className="text-lg font-bold text-gray-900">LogAll</p>
+          <p className="text-xs text-gray-400 mt-0.5">Log all. Worry none.</p>
+        </div>
       </div>
 
       {/* Nav items */}
