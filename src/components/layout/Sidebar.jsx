@@ -19,7 +19,7 @@ export default function Sidebar() {
           LA
         </div>
         <div>
-          <p className="text-lg font-bold text-gray-900">LogAll</p>
+          <p className="text-lg font-bold text-green-600">LogAll</p>
           <p className="text-xs text-gray-400 mt-0.5">Log all. Worry none.</p>
         </div>
       </div>
