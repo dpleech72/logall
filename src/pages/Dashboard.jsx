@@ -41,11 +41,12 @@ export default function Dashboard() {
 
   async function fetchStats() {
     const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-    const today = now.toISOString().split('T')[0]
-    const taxYearStart = new Date(
+    const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    const monthStart = localDate(new Date(now.getFullYear(), now.getMonth(), 1))
+    const today = localDate(now)
+    const taxYearStart = localDate(new Date(
       now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6
-    ).toISOString().split('T')[0]
+    ))
 
     const [
       { data: incomeMonth },
