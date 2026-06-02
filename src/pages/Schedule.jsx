@@ -395,12 +395,6 @@ export default function Schedule() {
                   Add job
                 </button>
                 <button
-                  onClick={() => setSelecting(true)}
-                  className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 font-semibold px-3 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
-                >
-                  <CheckSquare size={15} />
-                </button>
-                <button
                   onClick={() => navigate('/clients')}
                   className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
                 >
@@ -490,20 +484,27 @@ export default function Schedule() {
                 <ChevronRight size={18} />
               </button>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap mb-3">
-              <p className="text-sm font-semibold text-gray-700">
-                {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-              {selectedDayHoliday && (
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
-                }`}>
-                  {selectedDayHoliday.name}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-semibold text-gray-700">
+                  {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                {selectedDayHoliday && (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                  }`}>
+                    {selectedDayHoliday.name}
+                  </span>
+                )}
+                <span className="text-gray-400 text-sm font-normal">
+                  {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
                 </span>
+              </div>
+              {!selecting && (
+                <button onClick={() => setSelecting(true)} className="p-1.5 text-gray-400 active:text-gray-600">
+                  <CheckSquare size={18} />
+                </button>
               )}
-              <span className="text-gray-400 text-sm font-normal">
-                {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
-              </span>
             </div>
           </>
         )}
@@ -601,24 +602,31 @@ export default function Schedule() {
               })()}
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap mb-3">
-              <p className="text-sm font-semibold text-gray-700">
-                {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-              {selectedDayHoliday && (
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
-                }`}>
-                  {selectedDayHoliday.name}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-semibold text-gray-700">
+                  {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+                {selectedDayHoliday && (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                  }`}>
+                    {selectedDayHoliday.name}
+                  </span>
+                )}
+                <span className="text-gray-400 text-sm font-normal">
+                  {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
                 </span>
-              )}
-              <span className="text-gray-400 text-sm font-normal">
-                {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
-              </span>
-              {showIncome && dailyIncome[formatDate(selectedDay)] && (
-                <span className="text-green-600 text-sm font-semibold">
-                  · £{dailyIncome[formatDate(selectedDay)].toFixed(2)} received
-                </span>
+                {showIncome && dailyIncome[formatDate(selectedDay)] && (
+                  <span className="text-green-600 text-sm font-semibold">
+                    · £{dailyIncome[formatDate(selectedDay)].toFixed(2)} received
+                  </span>
+                )}
+              </div>
+              {!selecting && (
+                <button onClick={() => setSelecting(true)} className="p-1.5 text-gray-400 active:text-gray-600">
+                  <CheckSquare size={18} />
+                </button>
               )}
             </div>
           </>
