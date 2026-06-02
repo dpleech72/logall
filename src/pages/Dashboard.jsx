@@ -202,29 +202,27 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
           {firstName && <p className="text-gray-500 text-sm mt-0.5">Welcome back!</p>}
         </div>
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex flex-col items-end gap-2 mt-1">
+          <button
+            onClick={signOut}
+            className="flex items-center gap-1 text-gray-400 text-xs active:text-red-500 transition-colors whitespace-nowrap"
+          >
+            <LogOut size={13} />
+            Sign out
+          </button>
+          <button
+            onClick={() => navigate('/profile')}
+            className="flex items-center gap-1 text-gray-400 text-xs active:text-green-500 transition-colors whitespace-nowrap"
+          >
+            <UserCircle size={13} />
+            Profile
+          </button>
           <button
             onClick={() => navigate('/help')}
             className="text-gray-300 active:text-green-500 transition-colors"
           >
-            <HelpCircle size={26} />
+            <HelpCircle size={22} />
           </button>
-          <div className="flex flex-col items-end gap-2">
-            <button
-              onClick={signOut}
-              className="flex items-center gap-1 text-gray-400 text-xs active:text-red-500 transition-colors whitespace-nowrap"
-            >
-              <LogOut size={13} />
-              Sign out
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="flex items-center gap-1 text-gray-400 text-xs active:text-green-500 transition-colors whitespace-nowrap"
-            >
-              <UserCircle size={13} />
-              Profile
-            </button>
-          </div>
         </div>
       </div>
 
