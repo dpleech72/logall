@@ -105,7 +105,9 @@ export default function Dashboard() {
       supabase.from('income').select('amount').gte('received_date', taxYearStart),
       supabase.from('expenses').select('amount').gte('expense_date', taxYearStart),
       supabase.from('mileage').select('claimable_amount').gte('journey_date', taxYearStart),
-      supabase.from('visits').select('id').eq('scheduled_date', today).eq('status', 'scheduled'),
+      supabase.from('visits').select('id, scheduled_time, duration_minutes, status')
+        .eq('scheduled_date', today)
+        .in('status', ['scheduled', 'awaiting_payment']),
       supabase.from('income')
         .select('amount, received_date, description, client_id')
         .order('received_date', { ascending: false })
@@ -128,7 +130,18 @@ export default function Dashboard() {
       expensesThisMonth: (expensesMonth || []).reduce((s, i) => s + parseFloat(i.amount), 0),
       outstanding: (outstanding || []).reduce((s, i) => s + parseFloat(i.amount || 0), 0),
       taxSetAside: Math.round(estimatedTax / 12),
-      jobsToday: jobsToday?.length || 0,
+      jobsToday: (() => {
+        const nowMins = now.getHours() * 60 + now.getMinutes()
+        return (jobsToday || []).filter(v => {
+          // If we know start time + duration and the job has already finished, exclude it
+          if (v.scheduled_time && v.duration_minutes) {
+            const [h, m] = v.scheduled_time.split(':').map(Number)
+            const endMins = h * 60 + m + v.duration_minutes
+            if (endMins < nowMins) return false
+          }
+          return true
+        }).length
+      })(),
       recentIncome: recentIncome || [],
     })
     setLoading(false)
