@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ChevronDown, ChevronUp, ExternalLink, Info } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Info, FileText } from 'lucide-react'
 
 // UK 2025/26 tax constants
 const PERSONAL_ALLOWANCE = 12570
@@ -47,6 +48,7 @@ function TaxBar({ label, amount, total, colour }) {
 }
 
 export default function TaxSummary() {
+  const navigate = useNavigate()
   const [income, setIncome] = useState(0)
   const [expenses, setExpenses] = useState(0)
   const [mileage, setMileage] = useState(0)
@@ -211,8 +213,25 @@ export default function TaxSummary() {
         </div>
       </div>
 
+      {/* Tax report */}
+      <button
+        onClick={() => navigate('/tax/report')}
+        className="flex items-center justify-between w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 active:bg-gray-50"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-50 rounded-lg">
+            <FileText size={18} className="text-green-600" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-gray-900 text-sm">Download tax report</p>
+            <p className="text-xs text-gray-400 mt-0.5">Print or save as PDF to share with your accountant</p>
+          </div>
+        </div>
+        <ExternalLink size={16} className="text-gray-400 flex-shrink-0" />
+      </button>
+
       {/* HMRC link */}
-      <a
+      <
         href="https://www.gov.uk/self-assessment-tax-returns"
         target="_blank"
         rel="noopener noreferrer"
