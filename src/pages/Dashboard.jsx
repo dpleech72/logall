@@ -105,7 +105,7 @@ export default function Dashboard() {
       supabase.from('income').select('amount').gte('received_date', taxYearStart),
       supabase.from('expenses').select('amount').gte('expense_date', taxYearStart),
       supabase.from('mileage').select('claimable_amount').gte('journey_date', taxYearStart),
-      supabase.from('visits').select('id').eq('scheduled_date', today).neq('status', 'cancelled'),
+      supabase.from('visits').select('id').eq('scheduled_date', today).eq('status', 'scheduled'),
       supabase.from('income')
         .select('amount, received_date, description, client_id')
         .order('received_date', { ascending: false })
