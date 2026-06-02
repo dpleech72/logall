@@ -357,30 +357,30 @@ export default function Schedule() {
             <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
             <p className="text-gray-500 text-sm">{monthLabel()}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {selecting ? (
               <>
                 {selectedVisits.size > 0 && (
                   <>
                     <button
                       onClick={() => setConfirmBulkDelete('cancel')}
-                      className="flex items-center gap-1.5 bg-amber-500 text-white font-semibold px-3 py-2.5 rounded-xl text-sm active:bg-amber-600 transition-colors"
+                      className="flex items-center gap-1 bg-amber-500 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs active:bg-amber-600 transition-colors"
                     >
-                      <X size={15} />
+                      <X size={12} />
                       Cancel {selectedVisits.size}
                     </button>
                     <button
                       onClick={() => setConfirmBulkDelete('delete')}
-                      className="flex items-center gap-1.5 bg-red-600 text-white font-semibold px-3 py-2.5 rounded-xl text-sm active:bg-red-700 transition-colors"
+                      className="flex items-center gap-1 bg-red-600 text-white font-semibold px-2.5 py-1.5 rounded-lg text-xs active:bg-red-700 transition-colors"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={12} />
                       Delete {selectedVisits.size}
                     </button>
                   </>
                 )}
                 <button
                   onClick={() => { setSelecting(false); setSelectedVisits(new Set()) }}
-                  className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-600 active:bg-gray-50"
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-600 active:bg-gray-50"
                 >
                   Done
                 </button>
@@ -389,16 +389,16 @@ export default function Schedule() {
               <>
                 <button
                   onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
-                  className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors shadow-sm"
+                  className="flex items-center gap-1 bg-green-600 text-white font-semibold px-3 py-1.5 rounded-lg text-xs active:bg-green-700 transition-colors shadow-sm"
                 >
-                  <Plus size={15} />
+                  <Plus size={13} />
                   Add job
                 </button>
                 <button
                   onClick={() => navigate('/clients')}
-                  className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 bg-white border border-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-xs active:bg-gray-50 transition-colors"
                 >
-                  <Users size={15} />
+                  <Users size={13} />
                   Clients
                 </button>
               </>
