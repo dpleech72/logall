@@ -515,22 +515,23 @@ export default function Schedule() {
             </div>
           )
         })}
-      </div>
-
-      {/* Action buttons — always visible */}
-      <div className="px-4 pb-4 space-y-2">
-        <button
-          onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
-          className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 transition-colors"
-        >
-          + Add a job
-        </button>
-        <button
-          onClick={() => navigate('/schedule/bulk')}
-          className="w-full bg-blue-50 text-blue-600 border border-blue-200 font-semibold py-3 rounded-xl text-sm active:bg-blue-100 transition-colors"
-        >
-          Add past jobs in bulk →
-        </button>
+        {/* Action buttons — scroll with content */}
+        {!loading && (
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={() => navigate(`/schedule/add?date=${formatDate(selectedDay)}`)}
+              className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 transition-colors"
+            >
+              + Add a job
+            </button>
+            <button
+              onClick={() => navigate('/schedule/bulk')}
+              className="w-full bg-blue-50 text-blue-600 border border-blue-200 font-semibold py-3 rounded-xl text-sm active:bg-blue-100 transition-colors"
+            >
+              Add past jobs in bulk →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Undo toast */}

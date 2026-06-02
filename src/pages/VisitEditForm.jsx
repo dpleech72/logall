@@ -128,12 +128,18 @@ export default function VisitEditForm() {
 
         {/* Client */}
         <Field label="Client *">
-          <div className="space-y-2">
-            {clients.map(client => (
-              <button
-                key={client.id}
-                type="button"
-                onClick={() => {
+          <div className="relative">
+            {form.client_id && (
+              <div
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md z-10 pointer-events-none"
+                style={{ backgroundColor: clients.find(c => c.id === form.client_id)?.colour || '#16a34a' }}
+              />
+            )}
+            <select
+              value={form.client_id}
+              onChange={(e) => {
+                const client = clients.find(c => c.id === e.target.value)
+                if (client) {
                   setSelectedClientRate(client.hourly_rate || null)
                   setForm(f => ({
                     ...f,
@@ -141,22 +147,15 @@ export default function VisitEditForm() {
                     payment_method: client.payment_method || f.payment_method,
                     amount: calcAmount(client.hourly_rate, f.duration_minutes) || f.amount,
                   }))
-                }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
-                  form.client_id === client.id ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'
-                }`}
-              >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                  style={{ backgroundColor: client.colour || '#16a34a' }}
-                >
-                  {client.name.charAt(0)}
-                </div>
-                <span className={`font-medium text-sm ${form.client_id === client.id ? 'text-green-700' : 'text-gray-800'}`}>
-                  {client.name}
-                </span>
-              </button>
-            ))}
+                }
+              }}
+              className={`w-full py-3 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
+            >
+              <option value="">Select a client...</option>
+              {clients.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
         </Field>
 

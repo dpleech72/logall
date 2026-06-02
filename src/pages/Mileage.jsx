@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, Pencil } from 'lucide-react'
 
@@ -70,9 +71,9 @@ function groupByMonth(journeys) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v)
 }
 
-function LogJourneySheet({ clients, journey, homeAddress, onClose, onSaved }) {
+function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClose, onSaved }) {
   const [form, setForm] = useState({
-    client_id: journey?.client_id || '',
+    client_id: journey?.client_id || prefillClientId || '',
     journey_date: journey?.journey_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
     from_location: journey?.from_location || '',
     to_location: journey?.to_location || '',
@@ -387,12 +388,14 @@ function LogJourneySheet({ clients, journey, homeAddress, onClose, onSaved }) {
 }
 
 export default function Mileage() {
+  const [searchParams] = useSearchParams()
+  const prefillClientId = searchParams.get('client_id') || ''
   const [journeys, setJourneys] = useState([])
   const [clients, setClients] = useState([])
   const [clientMap, setClientMap] = useState({})
   const [homeAddress, setHomeAddress] = useState('')
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(!!prefillClientId)
   const [deleteId, setDeleteId] = useState(null)
   const [editJourney, setEditJourney] = useState(null)
 
@@ -552,7 +555,7 @@ export default function Mileage() {
 
       {/* Delete confirmation */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-24">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
             <p className="font-semibold text-gray-900 mb-1">Delete this journey?</p>
             <p className="text-sm text-gray-500 mb-4">This can't be undone.</p>
@@ -569,6 +572,7 @@ export default function Mileage() {
         <LogJourneySheet
           clients={clients}
           homeAddress={homeAddress}
+          prefillClientId={prefillClientId}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); fetchData() }}
         />

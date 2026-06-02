@@ -38,10 +38,11 @@ export default function VisitForm() {
   const today = new Date()
   const localToday = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
   const prefillDate = searchParams.get('date') || localToday
+  const prefillClientId = searchParams.get('client_id') || ''
 
   const [clients, setClients] = useState([])
   const [form, setForm] = useState({
-    client_id: '',
+    client_id: prefillClientId,
     scheduled_date: prefillDate,
     scheduled_time: '',
     duration_minutes: '',
@@ -52,36 +53,42 @@ export default function VisitForm() {
     recurrence_rule: 'none',
   })
   const [selectedClientRate, setSelectedClientRate] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [customDuration, setCustomDuration] = useState(false)
 
   function calcAmount(rate, mins) {
     if (!rate || !mins) return ''
     return (parseFloat(rate) * (parseInt(mins) / 60)).toFixed(2)
   }
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchClients()
-  }, [])
+  useEffect(() => { fetchClients() }, [])
 
   async function fetchClients() {
     const { data } = await supabase
       .from('clients')
-      .select('id, name, colour, payment_method, hourly_rate')
+      .select('id, name, colour, hourly_rate, payment_method')
       .eq('is_active', true)
       .order('name')
     setClients(data || [])
+    if (prefillClientId && data) {
+      const client = data.find(c => c.id === prefillClientId)
+      if (client) {
+        setSelectedClientRate(client.hourly_rate || null)
+        setForm(f => ({
+          ...f,
+          payment_method: client.payment_method || f.payment_method,
+          amount: client.hourly_rate ? String(client.hourly_rate) : f.amount,
+        }))
+      }
+    }
   }
 
-  const set = (field) => (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    setForm(f => ({ ...f, [field]: value }))
-  }
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-
     if (!form.client_id) { setError('Please select a client.'); return }
     if (!form.scheduled_date) { setError('Please choose a date.'); return }
 
@@ -131,48 +138,49 @@ export default function VisitForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Client picker */}
+        {/* Client dropdown */}
         <Field label="Client *">
-          <div className="space-y-2">
-            {clients.length === 0 && (
-              <p className="text-sm text-gray-400">
-                No clients yet —{' '}
-                <button type="button" onClick={() => navigate('/clients/add')} className="text-green-600 font-medium">
-                  add one first
-                </button>
-              </p>
-            )}
-            {clients.map(client => (
-              <button
-                key={client.id}
-                type="button"
-                onClick={() => {
-                  setSelectedClientRate(client.hourly_rate || null)
-                  setForm(f => ({
-                    ...f,
-                    client_id: client.id,
-                    payment_method: client.payment_method,
-                    amount: calcAmount(client.hourly_rate, f.duration_minutes) || (client.hourly_rate ? String(client.hourly_rate) : f.amount),
-                  }))
-                }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
-                  form.client_id === client.id
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white'
-                }`}
-              >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                  style={{ backgroundColor: client.colour || '#16a34a' }}
-                >
-                  {client.name.charAt(0)}
-                </div>
-                <span className={`font-medium text-sm ${form.client_id === client.id ? 'text-green-700' : 'text-gray-800'}`}>
-                  {client.name}
-                </span>
+          {clients.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              No clients yet —{' '}
+              <button type="button" onClick={() => navigate('/clients/add')} className="text-green-600 font-medium">
+                add one first
               </button>
-            ))}
-          </div>
+            </p>
+          ) : (
+            <div className="relative">
+              {form.client_id && (
+                <div
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md z-10 pointer-events-none"
+                  style={{ backgroundColor: clients.find(c => c.id === form.client_id)?.colour || '#16a34a' }}
+                />
+              )}
+              <select
+                value={form.client_id}
+                onChange={(e) => {
+                  const client = clients.find(c => c.id === e.target.value)
+                  if (client) {
+                    setSelectedClientRate(client.hourly_rate || null)
+                    setForm(f => ({
+                      ...f,
+                      client_id: client.id,
+                      payment_method: client.payment_method || f.payment_method,
+                      amount: calcAmount(client.hourly_rate, f.duration_minutes) || (client.hourly_rate ? String(client.hourly_rate) : f.amount),
+                    }))
+                  } else {
+                    setSelectedClientRate(null)
+                    setForm(f => ({ ...f, client_id: '' }))
+                  }
+                }}
+                className={`w-full py-3 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
+              >
+                <option value="">Select a client...</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </Field>
 
         {/* Date */}
@@ -192,9 +200,17 @@ export default function VisitForm() {
               <button
                 key={mins}
                 type="button"
-                onClick={() => setForm(f => ({ ...f, duration_minutes: String(mins), custom_duration: false }))}
+                onClick={() => {
+                  setCustomDuration(false)
+                  setForm(f => ({
+                    ...f,
+                    duration_minutes: String(mins),
+                    custom_duration: false,
+                    amount: calcAmount(selectedClientRate, mins) || f.amount,
+                  }))
+                }}
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
-                  form.duration_minutes === String(mins) && !form.custom_duration
+                  form.duration_minutes === String(mins) && !customDuration
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-gray-200 text-gray-600'
                 }`}
@@ -205,16 +221,14 @@ export default function VisitForm() {
           </div>
           <button
             type="button"
-            onClick={() => setForm(f => ({ ...f, custom_duration: !f.custom_duration, duration_minutes: '' }))}
+            onClick={() => { setCustomDuration(!customDuration); setForm(f => ({ ...f, duration_minutes: '' })) }}
             className={`w-full py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors mb-2 ${
-              form.custom_duration
-                ? 'border-green-500 bg-green-50 text-green-700'
-                : 'border-gray-200 text-gray-600'
+              customDuration ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'
             }`}
           >
             Custom duration (hours)
           </button>
-          {form.custom_duration && (
+          {customDuration && (
             <div className="relative">
               <input
                 type="number"
@@ -231,7 +245,7 @@ export default function VisitForm() {
                     amount: calcAmount(selectedClientRate, mins) || f.amount,
                   }))
                 }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-16"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">hours</span>
             </div>
@@ -249,7 +263,7 @@ export default function VisitForm() {
               placeholder="0.00"
               value={form.amount}
               onChange={set('amount')}
-              className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
         </Field>
@@ -305,9 +319,17 @@ export default function VisitForm() {
             value={form.notes}
             onChange={set('notes')}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
           />
         </Field>
+
+        <button
+          type="button"
+          onClick={() => navigate('/schedule')}
+          className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
 
         <button
           type="submit"
