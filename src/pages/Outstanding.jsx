@@ -235,7 +235,7 @@ export default function Outstanding() {
         visit_id: visit.id,
         amount: visit.amount,
         payment_method: visit.payment_method || 'cash',
-        received_date: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
+        received_date: visit.scheduled_date,
         description: `Payment — ${client?.name || 'Client'}`,
       })
     }
