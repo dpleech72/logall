@@ -79,6 +79,11 @@ export default function Schedule() {
     fetchData()
   }, [weekStart, monthDate, viewMode])
 
+  // Generate recurring visits on first load only
+  useEffect(() => {
+    generateRecurringVisits()
+  }, [])
+
   async function fetchData() {
     setLoading(true)
     let from, to
@@ -101,6 +106,94 @@ export default function Schedule() {
     ;(clientData || []).forEach(c => { clientMap[c.id] = c })
     setClients(clientMap)
     setLoading(false)
+  }
+
+  async function generateRecurringVisits() {
+    // Look 8 weeks ahead
+    const { data: { user } } = await supabase.auth.getUser()
+    const now = new Date()
+    const lookahead = new Date(now)
+    lookahead.setDate(lookahead.getDate() + 56) // 8 weeks
+
+    // Get all recurring visits
+    const { data: recurring } = await supabase
+      .from('visits')
+      .select('*')
+      .eq('user_id', user.id)
+      .not('recurrence_rule', 'is', null)
+      .neq('recurrence_rule', 'none')
+      .neq('status', 'cancelled')
+      .order('scheduled_date', { ascending: false })
+
+    if (!recurring || recurring.length === 0) return
+
+    // Group by client_id + recurrence_rule to get the latest visit per recurring series
+    const seriesMap = {}
+    recurring.forEach(v => {
+      const key = `${v.client_id}_${v.recurrence_rule}`
+      if (!seriesMap[key]) seriesMap[key] = v
+    })
+
+    const toInsert = []
+
+    for (const [, latestVisit] of Object.entries(seriesMap)) {
+      let nextDate = new Date(latestVisit.scheduled_date + 'T12:00:00')
+
+      // Step forward until we're in the future
+      const intervalDays = latestVisit.recurrence_rule === 'weekly' ? 7
+        : latestVisit.recurrence_rule === 'biweekly' ? 14
+        : latestVisit.recurrence_rule === 'monthly' ? 30
+        : null
+      if (!intervalDays) continue
+
+      // Advance to next occurrence after today
+      while (nextDate <= now) {
+        nextDate = new Date(nextDate)
+        if (latestVisit.recurrence_rule === 'monthly') {
+          nextDate.setMonth(nextDate.getMonth() + 1)
+        } else {
+          nextDate.setDate(nextDate.getDate() + intervalDays)
+        }
+      }
+
+      // Generate all missing visits up to lookahead
+      while (nextDate <= lookahead) {
+        const dateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth()+1).padStart(2,'0')}-${String(nextDate.getDate()).padStart(2,'0')}`
+
+        // Check if visit already exists for this date and client
+        const exists = recurring.some(v =>
+          v.client_id === latestVisit.client_id &&
+          v.scheduled_date === dateStr
+        )
+
+        if (!exists) {
+          toInsert.push({
+            user_id: user.id,
+            client_id: latestVisit.client_id,
+            scheduled_date: dateStr,
+            scheduled_time: latestVisit.scheduled_time,
+            duration_minutes: latestVisit.duration_minutes,
+            amount: latestVisit.amount,
+            payment_method: latestVisit.payment_method,
+            notes: latestVisit.notes,
+            status: 'scheduled',
+            is_recurring: true,
+            recurrence_rule: latestVisit.recurrence_rule,
+          })
+        }
+
+        if (latestVisit.recurrence_rule === 'monthly') {
+          nextDate.setMonth(nextDate.getMonth() + 1)
+        } else {
+          nextDate.setDate(nextDate.getDate() + intervalDays)
+        }
+      }
+    }
+
+    if (toInsert.length > 0) {
+      await supabase.from('visits').insert(toInsert)
+      fetchData() // Refresh the schedule
+    }
   }
 
   const visitsForDay = (date) =>
