@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2 } from 'lucide-react'
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -24,6 +24,18 @@ const TRADES = [
   'Childminder', 'Mobile beautician', 'Ironing service', 'Window cleaner', 'Other'
 ]
 
+function formatHolidayDates(startDate, endDate) {
+  const start = new Date(startDate + 'T12:00:00')
+  const end = new Date(endDate + 'T12:00:00')
+  const opts = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }
+  if (startDate === endDate) {
+    return start.toLocaleDateString('en-GB', opts)
+  }
+  const startStr = start.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const endStr = end.toLocaleDateString('en-GB', opts)
+  return `${startStr} – ${endStr}`
+}
+
 export default function Profile() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -43,7 +55,17 @@ export default function Profile() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => { fetchProfile() }, [])
+  const [holidays, setHolidays] = useState([])
+  const [newHolidayStart, setNewHolidayStart] = useState('')
+  const [newHolidayEnd, setNewHolidayEnd] = useState('')
+  const [newHolidayName, setNewHolidayName] = useState('')
+  const [holidayAdding, setHolidayAdding] = useState(false)
+  const [holidayError, setHolidayError] = useState('')
+
+  useEffect(() => {
+    fetchProfile()
+    fetchHolidays()
+  }, [])
 
   async function fetchProfile() {
     const { data } = await supabase
@@ -65,6 +87,52 @@ export default function Profile() {
       })
     }
     setLoading(false)
+  }
+
+  async function fetchHolidays() {
+    const { data } = await supabase
+      .from('holidays')
+      .select('*')
+      .order('date', { ascending: true })
+    setHolidays(data || [])
+  }
+
+  async function addHoliday() {
+    if (!newHolidayStart || !newHolidayName.trim()) {
+      setHolidayError('Please enter a start date and a name.')
+      return
+    }
+    const endDate = newHolidayEnd || newHolidayStart
+    if (endDate < newHolidayStart) {
+      setHolidayError('End date must be on or after the start date.')
+      return
+    }
+    setHolidayAdding(true)
+    setHolidayError('')
+    const { error } = await supabase.from('holidays').insert({
+      user_id: user.id,
+      date: newHolidayStart,
+      end_date: endDate,
+      name: newHolidayName.trim(),
+    })
+    setHolidayAdding(false)
+    if (error) {
+      if (error.code === '23505') {
+        setHolidayError('You already have a holiday starting on that date.')
+      } else {
+        setHolidayError(error.message)
+      }
+      return
+    }
+    setNewHolidayStart('')
+    setNewHolidayEnd('')
+    setNewHolidayName('')
+    fetchHolidays()
+  }
+
+  async function deleteHoliday(id) {
+    await supabase.from('holidays').delete().eq('id', id)
+    setHolidays(h => h.filter(x => x.id !== id))
   }
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
@@ -103,7 +171,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 pb-8">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
@@ -242,6 +310,89 @@ export default function Profile() {
           {saving ? 'Saving...' : 'Save profile'}
         </button>
       </form>
+
+      {/* My holidays */}
+      <div className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">My holidays</h2>
+          <p className="text-xs text-gray-400 mt-1">
+            Add your own days off — highlighted in purple on your schedule.
+            UK bank holidays are highlighted automatically in red.
+          </p>
+        </div>
+
+        {holidayError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />{holidayError}
+          </div>
+        )}
+
+        {/* Add form */}
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">From</label>
+              <input
+                type="date"
+                value={newHolidayStart}
+                onChange={e => { setNewHolidayStart(e.target.value); setHolidayError('') }}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">To <span className="text-gray-300 font-normal">(leave blank for one day)</span></label>
+              <input
+                type="date"
+                value={newHolidayEnd}
+                min={newHolidayStart || undefined}
+                onChange={e => { setNewHolidayEnd(e.target.value); setHolidayError('') }}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. Summer holiday, Christmas Eve"
+              value={newHolidayName}
+              onChange={e => { setNewHolidayName(e.target.value); setHolidayError('') }}
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={addHoliday}
+              disabled={holidayAdding}
+              className="bg-green-600 text-white font-semibold px-4 py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 flex items-center gap-1.5 flex-shrink-0"
+            >
+              <Plus size={16} />
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* Holiday list */}
+        {holidays.length > 0 ? (
+          <div className="space-y-2">
+            {holidays.map(h => (
+              <div key={h.id} className="flex items-center justify-between bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">{h.name}</p>
+                  <p className="text-xs text-gray-400">{formatHolidayDates(h.date, h.end_date)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteHoliday(h.id)}
+                  className="p-2 text-red-400 active:text-red-600 -mr-1 flex-shrink-0"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-1">No personal holidays added yet</p>
+        )}
+      </div>
     </div>
   )
 }

@@ -97,14 +97,30 @@ export default function BulkVisits() {
       recurrence_rule: form.frequency,
     }))
 
-    const { error } = await supabase.from('visits').insert(visits)
+    const { data: insertedVisits, error } = await supabase.from('visits').insert(visits).select()
 
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      setSaved(true)
+      return
     }
+
+    // If marked as done & paid and an amount is set, log income for every visit
+    if (form.status === 'done_paid' && form.amount && insertedVisits?.length) {
+      const clientName = clients.find(c => c.id === form.client_id)?.name || 'Client'
+      const incomeRecords = insertedVisits.map(v => ({
+        user_id: user.id,
+        client_id: form.client_id,
+        visit_id: v.id,
+        amount: parseFloat(form.amount),
+        payment_method: form.payment_method || null,
+        received_date: v.scheduled_date,
+        description: `Visit — ${clientName}`,
+      }))
+      await supabase.from('income').insert(incomeRecords)
+    }
+
+    setSaved(true)
   }
 
   if (saved) {
@@ -161,36 +177,42 @@ export default function BulkVisits() {
         {/* Client */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Client *</label>
-          <div className="space-y-2">
-            {clients.map(client => (
-              <button
-                key={client.id}
-                type="button"
-                onClick={() => {
-                  setSelectedClientRate(client.hourly_rate || null)
-                  setForm(f => ({
-                    ...f,
-                    client_id: client.id,
-                    payment_method: client.payment_method || f.payment_method,
-                    amount: calcAmount(client.hourly_rate, f.duration_minutes) || (client.hourly_rate ? String(client.hourly_rate) : f.amount),
-                  }))
-                }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
-                  form.client_id === client.id ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'
-                }`}
-              >
+          {clients.length === 0 ? (
+            <p className="text-sm text-gray-400">No clients yet — add one first</p>
+          ) : (
+            <div className="relative">
+              {form.client_id && (
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                  style={{ backgroundColor: client.colour || '#16a34a' }}
-                >
-                  {client.name.charAt(0)}
-                </div>
-                <span className={`font-medium text-sm ${form.client_id === client.id ? 'text-green-700' : 'text-gray-800'}`}>
-                  {client.name}
-                </span>
-              </button>
-            ))}
-          </div>
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md z-10 pointer-events-none"
+                  style={{ backgroundColor: clients.find(c => c.id === form.client_id)?.colour || '#16a34a' }}
+                />
+              )}
+              <select
+                value={form.client_id}
+                onChange={(e) => {
+                  const client = clients.find(c => c.id === e.target.value)
+                  if (client) {
+                    setSelectedClientRate(client.hourly_rate || null)
+                    setForm(f => ({
+                      ...f,
+                      client_id: client.id,
+                      payment_method: client.payment_method || f.payment_method,
+                      amount: calcAmount(client.hourly_rate, f.duration_minutes) || (client.hourly_rate ? String(client.hourly_rate) : f.amount),
+                    }))
+                  } else {
+                    setSelectedClientRate(null)
+                    setForm(f => ({ ...f, client_id: '' }))
+                  }
+                }}
+                className={`w-full py-3 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
+              >
+                <option value="">Select a client...</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Frequency */}

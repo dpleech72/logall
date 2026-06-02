@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, PoundSterling, Plus, MapPin, Calendar, CheckSquare, Square, Trash2 } from 'lucide-react'
+import { BANK_HOLIDAYS } from '../lib/bankHolidays'
+import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, Plus, MapPin, CheckSquare, Square, Trash2 } from 'lucide-react'
 
 // --- Date helpers ---
 function getMonday(date) {
@@ -26,7 +27,6 @@ function isSameDay(a, b) {
 }
 
 function formatDate(date) {
-  // Use local date to avoid UTC offset shifting the day
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
@@ -58,12 +58,16 @@ function UndoToast({ message, onUndo, onDismiss }) {
   )
 }
 
+// Module-level guard — persists across StrictMode's unmount/remount cycle,
+// preventing two concurrent calls from both inserting the same recurring visits.
+let _generatingRecurring = false
+
 export default function Schedule() {
   const navigate = useNavigate()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [viewMode, setViewMode] = useState('month') // 'week' or 'month'
+  const [viewMode, setViewMode] = useState('month')
   const [weekStart, setWeekStart] = useState(getMonday(today))
   const [selectedDay, setSelectedDay] = useState(today)
   const [monthDate, setMonthDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -75,6 +79,7 @@ export default function Schedule() {
   const [selecting, setSelecting] = useState(false)
   const [selectedVisits, setSelectedVisits] = useState(new Set())
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(null)
+  const [userHolidays, setUserHolidays] = useState([])
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -82,9 +87,9 @@ export default function Schedule() {
     fetchData()
   }, [weekStart, monthDate, viewMode])
 
-  // Generate recurring visits once on mount only
   useEffect(() => {
     generateRecurringVisits()
+    fetchUserHolidays()
   }, [])
 
   async function fetchData() {
@@ -111,16 +116,23 @@ export default function Schedule() {
     setLoading(false)
   }
 
+  async function fetchUserHolidays() {
+    const { data } = await supabase.from('holidays').select('date, end_date, name')
+    setUserHolidays(data || [])
+  }
+
   async function generateRecurringVisits() {
+    if (_generatingRecurring) return
+    _generatingRecurring = true
+    try {
     const { data: { user } } = await supabase.auth.getUser()
     const now = new Date()
     now.setHours(0, 0, 0, 0)
     const lookahead = new Date(now)
-    lookahead.setDate(lookahead.getDate() + 56) // 8 weeks ahead
+    lookahead.setDate(lookahead.getDate() + 56)
 
     const localStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
-    // Get all recurring visits
     const { data: recurring } = await supabase
       .from('visits')
       .select('*')
@@ -129,27 +141,21 @@ export default function Schedule() {
       .neq('recurrence_rule', 'none')
       .neq('status', 'cancelled')
       .order('scheduled_date', { ascending: false })
-    
-    // Only use future scheduled visits to determine the active series
-    // This prevents old completed biweekly visits from generating new visits
-    // when the rule has been changed to weekly
 
     if (!recurring || recurring.length === 0) return
 
-    // Build a set of all existing dates per client to avoid duplicates
     const existingDates = new Set(
       recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
     )
 
-    // Group by client_id + recurrence_rule so each series is independent
     const seriesMap = {}
     recurring.forEach(v => {
       const key = `${v.client_id}_${v.recurrence_rule}`
-      if (!seriesMap[key]) seriesMap[key] = v // sorted desc so first = latest
+      if (!seriesMap[key]) seriesMap[key] = v
     })
 
     const toInsert = []
-    const insertedDates = new Set() // track what we're about to insert
+    const insertedDates = new Set()
 
     for (const [, latestVisit] of Object.entries(seriesMap)) {
       const intervalDays = latestVisit.recurrence_rule === 'weekly' ? 7
@@ -158,17 +164,14 @@ export default function Schedule() {
       const isMonthly = latestVisit.recurrence_rule === 'monthly'
       if (!intervalDays && !isMonthly) continue
 
-      // Start from the latest visit date and step forward
       let nextDate = new Date(latestVisit.scheduled_date + 'T12:00:00')
-      
-      // Advance by one interval to get the next occurrence
+
       if (isMonthly) {
         nextDate.setMonth(nextDate.getMonth() + 1)
       } else {
         nextDate.setDate(nextDate.getDate() + intervalDays)
       }
 
-      // Generate visits up to lookahead
       while (nextDate <= lookahead) {
         const dateStr = localStr(nextDate)
         const key = `${latestVisit.client_id}_${dateStr}`
@@ -199,7 +202,6 @@ export default function Schedule() {
     }
 
     if (toInsert.length > 0) {
-      // Final dedup check - query ALL visits (not just recurring) for these dates
       const { data: freshCheck } = await supabase
         .from('visits')
         .select('client_id, scheduled_date')
@@ -220,6 +222,9 @@ export default function Schedule() {
         fetchData()
       }
     }
+    } finally {
+      _generatingRecurring = false
+    }
   }
 
   const visitsForDay = (date) =>
@@ -228,13 +233,27 @@ export default function Schedule() {
   const dotsForDay = (date) =>
     visitsForDay(date).map(v => STATUS[v.status]?.dot || 'bg-gray-300')
 
+  const getHolidayInfo = (dateStr) => {
+    const match = userHolidays.find(h => dateStr >= h.date && dateStr <= (h.end_date || h.date))
+    if (match) return { type: 'personal', name: match.name }
+    if (BANK_HOLIDAYS[dateStr]) return { type: 'bank', name: BANK_HOLIDAYS[dateStr] }
+    return null
+  }
+
+  const holidayBg = (holiday, isSelected, isToday) => {
+    if (isSelected) return 'bg-green-600'
+    if (holiday?.type === 'bank') return 'bg-red-100'
+    if (holiday?.type === 'personal') return 'bg-violet-100'
+    if (isToday) return 'bg-green-50'
+    return 'bg-transparent'
+  }
+
   async function updateStatus(visitId, newStatus, previousStatus) {
     setVisits(vs => vs.map(v => v.id === visitId ? { ...v, status: newStatus } : v))
     setExpandedId(null)
 
     await supabase.from('visits').update({ status: newStatus }).eq('id', visitId)
 
-    // If marking as done_paid, log income automatically
     if (newStatus === 'done_paid') {
       const visit = visits.find(v => v.id === visitId)
       if (visit?.amount) {
@@ -248,6 +267,9 @@ export default function Schedule() {
           description: `Visit — ${clients[visit.client_id]?.name || 'Client'}`,
         })
       }
+    } else if (previousStatus === 'done_paid') {
+      // Moving away from done & paid — remove the auto-logged income entry
+      await supabase.from('income').delete().eq('visit_id', visitId)
     }
 
     setToast({
@@ -259,10 +281,24 @@ export default function Schedule() {
 
   async function undoStatus() {
     if (!toast) return
+    const visit = visits.find(v => v.id === toast.visitId)
     setVisits(vs => vs.map(v => v.id === toast.visitId ? { ...v, status: toast.previousStatus } : v))
     await supabase.from('visits').update({ status: toast.previousStatus }).eq('id', toast.visitId)
-    // Remove auto-logged income if undoing done_paid
-    if (toast.previousStatus !== 'done_paid') {
+    if (toast.previousStatus === 'done_paid') {
+      // Undoing a change away from done_paid — re-log the income
+      if (visit?.amount) {
+        await supabase.from('income').insert({
+          user_id: visit.user_id,
+          client_id: visit.client_id,
+          visit_id: visit.id,
+          amount: visit.amount,
+          payment_method: visit.payment_method || clients[visit.client_id]?.payment_method || 'cash',
+          received_date: visit.scheduled_date,
+          description: `Visit — ${clients[visit.client_id]?.name || 'Client'}`,
+        })
+      }
+    } else {
+      // Undoing a done_paid marking — remove the auto-logged income
       await supabase.from('income').delete().eq('visit_id', toast.visitId)
     }
     setToast(null)
@@ -297,6 +333,7 @@ export default function Schedule() {
   }
 
   const dayVisits = visitsForDay(selectedDay)
+  const selectedDayHoliday = getHolidayInfo(formatDate(selectedDay))
 
   return (
     <div className="flex flex-col h-full">
@@ -409,13 +446,12 @@ export default function Schedule() {
                   const isSelected = isSameDay(day, selectedDay)
                   const isToday = isSameDay(day, today)
                   const dots = dotsForDay(day)
+                  const holiday = getHolidayInfo(formatDate(day))
                   return (
                     <button
                       key={i}
                       onClick={() => setSelectedDay(day)}
-                      className={`flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${
-                        isSelected ? 'bg-green-600' : isToday ? 'bg-green-50' : 'bg-transparent'
-                      }`}
+                      className={`flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
                       <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400'}`}>
                         {DAY_LABELS[i]}
@@ -441,12 +477,21 @@ export default function Schedule() {
                 <ChevronRight size={18} />
               </button>
             </div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">
-              {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-              <span className="text-gray-400 font-normal ml-2">
+            <div className="flex items-center gap-1.5 flex-wrap mb-3">
+              <p className="text-sm font-semibold text-gray-700">
+                {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+              {selectedDayHoliday && (
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                }`}>
+                  {selectedDayHoliday.name}
+                </span>
+              )}
+              <span className="text-gray-400 text-sm font-normal">
                 {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
               </span>
-            </p>
+            </div>
           </>
         )}
 
@@ -483,7 +528,6 @@ export default function Schedule() {
               {(() => {
                 const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
                 const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
-                // Start from Monday before first day
                 const startPad = (firstDay.getDay() + 6) % 7
                 const cells = []
                 for (let i = 0; i < startPad; i++) cells.push(null)
@@ -495,13 +539,12 @@ export default function Schedule() {
                   const isSelected = isSameDay(day, selectedDay)
                   const isToday = isSameDay(day, today)
                   const dots = dotsForDay(day)
+                  const holiday = getHolidayInfo(formatDate(day))
                   return (
                     <button
                       key={i}
                       onClick={() => { setSelectedDay(day) }}
-                      className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${
-                        isSelected ? 'bg-green-600' : isToday ? 'bg-green-50' : 'bg-transparent'
-                      }`}
+                      className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
                       <span className={`text-xs font-bold ${
                         isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800'
@@ -519,12 +562,21 @@ export default function Schedule() {
               })()}
             </div>
 
-            <p className="text-sm font-semibold text-gray-700 mb-3">
-              {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-              <span className="text-gray-400 font-normal ml-2">
+            <div className="flex items-center gap-1.5 flex-wrap mb-3">
+              <p className="text-sm font-semibold text-gray-700">
+                {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+              {selectedDayHoliday && (
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                }`}>
+                  {selectedDayHoliday.name}
+                </span>
+              )}
+              <span className="text-gray-400 text-sm font-normal">
                 {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
               </span>
-            </p>
+            </div>
           </>
         )}
       </div>
@@ -587,7 +639,6 @@ export default function Schedule() {
                     )}
                   </div>
 
-                  {/* Time and duration */}
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {visit.scheduled_time && (
                       <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -604,7 +655,6 @@ export default function Schedule() {
                     )}
                   </div>
 
-                  {/* Address with map button */}
                   {(client?.address || client?.postcode) && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-gray-400 flex-1">
@@ -623,7 +673,6 @@ export default function Schedule() {
                     </div>
                   )}
 
-                  {/* Tags row */}
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>
                       {s.label}
@@ -707,7 +756,7 @@ export default function Schedule() {
             </div>
           )
         })}
-        {/* Action buttons — scroll with content */}
+        {/* Action buttons */}
         {!loading && (
           <div className="space-y-2 pt-2">
             <button

@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, PoundSterling, Car, Receipt, Calculator } from 'lucide-react'
+import { House, CalendarDays, Banknote, Car, PoundSterling, FileText } from 'lucide-react'
 
 const tabs = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-  { to: '/schedule',  icon: CalendarDays,    label: 'Schedule' },
-  { to: '/income',    icon: PoundSterling,   label: 'Income' },
-  { to: '/mileage',   icon: Car,             label: 'Mileage' },
-  { to: '/expenses',  icon: Receipt,         label: 'Expenses' },
-  { to: '/tax',       icon: Calculator,      label: 'Tax' },
+  { to: '/dashboard', icon: House,         label: 'Home' },
+  { to: '/schedule',  icon: CalendarDays,  label: 'Schedule' },
+  { to: '/income',    icon: Banknote,      label: 'Income' },
+  { to: '/mileage',   icon: Car,           label: 'Mileage' },
+  { to: '/expenses',  icon: PoundSterling, label: 'Expenses' },
+  { to: '/tax',       icon: FileText,      label: 'Tax' },
 ]
 
 export default function BottomNav() {

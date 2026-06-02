@@ -35,6 +35,7 @@ export default function Dashboard() {
     jobsToday: 0,
     recentIncome: [],
   })
+  const [firstName, setFirstName] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { fetchStats() }, [])
@@ -57,6 +58,7 @@ export default function Dashboard() {
       { data: mileageYear },
       { data: jobsToday },
       { data: recentIncome },
+      { data: profile },
     ] = await Promise.all([
       supabase.from('income').select('amount').gte('received_date', monthStart),
       supabase.from('expenses').select('amount').gte('expense_date', monthStart),
@@ -69,7 +71,10 @@ export default function Dashboard() {
         .select('amount, received_date, description, client_id')
         .order('received_date', { ascending: false })
         .limit(3),
+      supabase.from('profiles').select('full_name').single(),
     ])
+
+    setFirstName(profile?.full_name?.split(' ')[0] || '')
 
     // Calculate estimated tax
     const totalIncome = (incomeYear || []).reduce((s, i) => s + parseFloat(i.amount), 0)
@@ -109,8 +114,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="pt-2 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{greeting()} 👋</h1>
-          <p className="text-gray-500 text-sm mt-0.5">{user?.email}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
+          {firstName && <p className="text-gray-500 text-sm mt-0.5">Welcome back!</p>}
         </div>
         <div className="flex items-center gap-3 mt-1">
           <button
