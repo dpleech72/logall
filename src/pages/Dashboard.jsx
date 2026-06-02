@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle } from 'lucide-react'
+import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRight, UserCircle, Bell } from 'lucide-react'
 
 function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
