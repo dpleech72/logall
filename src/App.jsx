@@ -3,6 +3,7 @@ import { AuthProvider } from './hooks/useAuth'
 import ProtectedRoute from './components/ui/ProtectedRoute'
 import BottomNav from './components/layout/BottomNav'
 import InstallPrompt from './components/ui/InstallPrompt'
+import PullToRefresh from './components/ui/PullToRefresh'
 
 import SignIn from './pages/auth/SignIn'
 import SignUp from './pages/auth/SignUp'
@@ -47,6 +48,7 @@ function AppShell() {
           <Route path="/outstanding" element={<Outstanding />} />
         </Routes>
       </main>
+      <PullToRefresh />
       <InstallPrompt />
       <BottomNav />
     </div>
