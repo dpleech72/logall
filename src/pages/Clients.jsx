@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, ChevronRight, Phone, CreditCard, User } from 'lucide-react'
+import { Plus, ChevronRight, Phone, ArrowLeft, Trash2, CheckSquare, Square } from 'lucide-react'
 
 const paymentLabel = {
   cash: 'Cash',
@@ -65,19 +65,57 @@ export default function Clients() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-          </p>
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {selecting
+                ? `${selected.size} selected`
+                : `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}`}
+            </p>
+          </div>
         </div>
-        <button
-          onClick={() => navigate('/clients/add')}
-          className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors"
-        >
-          <Plus size={16} />
-          Add
-        </button>
+        <div className="flex items-center gap-2">
+          {selecting ? (
+            <>
+              {selected.size > 0 && (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-1.5 bg-red-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-red-700 transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete {selected.size}
+                </button>
+              )}
+              <button
+                onClick={() => { setSelecting(false); setSelected(new Set()) }}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 active:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setSelecting(true)}
+                className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
+              >
+                <CheckSquare size={16} />
+                Select
+              </button>
+              <button
+                onClick={() => navigate('/clients/add')}
+                className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors"
+              >
+                <Plus size={16} />
+                Add
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Empty state */}
@@ -88,7 +126,7 @@ export default function Clients() {
           <p className="text-gray-400 text-sm">Add your first client to get started</p>
           <button
             onClick={() => navigate('/clients/add')}
-            className="mt-2 bg-green-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors"
+            className="mt-2 bg-green-600 text-white font-semibold px-6 py-2.5 rounded-xl active:bg-green-700 transition-colors text-sm"
           >
             Add a client
           </button>
@@ -113,7 +151,6 @@ export default function Clients() {
               selected.has(client.id) ? 'border-red-300 bg-red-50' : 'border-gray-100 active:bg-gray-50'
             }`}
           >
-            {/* Checkbox or Avatar */}
             {selecting ? (
               <div className="w-11 h-11 flex items-center justify-center flex-shrink-0">
                 {selected.has(client.id)
@@ -130,7 +167,6 @@ export default function Clients() {
               </div>
             )}
 
-            {/* Details */}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900">{client.name}</p>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -153,6 +189,7 @@ export default function Clients() {
           </button>
         ))}
       </div>
+
       {/* Confirm delete modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
