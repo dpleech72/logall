@@ -312,7 +312,7 @@ export default function Schedule() {
                   return (
                     <button
                       key={i}
-                      onClick={() => { setSelectedDay(day); setViewMode('week'); setWeekStart(getMonday(day)) }}
+                      onClick={() => { setSelectedDay(day) }}
                       className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${
                         isSelected ? 'bg-green-600' : isToday ? 'bg-green-50' : 'bg-transparent'
                       }`}
