@@ -145,12 +145,11 @@ export default function Schedule() {
       recurring.map(v => `${v.client_id}_${v.scheduled_date}`)
     )
 
-    // Get the most recent recurring visit per client as the template
-    // Sorted descending so first match = latest
+    // Group by client_id + recurrence_rule so each series is independent
     const seriesMap = {}
     recurring.forEach(v => {
-      const key = v.client_id
-      if (!seriesMap[key]) seriesMap[key] = v
+      const key = `${v.client_id}_${v.recurrence_rule}`
+      if (!seriesMap[key]) seriesMap[key] = v // sorted desc so first = latest
     })
 
     const toInsert = []
