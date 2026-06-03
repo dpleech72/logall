@@ -394,7 +394,6 @@ export default function Profile() {
           <p className="text-sm text-gray-400 text-center py-1">No personal holidays added yet</p>
         )}
       </div>
-      </div>
 
       {/* Sign out */}
       <div className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
