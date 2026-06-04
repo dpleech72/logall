@@ -375,7 +375,7 @@ export default function Profile() {
         {holidays.length > 0 ? (
           <div className="space-y-2">
             {holidays.map(h => (
-              <div key={h.id} className="flex items-center justify-between bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5">
+              <div key={h.id} className="flex items-center justify-between bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-2.5">
                 <div>
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{h.name}</p>
                   <p className="text-xs text-gray-400 dark:text-gray-500">{formatHolidayDates(h.date, h.end_date)}</p>

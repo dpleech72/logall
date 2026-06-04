@@ -499,7 +499,7 @@ export default function Schedule() {
                 </p>
                 {selectedDayHoliday && (
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                    selectedDayHoliday.type === 'bank' ? 'bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400' : 'bg-violet-50 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400'
                   }`}>
                     {selectedDayHoliday.name}
                   </span>
@@ -624,7 +624,7 @@ export default function Schedule() {
                 </p>
                 {selectedDayHoliday && (
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                    selectedDayHoliday.type === 'bank' ? 'bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400' : 'bg-violet-50 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400'
                   }`}>
                     {selectedDayHoliday.name}
                   </span>
@@ -666,7 +666,7 @@ export default function Schedule() {
             </h2>
             {selectedDayHoliday && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                selectedDayHoliday.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                selectedDayHoliday.type === 'bank' ? 'bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400' : 'bg-violet-50 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400'
               }`}>
                 {selectedDayHoliday.name}
               </span>
@@ -801,7 +801,7 @@ export default function Schedule() {
                       if (!h) return null
                       return (
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          h.type === 'bank' ? 'bg-red-50 text-red-600' : 'bg-violet-50 text-violet-600'
+                          h.type === 'bank' ? 'bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400' : 'bg-violet-50 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400'
                         }`}>
                           🏖️ {h.name}
                         </span>
