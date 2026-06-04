@@ -354,7 +354,7 @@ export default function Profile() {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="e.g. Summer holiday, Christmas Eve"
+              placeholder="Holiday name"
               value={newHolidayName}
               onChange={e => { setNewHolidayName(e.target.value); setHolidayError('') }}
               className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -363,9 +363,9 @@ export default function Profile() {
               type="button"
               onClick={addHoliday}
               disabled={holidayAdding}
-              className="bg-green-600 text-white font-semibold px-4 py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 flex items-center gap-1.5 flex-shrink-0"
+              className="bg-green-600 text-white font-semibold px-3 py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 flex items-center gap-1 flex-shrink-0 whitespace-nowrap"
             >
-              <Plus size={16} />
+              <Plus size={14} />
               Add
             </button>
           </div>
