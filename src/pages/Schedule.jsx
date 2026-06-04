@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { BANK_HOLIDAYS } from '../lib/bankHolidays'
-import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, Plus, MapPin, CheckSquare, Square, Trash2 } from 'lucide-react'
+import { Users, ChevronLeft, ChevronRight, Check, Clock, X, Pencil, Plus, MapPin, CheckSquare, Square, Trash2, Car } from 'lucide-react'
 
 // --- Date helpers ---
 function getMonday(date) {
@@ -856,6 +856,13 @@ export default function Schedule() {
                         Reschedule
                       </button>
                     )}
+                    <button
+                      onClick={() => navigate(`/mileage?client_id=${visit.client_id}`)}
+                      className="flex items-center justify-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-600 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-blue-100 transition-colors"
+                    >
+                      <Car size={14} />
+                      Log mileage
+                    </button>
                     <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
                       <Pencil size={14} />
                       Edit visit
