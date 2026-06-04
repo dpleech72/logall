@@ -130,10 +130,10 @@ export default function BulkVisits() {
           <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center">
             <Check size={32} className="text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {preview.length} visits added!
           </h2>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm">
             All jobs have been added to the schedule.
           </p>
           <button
@@ -144,7 +144,7 @@ export default function BulkVisits() {
           </button>
           <button
             onClick={() => { setSaved(false); setPreview([]) }}
-            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm"
+            className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm"
           >
             Add more
           </button>
@@ -157,12 +157,12 @@ export default function BulkVisits() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/schedule')} className="p-2 -ml-2 text-gray-400">
+        <button onClick={() => navigate('/schedule')} className="p-2 -ml-2 text-gray-400 dark:text-gray-500">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Add past jobs</h1>
-          <p className="text-gray-500 text-xs mt-0.5">Bulk add recurring visits</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Add past jobs</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-xs mt-0.5">Bulk add recurring visits</p>
         </div>
       </div>
 
@@ -176,9 +176,9 @@ export default function BulkVisits() {
 
         {/* Client */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Client *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Client *</label>
           {clients.length === 0 ? (
-            <p className="text-sm text-gray-400">No clients yet — add one first</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">No clients yet — add one first</p>
           ) : (
             <div className="relative">
               {form.client_id && (
@@ -204,7 +204,7 @@ export default function BulkVisits() {
                     setForm(f => ({ ...f, client_id: '' }))
                   }
                 }}
-                className={`w-full py-3 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
+                className={`w-full py-3 pr-4 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
               >
                 <option value="">Select a client...</option>
                 {clients.map(c => (
@@ -217,7 +217,7 @@ export default function BulkVisits() {
 
         {/* Frequency */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">How often?</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">How often?</label>
           <div className="grid grid-cols-3 gap-2">
             {FREQUENCIES.map(f => (
               <button
@@ -227,7 +227,7 @@ export default function BulkVisits() {
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.frequency === f.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {f.label}
@@ -239,22 +239,22 @@ export default function BulkVisits() {
         {/* Date range */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">From</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">From</label>
             <input
               type="date"
               value={form.start_date}
               onChange={set('start_date')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">To</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">To</label>
             <input
               type="date"
               value={form.end_date}
               onChange={set('end_date')}
               max={today}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function BulkVisits() {
             </div>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               {preview.map(date => (
-                <span key={date} className="text-xs bg-white border border-green-200 text-green-700 px-2 py-0.5 rounded-full">
+                <span key={date} className="text-xs bg-white dark:bg-gray-800 border border-green-200 text-green-700 px-2 py-0.5 rounded-full">
                   {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </span>
               ))}
@@ -278,18 +278,18 @@ export default function BulkVisits() {
 
         {/* Time */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Start time (optional)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Start time (optional)</label>
           <input
             type="time"
             value={form.scheduled_time}
             onChange={set('scheduled_time')}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
         </div>
 
         {/* Duration */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Duration (optional)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Duration (optional)</label>
           <div className="grid grid-cols-4 gap-2">
             {[{mins:60,label:'1hr'},{mins:90,label:'1.5hr'},{mins:120,label:'2hr'},{mins:180,label:'3hr'}].map(({ mins, label }) => (
               <button
@@ -303,7 +303,7 @@ export default function BulkVisits() {
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.duration_minutes === String(mins)
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {label}
@@ -314,9 +314,9 @@ export default function BulkVisits() {
 
         {/* Amount */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount per visit (optional)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Amount per visit (optional)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">£</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">£</span>
             <input
               type="number"
               step="0.01"
@@ -324,7 +324,7 @@ export default function BulkVisits() {
               placeholder="0.00"
               value={form.amount}
               onChange={set('amount')}
-              className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full pl-7 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
           {form.amount && preview.length > 0 && (
@@ -336,7 +336,7 @@ export default function BulkVisits() {
 
         {/* Payment method */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Payment method</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Payment method</label>
           <div className="grid grid-cols-3 gap-2">
             {[
               { value: 'cash', label: '💵 Cash' },
@@ -350,7 +350,7 @@ export default function BulkVisits() {
                 className={`py-2.5 px-2 rounded-xl text-xs font-semibold border-2 transition-colors text-center ${
                   form.payment_method === opt.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {opt.label}
@@ -361,7 +361,7 @@ export default function BulkVisits() {
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Mark all as</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Mark all as</label>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'done_paid', label: '✅ Done & paid' },
@@ -374,7 +374,7 @@ export default function BulkVisits() {
                 className={`py-2.5 px-3 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.status === opt.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {opt.label}
@@ -386,7 +386,7 @@ export default function BulkVisits() {
         <button
           type="button"
           onClick={() => navigate('/schedule')}
-          className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+          className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
         >
           Cancel
         </button>

@@ -38,11 +38,11 @@ function TaxBar({ label, amount, total, colour }) {
   const pct = total > 0 ? (amount / total) * 100 : 0
   return (
     <div className="flex items-center gap-3">
-      <div className="w-28 text-xs text-gray-500 flex-shrink-0">{label}</div>
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="w-28 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 flex-shrink-0">{label}</div>
+      <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${colour}`} style={{ width: `${pct}%` }} />
       </div>
-      <div className="w-16 text-right text-xs font-semibold text-gray-700">£{amount.toFixed(2)}</div>
+      <div className="w-16 text-right text-xs font-semibold text-gray-700 dark:text-gray-200">£{amount.toFixed(2)}</div>
     </div>
   )
 }
@@ -106,7 +106,7 @@ export default function TaxSummary() {
     return (
       <div className="p-4 pt-6">
         <div className="space-y-3">
-          {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />)}
+          {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-100 dark:bg-gray-700 rounded-2xl animate-pulse" />)}
         </div>
       </div>
     )
@@ -116,8 +116,8 @@ export default function TaxSummary() {
     <div className="p-4 space-y-4">
       {/* Header */}
       <div className="pt-2">
-        <h1 className="text-2xl font-bold text-gray-900">Tax Summary</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Tax year {taxYearLabel} · Self Assessment</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tax Summary</h1>
+        <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">Tax year {taxYearLabel} · Self Assessment</p>
       </div>
 
       {/* Set aside card — most important */}
@@ -128,10 +128,10 @@ export default function TaxSummary() {
       </div>
 
       {/* Estimated bill */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="font-semibold text-gray-900">Estimated tax bill</p>
-          <p className="text-2xl font-bold text-gray-900">£{tax.total.toFixed(2)}</p>
+          <p className="font-semibold text-gray-900 dark:text-white">Estimated tax bill</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">£{tax.total.toFixed(2)}</p>
         </div>
 
         {/* Breakdown toggle */}
@@ -144,31 +144,31 @@ export default function TaxSummary() {
         </button>
 
         {showBreakdown && (
-          <div className="space-y-2.5 mb-3 p-3 bg-gray-50 rounded-xl">
+          <div className="space-y-2.5 mb-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
             <TaxBar label="Income Tax" amount={tax.incomeTax} total={tax.total} colour="bg-blue-400" />
             <TaxBar label="Class 4 NI" amount={tax.class4} total={tax.total} colour="bg-purple-400" />
             <TaxBar label="Class 2 NI" amount={tax.class2} total={tax.total} colour="bg-amber-400" />
           </div>
         )}
 
-        <div className="text-xs text-gray-400 leading-relaxed">
-          Deadline: <span className="font-medium text-gray-600">31 January {tyStart + 2}</span> · 
+        <div className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+          Deadline: <span className="font-medium text-gray-600 dark:text-gray-300">31 January {tyStart + 2}</span> · 
           Based on 20% basic rate Income Tax + Class 4 NI (9%) + Class 2 NI (£3.45/week)
         </div>
       </div>
 
       {/* Profit breakdown */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
-        <p className="font-semibold text-gray-900">Your numbers</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
+        <p className="font-semibold text-gray-900 dark:text-white">Your numbers</p>
         {[
           { label: 'Income this tax year', value: income, colour: 'text-green-600' },
           { label: 'Expenses claimed', value: -totalDeductions, colour: 'text-red-500' },
-          { label: 'Taxable profit', value: actualProfit, colour: 'text-gray-900', bold: true },
+          { label: 'Taxable profit', value: actualProfit, colour: 'text-gray-900 dark:text-white', bold: true },
           { label: 'Personal allowance', value: -Math.min(actualProfit, PERSONAL_ALLOWANCE), colour: 'text-blue-500' },
-          { label: 'Taxable income', value: Math.max(0, actualProfit - PERSONAL_ALLOWANCE), colour: 'text-gray-900', bold: true },
+          { label: 'Taxable income', value: Math.max(0, actualProfit - PERSONAL_ALLOWANCE), colour: 'text-gray-900 dark:text-white', bold: true },
         ].map(row => (
-          <div key={row.label} className={`flex items-center justify-between ${row.bold ? 'pt-2 border-t border-gray-100' : ''}`}>
-            <p className={`text-sm ${row.bold ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>{row.label}</p>
+          <div key={row.label} className={`flex items-center justify-between ${row.bold ? 'pt-2 border-t border-gray-100 dark:border-gray-700' : ''}`}>
+            <p className={`text-sm ${row.bold ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500'}`}>{row.label}</p>
             <p className={`text-sm font-semibold ${row.colour}`}>
               £{Math.abs(row.value).toFixed(2)}
             </p>
@@ -177,9 +177,9 @@ export default function TaxSummary() {
       </div>
 
       {/* Income slider */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
         <div className="flex items-center justify-between mb-1">
-          <p className="font-semibold text-gray-900">What if my income changes?</p>
+          <p className="font-semibold text-gray-900 dark:text-white">What if my income changes?</p>
           {sliderIncome !== Math.round(income) && (
             <button
               onClick={() => setSliderIncome(Math.round(income))}
@@ -189,12 +189,12 @@ export default function TaxSummary() {
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-400 mb-4">Drag the slider to see how your tax bill changes</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Drag the slider to see how your tax bill changes</p>
 
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-400">£0</span>
-          <span className="text-sm font-bold text-gray-900">£{(sliderIncome || 0).toLocaleString()}/year</span>
-          <span className="text-xs text-gray-400">£50,000</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">£0</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white">£{(sliderIncome || 0).toLocaleString()}/year</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">£50,000</span>
         </div>
 
         <input
@@ -208,9 +208,9 @@ export default function TaxSummary() {
         />
 
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-gray-50 rounded-xl p-3">
-            <p className="text-xs text-gray-400 mb-1">Tax bill</p>
-            <p className="font-bold text-gray-900">£{tax.total.toFixed(0)}</p>
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Tax bill</p>
+            <p className="font-bold text-gray-900 dark:text-white">£{tax.total.toFixed(0)}</p>
           </div>
           <div className="bg-green-50 rounded-xl p-3">
             <p className="text-xs text-green-600 mb-1">Set aside/mo</p>
@@ -226,18 +226,18 @@ export default function TaxSummary() {
       {/* Tax report */}
       <button
         onClick={() => navigate('/tax/report')}
-        className="flex items-center justify-between w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 active:bg-gray-50"
+        className="flex items-center justify-between w-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 active:bg-gray-50"
       >
         <div className="flex items-center gap-3">
           <div className="p-2 bg-green-50 rounded-lg">
             <FileText size={18} className="text-green-600" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-gray-900 text-sm">Download tax report</p>
-            <p className="text-xs text-gray-400 mt-0.5">Print or save as PDF to share with your accountant</p>
+            <p className="font-semibold text-gray-900 dark:text-white text-sm">Download tax report</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Print or save as PDF to share with your accountant</p>
           </div>
         </div>
-        <ExternalLink size={16} className="text-gray-400 flex-shrink-0" />
+        <ExternalLink size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
       </button>
 
       {/* HMRC link */}
@@ -245,16 +245,16 @@ export default function TaxSummary() {
         href="https://www.gov.uk/self-assessment-tax-returns"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm p-4 active:bg-gray-50"
+        className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 active:bg-gray-50"
       >
         <div>
-          <p className="font-semibold text-gray-900 text-sm">HMRC Self Assessment</p>
-          <p className="text-xs text-gray-400 mt-0.5">File your return at gov.uk</p>
+          <p className="font-semibold text-gray-900 dark:text-white text-sm">HMRC Self Assessment</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">File your return at gov.uk</p>
         </div>
-        <ExternalLink size={16} className="text-gray-400" />
+        <ExternalLink size={16} className="text-gray-400 dark:text-gray-500" />
       </a>
 
-      <p className="text-xs text-gray-400 text-center leading-relaxed pb-4">
+      <p className="text-xs text-gray-400 dark:text-gray-500 text-center leading-relaxed pb-4">
         This is an estimate based on the basic rate tax band. LogAll is not a substitute for professional tax advice.
       </p>
     </div>

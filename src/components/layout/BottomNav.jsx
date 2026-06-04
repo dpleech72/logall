@@ -13,7 +13,7 @@ const tabs = [
 export default function BottomNav() {
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex h-16">
@@ -23,7 +23,7 @@ export default function BottomNav() {
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 text-xs transition-colors ${
-                isActive ? 'text-green-600' : 'text-gray-400'
+                isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
               }`
             }
           >

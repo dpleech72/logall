@@ -5,8 +5,8 @@ import { ArrowLeft, AlertCircle, Trash2 } from 'lucide-react'
 
 const Field = ({ label, hint, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-    {hint && <p className="text-xs text-gray-400 mb-1.5">{hint}</p>}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">{label}</label>
+    {hint && <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">{hint}</p>}
     {children}
   </div>
 )
@@ -105,17 +105,17 @@ export default function VisitEditForm() {
   }
 
   if (!form) {
-    return <div className="p-4 pt-6 text-gray-400 text-sm">Loading...</div>
+    return <div className="p-4 pt-6 text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
   }
 
   return (
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/schedule')} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+        <button onClick={() => navigate('/schedule')} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Edit visit</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Edit visit</h1>
       </div>
 
       {error && (
@@ -149,7 +149,7 @@ export default function VisitEditForm() {
                   }))
                 }
               }}
-              className={`w-full py-3 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
+              className={`w-full py-3 pr-4 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
             >
               <option value="">Select a client...</option>
               {clients.map(c => (
@@ -166,14 +166,14 @@ export default function VisitEditForm() {
               { value: 'scheduled',        label: '📅 Scheduled',        colour: 'border-blue-500 bg-blue-50 text-blue-700' },
               { value: 'done_paid',        label: '✅ Done & paid',       colour: 'border-green-500 bg-green-50 text-green-700' },
               { value: 'awaiting_payment', label: '⏳ Awaiting payment',  colour: 'border-amber-500 bg-amber-50 text-amber-700' },
-              { value: 'cancelled',        label: '❌ Cancelled',         colour: 'border-gray-300 bg-gray-50 text-gray-500' },
+              { value: 'cancelled',        label: '❌ Cancelled',         colour: 'border-gray-300 bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
             ].map(opt => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setForm(f => ({ ...f, status: opt.value }))}
                 className={`py-2.5 px-3 rounded-xl text-xs font-semibold border-2 transition-colors text-left ${
-                  form.status === opt.value ? opt.colour : 'border-gray-200 text-gray-600'
+                  form.status === opt.value ? opt.colour : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {opt.label}
@@ -189,7 +189,7 @@ export default function VisitEditForm() {
             value={form.scheduled_date}
             onChange={set('scheduled_date')}
             required
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
         </Field>
 
@@ -199,7 +199,7 @@ export default function VisitEditForm() {
             type="time"
             value={form.scheduled_time}
             onChange={set('scheduled_time')}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
         </Field>
 
@@ -221,7 +221,7 @@ export default function VisitEditForm() {
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.duration_minutes === String(mins) && !customDuration
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {label}
@@ -232,7 +232,7 @@ export default function VisitEditForm() {
             type="button"
             onClick={() => { setCustomDuration(!customDuration); setForm(f => ({ ...f, duration_minutes: '' })) }}
             className={`w-full py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors mb-2 ${
-              customDuration ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'
+              customDuration ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
             }`}
           >
             Custom duration (hours)
@@ -254,9 +254,9 @@ export default function VisitEditForm() {
                     amount: calcAmount(selectedClientRate, mins) || f.amount,
                   }))
                 }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">hours</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">hours</span>
             </div>
           )}
         </Field>
@@ -264,7 +264,7 @@ export default function VisitEditForm() {
         {/* Amount */}
         <Field label="Amount (optional)">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">£</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">£</span>
             <input
               type="number"
               step="0.01"
@@ -272,7 +272,7 @@ export default function VisitEditForm() {
               placeholder="0.00"
               value={form.amount}
               onChange={set('amount')}
-              className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full pl-7 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
         </Field>
@@ -292,7 +292,7 @@ export default function VisitEditForm() {
                 className={`py-2.5 px-2 rounded-xl text-xs font-semibold border-2 transition-colors text-center ${
                   form.payment_method === opt.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {opt.label}
@@ -312,7 +312,7 @@ export default function VisitEditForm() {
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.recurrence_rule === r.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {r.label}
@@ -328,14 +328,14 @@ export default function VisitEditForm() {
             value={form.notes}
             onChange={set('notes')}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
           />
         </Field>
 
         <button
           type="button"
           onClick={() => navigate('/schedule')}
-          className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+          className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
         >
           ← Back to schedule
         </button>
@@ -350,7 +350,7 @@ export default function VisitEditForm() {
       </form>
 
       {/* Delete */}
-      <div className="mt-6 pt-6 border-t border-gray-100">
+      <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
         {!showDelete ? (
           <button
             onClick={() => setShowDelete(true)}
@@ -364,7 +364,7 @@ export default function VisitEditForm() {
             <p className="text-sm text-red-700 font-medium mb-1">Delete this visit?</p>
             <p className="text-xs text-red-500 mb-4">This can't be undone.</p>
             <div className="flex gap-2">
-              <button onClick={() => setShowDelete(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
+              <button onClick={() => setShowDelete(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={handleDelete} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
             </div>
           </div>

@@ -5,15 +5,15 @@ import { ArrowLeft, AlertCircle } from 'lucide-react'
 
 const Field = ({ label, hint, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-    {hint && <p className="text-xs text-gray-400 mb-1.5">{hint}</p>}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">{label}</label>
+    {hint && <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">{hint}</p>}
     {children}
   </div>
 )
 
 const Input = ({ ...props }) => (
   <input
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
     {...props}
   />
 )
@@ -123,10 +123,10 @@ export default function VisitForm() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/schedule')} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+        <button onClick={() => navigate('/schedule')} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Add a job</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Add a job</h1>
       </div>
 
       {error && (
@@ -141,7 +141,7 @@ export default function VisitForm() {
         {/* Client dropdown */}
         <Field label="Client *">
           {clients.length === 0 ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
               No clients yet —{' '}
               <button type="button" onClick={() => navigate('/clients/add')} className="text-green-600 font-medium">
                 add one first
@@ -172,7 +172,7 @@ export default function VisitForm() {
                     setForm(f => ({ ...f, client_id: '' }))
                   }
                 }}
-                className={`w-full py-3 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
+                className={`w-full py-3 pr-4 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white ${form.client_id ? 'pl-11' : 'pl-4'}`}
               >
                 <option value="">Select a client...</option>
                 {clients.map(c => (
@@ -212,7 +212,7 @@ export default function VisitForm() {
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.duration_minutes === String(mins) && !customDuration
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {label}
@@ -223,7 +223,7 @@ export default function VisitForm() {
             type="button"
             onClick={() => { setCustomDuration(!customDuration); setForm(f => ({ ...f, duration_minutes: '' })) }}
             className={`w-full py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors mb-2 ${
-              customDuration ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'
+              customDuration ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
             }`}
           >
             Custom duration (hours)
@@ -245,9 +245,9 @@ export default function VisitForm() {
                     amount: calcAmount(selectedClientRate, mins) || f.amount,
                   }))
                 }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">hours</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">hours</span>
             </div>
           )}
         </Field>
@@ -255,7 +255,7 @@ export default function VisitForm() {
         {/* Amount */}
         <Field label="Amount (optional)" hint="Leave blank if you log payment separately">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">£</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">£</span>
             <input
               type="number"
               step="0.01"
@@ -263,7 +263,7 @@ export default function VisitForm() {
               placeholder="0.00"
               value={form.amount}
               onChange={set('amount')}
-              className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full pl-7 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
         </Field>
@@ -283,7 +283,7 @@ export default function VisitForm() {
                 className={`py-2.5 px-2 rounded-xl text-xs font-semibold border-2 transition-colors text-center ${
                   form.payment_method === opt.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {opt.label}
@@ -303,7 +303,7 @@ export default function VisitForm() {
                 className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-colors ${
                   form.recurrence_rule === r.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {r.label}
@@ -319,14 +319,14 @@ export default function VisitForm() {
             value={form.notes}
             onChange={set('notes')}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
           />
         </Field>
 
         <button
           type="button"
           onClick={() => navigate('/schedule')}
-          className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+          className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
         >
           Cancel
         </button>

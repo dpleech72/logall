@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
+import { useDarkMode } from './hooks/useDarkMode'
 import ProtectedRoute from './components/ui/ProtectedRoute'
 import BottomNav from './components/layout/BottomNav'
 import Sidebar from './components/layout/Sidebar'
@@ -64,6 +65,8 @@ function AppShell() {
 }
 
 export default function App() {
+  useDarkMode() // applies dark class to <html> and persists preference
+
   useEffect(() => {
     // Reload when a new service worker takes control — picks up fresh deploys
     if ('serviceWorker' in navigator) {

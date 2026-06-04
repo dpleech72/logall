@@ -9,7 +9,7 @@ function StatCard({ label, value, sub, colour, onClick }) {
     green: 'bg-green-50 text-green-700',
     amber: 'bg-amber-50 text-amber-700',
     red:   'bg-red-50 text-red-700',
-    grey:  'bg-gray-50 text-gray-600',
+    grey:  'bg-gray-50 text-gray-600 dark:text-gray-300',
   }
   return (
     <div
@@ -192,7 +192,7 @@ export default function Dashboard() {
     { icon: Car,           label: 'Log a journey',  colour: 'text-blue-600 bg-blue-50',     to: '/mileage' },
     { icon: TrendingUp,    label: 'Log an expense', colour: 'text-purple-600 bg-purple-50', to: '/expenses' },
     { icon: Users,         label: 'Manage clients', colour: 'text-teal-600 bg-teal-50',     to: '/clients' },
-    { icon: UserCircle,    label: 'My profile',     colour: 'text-gray-600 bg-gray-100',    to: '/profile' },
+    { icon: UserCircle,    label: 'My profile',     colour: 'text-gray-600 dark:text-gray-300 bg-gray-100',    to: '/profile' },
     { icon: HelpCircle,    label: 'Help',           colour: 'text-amber-600 bg-amber-50',   to: '/help' },
   ]
 
@@ -200,8 +200,8 @@ export default function Dashboard() {
     <div className="p-4 lg:p-8 lg:max-w-4xl lg:mx-auto space-y-5">
       {/* Header */}
       <div className="pt-2">
-        <h1 className="text-2xl font-bold text-gray-900">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
-        {firstName && <p className="text-gray-500 text-sm mt-0.5">Welcome back!</p>}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
+        {firstName && <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">Welcome back!</p>}
       </div>
 
       {/* Jobs today banner */}
@@ -278,7 +278,7 @@ export default function Dashboard() {
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
           Quick actions
         </h2>
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
@@ -286,12 +286,12 @@ export default function Dashboard() {
             <button
               key={label}
               onClick={() => navigate(to)}
-              className="flex flex-col items-center gap-2 bg-white rounded-xl p-3 shadow-sm border border-gray-100 text-center active:bg-gray-50 transition-colors"
+              className="flex flex-col items-center gap-2 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-gray-100 dark:border-gray-700 text-center active:bg-gray-50 transition-colors"
             >
               <span className={`p-2.5 rounded-xl ${colour} flex-shrink-0`}>
                 <Icon size={18} />
               </span>
-              <span className="font-medium text-gray-700 text-xs leading-tight">{label}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-200 text-xs leading-tight">{label}</span>
             </button>
           ))}
         </div>
@@ -301,15 +301,15 @@ export default function Dashboard() {
       {!loading && stats.recentIncome.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Recent payments</h2>
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wide">Recent payments</h2>
             <button onClick={() => navigate('/income')} className="text-xs text-green-600 font-medium">See all</button>
           </div>
           <div className="space-y-2">
             {stats.recentIncome.map((item, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex items-center justify-between">
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{item.description || 'Payment'}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.description || 'Payment'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                     {new Date(item.received_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   </p>
                 </div>
@@ -322,8 +322,8 @@ export default function Dashboard() {
 
       {/* Empty state */}
       {!loading && stats.incomeThisMonth === 0 && stats.recentIncome.length === 0 && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm text-center">
-          <p className="text-gray-400 text-sm">No activity yet — start by adding a client and logging your first job.</p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm text-center">
+          <p className="text-gray-400 dark:text-gray-500 text-sm">No activity yet — start by adding a client and logging your first job.</p>
           <button
             onClick={() => navigate('/clients/add')}
             className="mt-3 bg-green-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm"

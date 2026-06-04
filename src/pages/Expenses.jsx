@@ -30,13 +30,13 @@ function groupByMonth(expenses) {
 function WhatCanIClaimSheet({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
-      <div className="bg-white rounded-t-3xl p-5 pb-10 max-h-[85vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 pb-10 max-h-[85vh] overflow-y-auto">
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">What can I claim?</h2>
-          <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">What can I claim?</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500"><X size={20} /></button>
         </div>
-        <div className="space-y-4 text-sm text-gray-700">
+        <div className="space-y-4 text-sm text-gray-700 dark:text-gray-200">
           {[
             { emoji: '🧴', title: 'Cleaning products', body: 'Anything you buy to do the job — sprays, cloths, mops, hoovers, gloves. Keep your receipts.' },
             { emoji: '🔧', title: 'Equipment', body: 'Tools and equipment used for work. Claim the full cost in the year you buy it via Annual Investment Allowance (AIA). Includes a new vacuum cleaner, steam cleaner, or gardening tools.' },
@@ -46,11 +46,11 @@ function WhatCanIClaimSheet({ onClose }) {
             { emoji: '🚗', title: 'Mileage vs fuel', body: 'If you claim mileage at 55p/mile you CANNOT also claim fuel or charging costs. Pick one — mileage is almost always better.' },
             { emoji: '❌', title: 'What you cannot claim', body: 'Food and drink, regular clothing, fines, personal expenses, or anything not wholly used for work.' },
           ].map(item => (
-            <div key={item.title} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
+            <div key={item.title} className="flex gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
               <span className="text-2xl flex-shrink-0">{item.emoji}</span>
               <div>
-                <p className="font-semibold text-gray-900 mb-0.5">{item.title}</p>
-                <p className="text-gray-600 leading-relaxed">{item.body}</p>
+                <p className="font-semibold text-gray-900 dark:text-white mb-0.5">{item.title}</p>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{item.body}</p>
               </div>
             </div>
           ))}
@@ -107,11 +107,11 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
-      <div className="bg-white rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">{expense ? 'Edit expense' : 'Log an expense'}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{expense ? 'Edit expense' : 'Log an expense'}</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500"><X size={20} /></button>
         </div>
 
         {error && (
@@ -124,7 +124,7 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Category</label>
             <div className="grid grid-cols-3 gap-2">
               {CATEGORIES.map(cat => (
                 <button
@@ -140,11 +140,11 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
                   className={`py-3 px-2 rounded-xl border-2 text-center transition-colors ${
                     form.category === cat.value
                       ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200'
+                      : 'border-gray-200 dark:border-gray-700'
                   }`}
                 >
                   <div className="text-xl mb-1">{cat.emoji}</div>
-                  <div className={`text-xs font-semibold ${form.category === cat.value ? 'text-green-700' : 'text-gray-600'}`}>
+                  <div className={`text-xs font-semibold ${form.category === cat.value ? 'text-green-700' : 'text-gray-600 dark:text-gray-300'}`}>
                     {cat.label}
                   </div>
                 </button>
@@ -172,21 +172,21 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">What did you buy?</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">What did you buy?</label>
             <input
               type="text"
               placeholder="e.g. Fairy washing up liquid, Flash spray"
               value={form.description}
               onChange={set('description')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">How much did it cost?</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">How much did it cost?</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">£</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">£</span>
               <input
                 type="number"
                 step="0.01"
@@ -194,7 +194,7 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
                 placeholder="0.00"
                 value={form.amount}
                 onChange={set('amount')}
-                className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full pl-7 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             {form.amount > 0 && (
@@ -206,31 +206,31 @@ function LogExpenseSheet({ expense, onClose, onSaved }) {
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Date</label>
             <input
               type="date"
               value={form.expense_date}
               onChange={set('expense_date')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Notes (optional)</label>
             <input
               type="text"
               placeholder="e.g. Bought from Asda"
               value={form.notes}
               onChange={set('notes')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+            className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
@@ -283,13 +283,13 @@ export default function Expenses() {
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Things you buy for work</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Expenses</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">Things you buy for work</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowGuide(true)}
-            className="p-2.5 rounded-xl border border-gray-200 text-gray-500 active:bg-gray-50"
+            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 active:bg-gray-50"
           >
             <Info size={18} />
           </button>
@@ -323,10 +323,10 @@ export default function Expenses() {
 
       {/* Empty state */}
       {!loading && expenses.length === 0 && (
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
           <div className="text-4xl">🧾</div>
-          <p className="font-semibold text-gray-700">No expenses logged yet</p>
-          <p className="text-gray-400 text-sm">Cleaning products, equipment, insurance — it all reduces your tax bill</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-200">No expenses logged yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Cleaning products, equipment, insurance — it all reduces your tax bill</p>
           <button
             onClick={() => setShowGuide(true)}
             className="mt-1 text-green-600 font-semibold text-sm"
@@ -340,9 +340,9 @@ export default function Expenses() {
       {groups.map(group => (
         <div key={group.label} className="mb-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-gray-500">{group.label}</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.label}</p>
             <div className="text-right">
-              <p className="text-sm font-bold text-gray-700">£{group.total.toFixed(2)}</p>
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">£{group.total.toFixed(2)}</p>
               <p className="text-xs text-green-600">saves £{group.taxSaved.toFixed(2)}</p>
             </div>
           </div>
@@ -350,24 +350,24 @@ export default function Expenses() {
             {group.items.map(expense => {
               const cat = CATEGORIES.find(c => c.value === expense.category)
               return (
-                <div key={expense.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5 flex items-center gap-3">
+                <div key={expense.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-lg">
                     {cat?.emoji || '📦'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm truncate">{expense.description}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{expense.description}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         {new Date(expense.expense_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
-                      <span className="text-xs text-gray-400">{cat?.label}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{cat?.label}</span>
                       {expense.is_aia && (
                         <span className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-medium">AIA</span>
                       )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 mr-1">
-                    <p className="font-bold text-gray-800">£{parseFloat(expense.amount).toFixed(2)}</p>
+                    <p className="font-bold text-gray-800 dark:text-gray-100">£{parseFloat(expense.amount).toFixed(2)}</p>
                     <p className="text-xs text-green-600">saves £{(parseFloat(expense.amount) * TAX_RATE).toFixed(2)}</p>
                   </div>
                   <div className="flex flex-col gap-1 flex-shrink-0">
@@ -388,11 +388,11 @@ export default function Expenses() {
       {/* Delete confirmation */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <p className="font-semibold text-gray-900 mb-1">Delete this expense?</p>
-            <p className="text-sm text-gray-500 mb-4">This can't be undone.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this expense?</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">This can't be undone.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
+              <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
             </div>
           </div>

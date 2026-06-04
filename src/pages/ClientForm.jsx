@@ -10,14 +10,14 @@ const COLOURS = [
 
 const Field = ({ label, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">{label}</label>
     {children}
   </div>
 )
 
 const Input = ({ ...props }) => (
   <input
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
     {...props}
   />
 )
@@ -107,10 +107,10 @@ export default function ClientForm() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/clients')} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+        <button onClick={() => navigate('/clients')} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
           {isEditing ? 'Edit client' : 'Add a client'}
         </h1>
       </div>
@@ -211,7 +211,7 @@ export default function ClientForm() {
                 className={`py-2.5 px-2 rounded-xl text-xs font-semibold border-2 transition-colors text-center ${
                   form.payment_method === opt.value
                     ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {opt.label}
@@ -222,7 +222,7 @@ export default function ClientForm() {
 
         <Field label="Hourly rate (optional)">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">£</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">£</span>
             <input
               type="number"
               step="0.50"
@@ -230,7 +230,7 @@ export default function ClientForm() {
               placeholder="0.00"
               value={form.hourly_rate}
               onChange={set('hourly_rate')}
-              className="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-7 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
           </div>
         </Field>
@@ -241,7 +241,7 @@ export default function ClientForm() {
             value={form.notes}
             onChange={set('notes')}
             rows={3}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
           />
         </Field>
 
@@ -256,7 +256,7 @@ export default function ClientForm() {
 
       {/* Delete */}
       {isEditing && (
-        <div className="mt-6 pt-6 border-t border-gray-100">
+        <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
           {!showDelete ? (
             <button
               onClick={() => setShowDelete(true)}
@@ -272,7 +272,7 @@ export default function ClientForm() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowDelete(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600"
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300"
                 >
                   Cancel
                 </button>

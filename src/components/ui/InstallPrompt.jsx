@@ -75,12 +75,12 @@ export default function InstallPrompt() {
     >
       {showAndroid && (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white border-2 border-green-600 rounded-xl flex items-center justify-center flex-shrink-0 text-green-600 font-bold text-sm">
+          <div className="w-10 h-10 bg-white dark:bg-gray-800 border-2 border-green-600 rounded-xl flex items-center justify-center flex-shrink-0 text-green-600 font-bold text-sm">
             LA
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">Install LogAll</p>
-            <p className="text-xs text-gray-400 mt-0.5">Add to your home screen for quick access</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Add to your home screen for quick access</p>
           </div>
           <button
             onClick={handleInstall}
@@ -88,7 +88,7 @@ export default function InstallPrompt() {
           >
             Install
           </button>
-          <button onClick={dismiss} className="text-gray-400 active:text-white flex-shrink-0 p-1">
+          <button onClick={dismiss} className="text-gray-400 dark:text-gray-500 active:text-white flex-shrink-0 p-1">
             <X size={16} />
           </button>
         </div>
@@ -103,7 +103,7 @@ export default function InstallPrompt() {
               </div>
               <p className="font-semibold text-sm">Install LogAll</p>
             </div>
-            <button onClick={dismiss} className="text-gray-400 active:text-white p-1 -mt-0.5">
+            <button onClick={dismiss} className="text-gray-400 dark:text-gray-500 active:text-white p-1 -mt-0.5">
               <X size={16} />
             </button>
           </div>

@@ -6,15 +6,15 @@ import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut } from 'lucid
 
 const Field = ({ label, hint, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-    {hint && <p className="text-xs text-gray-400 mb-1.5">{hint}</p>}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">{label}</label>
+    {hint && <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">{hint}</p>}
     {children}
   </div>
 )
 
 const Input = ({ ...props }) => (
   <input
-    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
     {...props}
   />
 )
@@ -167,19 +167,19 @@ export default function Profile() {
   }
 
   if (loading) {
-    return <div className="p-4 pt-6 text-gray-400 text-sm">Loading...</div>
+    return <div className="p-4 pt-6 text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
   }
 
   return (
     <div className="p-4 pb-8">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">My profile</h1>
-          <p className="text-gray-500 text-xs mt-0.5">{user?.email}</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">My profile</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-xs mt-0.5">{user?.email}</p>
         </div>
       </div>
 
@@ -198,8 +198,8 @@ export default function Profile() {
       <form onSubmit={handleSubmit} className="space-y-5">
 
         {/* Personal details */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
-          <h2 className="font-semibold text-gray-900">Personal details</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-4">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Personal details</h2>
 
           <Field label="Full name">
             <Input
@@ -214,7 +214,7 @@ export default function Profile() {
             <select
               value={form.trade}
               onChange={set('trade')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="">Select your trade</option>
               {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -250,9 +250,9 @@ export default function Profile() {
         </div>
 
         {/* HMRC details */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">HMRC details</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">HMRC details</h2>
             <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-medium">For tax submission</span>
           </div>
 
@@ -312,10 +312,10 @@ export default function Profile() {
       </form>
 
       {/* My holidays */}
-      <div className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-4">
         <div>
-          <h2 className="font-semibold text-gray-900">My holidays</h2>
-          <p className="text-xs text-gray-400 mt-1">
+          <h2 className="font-semibold text-gray-900 dark:text-white">My holidays</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
             Add your own days off — highlighted in purple on your schedule.
             UK bank holidays are highlighted automatically in red.
           </p>
@@ -331,33 +331,33 @@ export default function Profile() {
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">From</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-1 ml-1">From</label>
               <input
                 type="date"
                 value={newHolidayStart}
                 onChange={e => { setNewHolidayStart(e.target.value); setHolidayError('') }}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">To</label>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-1 ml-1">To</label>
               <input
                 type="date"
                 value={newHolidayEnd}
                 min={newHolidayStart || undefined}
                 onChange={e => { setNewHolidayEnd(e.target.value); setHolidayError('') }}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
           </div>
-          <p className="text-xs text-gray-400 ml-1">Leave "To" blank for a single day.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 ml-1">Leave "To" blank for a single day.</p>
           <div className="flex gap-2">
             <input
               type="text"
               placeholder="e.g. Summer holiday, Christmas Eve"
               value={newHolidayName}
               onChange={e => { setNewHolidayName(e.target.value); setHolidayError('') }}
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             />
             <button
               type="button"
@@ -377,8 +377,8 @@ export default function Profile() {
             {holidays.map(h => (
               <div key={h.id} className="flex items-center justify-between bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5">
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{h.name}</p>
-                  <p className="text-xs text-gray-400">{formatHolidayDates(h.date, h.end_date)}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{h.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{formatHolidayDates(h.date, h.end_date)}</p>
                 </div>
                 <button
                   type="button"
@@ -391,12 +391,12 @@ export default function Profile() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-400 text-center py-1">No personal holidays added yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-1">No personal holidays added yet</p>
         )}
       </div>
 
       {/* Sign out */}
-      <div className="mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
         <button
           onClick={signOut}
           className="w-full flex items-center justify-center gap-2 text-red-500 font-semibold py-2 text-sm active:opacity-70 transition-colors"

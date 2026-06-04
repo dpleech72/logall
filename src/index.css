@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode */
+@custom-variant dark (.dark &);
+
 @layer base {
   :root {
-    /* LogAll colour tokens */
+    /* LogAll colour tokens — light mode */
     --color-green: #16a34a;
     --color-green-light: #dcfce7;
     --color-amber: #d97706;
@@ -16,6 +19,15 @@
     --color-text: #111827;
     --color-text-muted: #6b7280;
     --nav-height: 64px;
+  }
+
+  /* Dark mode token overrides */
+  .dark {
+    --color-surface: #1f2937;
+    --color-bg: #111827;
+    --color-text: #f9fafb;
+    --color-text-muted: #9ca3af;
+    --color-grey-light: #374151;
   }
 
   html, body, #root {

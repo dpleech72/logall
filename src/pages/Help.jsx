@@ -172,20 +172,20 @@ const sections = [
 function Section({ section }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center justify-between p-4 text-left active:bg-gray-50 transition-colors"
       >
-        <span className="font-semibold text-gray-900 text-sm">{section.title}</span>
-        {open ? <ChevronUp size={18} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />}
+        <span className="font-semibold text-gray-900 dark:text-white text-sm">{section.title}</span>
+        {open ? <ChevronUp size={18} className="text-gray-400 dark:text-gray-500 flex-shrink-0" /> : <ChevronDown size={18} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />}
       </button>
       {open && (
-        <div className="border-t border-gray-100 divide-y divide-gray-50">
+        <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-50 dark:divide-gray-700">
           {section.content.map((item, i) => (
             <div key={i} className="px-4 py-3.5">
-              <p className="text-sm font-semibold text-gray-800 mb-1">{item.heading}</p>
-              <p className="text-sm text-gray-500 leading-relaxed">{item.text}</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">{item.heading}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-relaxed">{item.text}</p>
             </div>
           ))}
         </div>
@@ -199,12 +199,12 @@ export default function Help() {
   return (
     <div className="p-4 pb-8 md:p-8 md:max-w-3xl md:mx-auto">
       <div className="pt-2 flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Help</h1>
-          <p className="text-gray-500 text-xs mt-0.5">How to use LogAll</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Help</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-xs mt-0.5">How to use LogAll</p>
         </div>
       </div>
 
@@ -221,7 +221,7 @@ export default function Help() {
         ))}
       </div>
 
-      <p className="text-xs text-gray-400 text-center mt-6 leading-relaxed">
+      <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-6 leading-relaxed">
         LogAll is designed for UK self-employed sole traders. Tax calculations are estimates — always consult a qualified accountant for advice.
       </p>
     </div>

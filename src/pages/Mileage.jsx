@@ -187,12 +187,12 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
-      <div className="bg-white rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
 
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">{journey ? 'Edit journey' : 'Log a journey'}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{journey ? 'Edit journey' : 'Log a journey'}</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500"><X size={20} /></button>
         </div>
 
         {/* Live claimable preview */}
@@ -211,11 +211,11 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Client */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Client (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Client (optional)</label>
             <select
               value={form.client_id}
               onChange={handleClientChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="">No specific client</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -224,24 +224,24 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Date</label>
             <input
               type="date"
               value={form.journey_date}
               onChange={set('journey_date')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           {/* From */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">From</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">From</label>
             <input
               type="text"
               placeholder="e.g. Home, or leave blank for current location"
               value={form.from_location}
               onChange={set('from_location')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
             />
             <div className="flex items-center gap-2">
               <button
@@ -257,7 +257,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                   if (e.target.value) setForm(f => ({ ...f, from_location: e.target.value }))
                   e.target.value = ''
                 }}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
               >
                 <option value="">Select a client...</option>
                 {clients.filter(c => c.address || c.postcode).map(c => (
@@ -275,7 +275,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                 const firstTo = f.to_locations[0] || ''
                 return { ...f, from_location: firstTo, to_locations: [f.from_location, ...f.to_locations.slice(1)] }
               })}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium active:bg-gray-200 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500 text-xs font-medium active:bg-gray-200 transition-colors"
             >
               <ArrowLeftRight size={13} />
               Swap
@@ -284,19 +284,19 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
           {/* To — multiple stops */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">To</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">To</label>
             <div className="space-y-2 mb-2">
               {form.to_locations.map((loc, i) => (
                 <div key={i} className="flex gap-2 items-center">
                   {form.to_locations.length > 1 && (
-                    <span className="text-xs text-gray-400 w-4 flex-shrink-0 text-center">{i + 1}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 w-4 flex-shrink-0 text-center">{i + 1}</span>
                   )}
                   <input
                     type="text"
                     placeholder="e.g. postcode or address"
                     value={loc}
                     onChange={e => updateStop(i, e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                   {form.to_locations.length > 1 && (
                     <button
@@ -338,7 +338,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                   if (client) setForm(f => ({ ...f, client_id: f.client_id || client.id }))
                   e.target.value = ''
                 }}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
               >
                 <option value="">Select a client...</option>
                 {clients.filter(c => c.address || c.postcode).map(c => (
@@ -350,10 +350,10 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
           {/* Miles */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Miles
               {form.to_locations.length > 1 && (
-                <span className="ml-2 text-xs font-normal text-gray-400">total for all stops</span>
+                <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">total for all stops</span>
               )}
             </label>
             <div className="relative mb-2">
@@ -364,9 +364,9 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                 placeholder="e.g. 3.5"
                 value={form.miles}
                 onChange={set('miles')}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-16"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">miles</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">miles</span>
             </div>
             <button
               type="button"
@@ -378,7 +378,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                 ? <><Loader size={14} className="animate-spin" /> Calculating...</>
                 : <><Navigation size={14} /> Calculate distance automatically</>}
             </button>
-            <p className="text-xs text-gray-400 mt-1.5 text-center">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 text-center">
               {form.to_locations.length > 1
                 ? 'Adds up each leg of the journey'
                 : 'Uses your current location if "From" is empty'}
@@ -387,17 +387,17 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Notes (optional)</label>
             <input
               type="text"
               placeholder="e.g. Return journey"
               value={form.notes}
               onChange={set('notes')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
-          <button type="button" onClick={onClose} className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors">
+          <button type="button" onClick={onClose} className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors">
             Cancel
           </button>
           <button type="submit" disabled={loading} className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2">
@@ -459,8 +459,8 @@ export default function Mileage() {
     <div className="p-4">
       <div className="pt-2 flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mileage</h1>
-          <p className="text-gray-500 text-sm mt-0.5">55p/mile — HMRC approved</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mileage</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">55p/mile — HMRC approved</p>
         </div>
         <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
           <Plus size={16} />
@@ -499,40 +499,40 @@ export default function Mileage() {
       </div>
 
       {!loading && journeys.length === 0 && (
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
           <div className="text-4xl">🚗</div>
-          <p className="font-semibold text-gray-700">No journeys logged yet</p>
-          <p className="text-gray-400 text-sm">Every mile you drive for work saves you tax</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-200">No journeys logged yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Every mile you drive for work saves you tax</p>
         </div>
       )}
 
       {groups.map(group => (
         <div key={group.label} className="mb-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-gray-500">{group.label}</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.label}</p>
             <div className="text-right">
-              <p className="text-sm font-bold text-gray-700">£{group.claimable.toFixed(2)}</p>
-              <p className="text-xs text-gray-400">{group.miles.toFixed(1)} miles</p>
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">£{group.claimable.toFixed(2)}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{group.miles.toFixed(1)} miles</p>
             </div>
           </div>
           <div className="space-y-2">
             {group.items.map(journey => {
               const client = clientMap[journey.client_id]
               return (
-                <div key={journey.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5 flex items-center gap-3">
+                <div key={journey.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                     <Car size={16} className="text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                       {journey.from_location} → {journey.to_location}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         {new Date(journey.journey_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
-                      <span className="text-xs text-gray-400">{parseFloat(journey.miles).toFixed(1)} miles</span>
-                      {client && <span className="text-xs text-gray-400">{client.name}</span>}
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{parseFloat(journey.miles).toFixed(1)} miles</span>
+                      {client && <span className="text-xs text-gray-400 dark:text-gray-500">{client.name}</span>}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 mr-1">
@@ -555,11 +555,11 @@ export default function Mileage() {
 
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-24">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <p className="font-semibold text-gray-900 mb-1">Delete this journey?</p>
-            <p className="text-sm text-gray-500 mb-4">This can't be undone.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this journey?</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">This can't be undone.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
+              <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
             </div>
           </div>

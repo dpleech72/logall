@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { House, CalendarDays, Banknote, Car, PoundSterling, FileText, HelpCircle } from 'lucide-react'
+import { House, CalendarDays, Banknote, Car, PoundSterling, FileText, HelpCircle, Sun, Moon } from 'lucide-react'
+import { useDarkMode } from '../../hooks/useDarkMode'
 
 const tabs = [
   { to: '/dashboard', icon: House,         label: 'Home' },
@@ -11,16 +12,18 @@ const tabs = [
 ]
 
 export default function Sidebar() {
+  const [dark, setDark] = useDarkMode()
+
   return (
-    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white border-r border-gray-100 h-full">
+    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 h-full">
       {/* Logo */}
-      <div className="px-4 pt-6 pb-5 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-9 h-9 bg-white border-2 border-green-600 rounded-xl flex items-center justify-center text-green-600 font-bold text-sm flex-shrink-0">
+      <div className="px-4 pt-6 pb-5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+        <div className="w-9 h-9 bg-white dark:bg-gray-800 border-2 border-green-600 rounded-xl flex items-center justify-center text-green-600 font-bold text-sm flex-shrink-0">
           LA
         </div>
         <div>
           <p className="text-lg font-bold text-green-600">LogAll</p>
-          <p className="text-xs text-gray-400 mt-0.5">Log all. Worry none.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Log all. Worry none.</p>
         </div>
       </div>
 
@@ -33,8 +36,8 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-green-50 text-green-700'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200'
               }`
             }
           >
@@ -49,12 +52,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t border-gray-100 space-y-0.5">
+      <div className="px-3 py-4 border-t border-gray-100 dark:border-gray-800 space-y-0.5">
         <NavLink
           to="/help"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              isActive ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              isActive ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200'
             }`
           }
         >
@@ -65,7 +68,17 @@ export default function Sidebar() {
             </>
           )}
         </NavLink>
-        <p className="text-xs text-gray-300 px-3 pt-1">logall.co.uk</p>
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={() => setDark(d => !d)}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          {dark ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
+          {dark ? 'Light mode' : 'Dark mode'}
+        </button>
+
+        <p className="text-xs text-gray-300 dark:text-gray-600 px-3 pt-1">logall.co.uk</p>
       </div>
     </aside>
   )

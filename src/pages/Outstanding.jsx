@@ -36,12 +36,12 @@ function ReminderSheet({ visit, client, onClose, onMarkPaid }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-      <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-        <h2 className="text-lg font-bold text-gray-900 mb-1">Send reminder</h2>
-        <p className="text-sm text-gray-500 mb-4">{client.name} · {days} days overdue</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Send reminder</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">{client.name} · {days} days overdue</p>
 
         {/* Message preview */}
-        <div className="bg-gray-50 rounded-xl p-3 mb-4 text-sm text-gray-700 leading-relaxed border border-gray-100">
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-4 text-sm text-gray-700 dark:text-gray-200 leading-relaxed border border-gray-100 dark:border-gray-700">
           {message}
         </div>
 
@@ -95,7 +95,7 @@ function ReminderSheet({ visit, client, onClose, onMarkPaid }) {
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 active:bg-gray-50"
+            className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 active:bg-gray-50"
           >
             Cancel
           </button>
@@ -115,14 +115,14 @@ function ReminderSheet({ visit, client, onClose, onMarkPaid }) {
 function RemindAllSheet({ visits, clientMap, onClose, onMarkPaid }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
-      <div className="bg-white rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Remind all</h2>
-            <p className="text-sm text-gray-400">{visits.length} outstanding payment{visits.length > 1 ? 's' : ''}</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Remind all</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{visits.length} outstanding payment{visits.length > 1 ? 's' : ''}</p>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500"><X size={20} /></button>
         </div>
         <div className="space-y-3">
           {visits.map(visit => {
@@ -138,7 +138,7 @@ function RemindAllSheet({ visits, clientMap, onClose, onMarkPaid }) {
             const smsUrl = client.mobile ? `sms:${client.mobile}?body=${encodeURIComponent(message)}` : null
 
             return (
-              <div key={visit.id} className="bg-gray-50 rounded-2xl p-4">
+              <div key={visit.id} className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
                     <div
@@ -148,8 +148,8 @@ function RemindAllSheet({ visits, clientMap, onClose, onMarkPaid }) {
                       {client.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{client.name}</p>
-                      <p className="text-xs text-gray-400">{days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`} · {visit.amount ? `£${parseFloat(visit.amount).toFixed(2)}` : 'no amount'}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm">{client.name}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`} · {visit.amount ? `£${parseFloat(visit.amount).toFixed(2)}` : 'no amount'}</p>
                     </div>
                   </div>
                   <button
@@ -180,7 +180,7 @@ function RemindAllSheet({ visits, clientMap, onClose, onMarkPaid }) {
                       SMS
                     </a>
                   ) : (
-                    <p className="flex-1 text-center text-xs text-gray-400 py-2.5">No phone number saved</p>
+                    <p className="flex-1 text-center text-xs text-gray-400 dark:text-gray-500 py-2.5">No phone number saved</p>
                   )}
                 </div>
               </div>
@@ -250,12 +250,12 @@ export default function Outstanding() {
     <div className="p-4">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 dark:text-gray-500">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-gray-900">Outstanding payments</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Clients who still owe you money</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Outstanding payments</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">Clients who still owe you money</p>
         </div>
         {visits.length > 1 && (
           <button
@@ -279,10 +279,10 @@ export default function Outstanding() {
 
       {/* Empty state */}
       {!loading && visits.length === 0 && (
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
           <div className="text-4xl">🎉</div>
-          <p className="font-semibold text-gray-700">All paid up!</p>
-          <p className="text-gray-400 text-sm">No outstanding payments at the moment</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-200">All paid up!</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">No outstanding payments at the moment</p>
         </div>
       )}
 
@@ -304,7 +304,7 @@ export default function Outstanding() {
                     {client?.name?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{client?.name || 'Unknown'}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{client?.name || 'Unknown'}</p>
                     <p className="text-xs mt-0.5 opacity-70">
                       {new Date(visit.scheduled_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       {' · '}
@@ -314,7 +314,7 @@ export default function Outstanding() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   {visit.amount && (
-                    <p className="font-bold text-gray-900">£{parseFloat(visit.amount).toFixed(2)}</p>
+                    <p className="font-bold text-gray-900 dark:text-white">£{parseFloat(visit.amount).toFixed(2)}</p>
                   )}
                 </div>
               </div>
@@ -322,14 +322,14 @@ export default function Outstanding() {
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={() => setSelected(visit)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-current font-semibold py-2.5 rounded-xl text-xs active:opacity-80 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-current font-semibold py-2.5 rounded-xl text-xs active:opacity-80 transition-colors"
                 >
                   <MessageCircle size={14} />
                   Send reminder
                 </button>
                 <button
                   onClick={() => markPaid(visit)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-current font-semibold py-2.5 rounded-xl text-xs active:opacity-80 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-current font-semibold py-2.5 rounded-xl text-xs active:opacity-80 transition-colors"
                 >
                   <CheckCircle size={14} />
                   Mark paid

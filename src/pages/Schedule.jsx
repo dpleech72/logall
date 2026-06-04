@@ -41,7 +41,7 @@ const STATUS = {
   scheduled:        { label: 'Scheduled',        bg: 'bg-blue-50',   border: 'border-blue-200',   dot: 'bg-blue-400',   text: 'text-blue-700' },
   done_paid:        { label: 'Done & paid',       bg: 'bg-green-50',  border: 'border-green-200',  dot: 'bg-green-500',  text: 'text-green-700' },
   awaiting_payment: { label: 'Awaiting payment',  bg: 'bg-amber-50',  border: 'border-amber-200',  dot: 'bg-amber-400',  text: 'text-amber-700' },
-  cancelled:        { label: 'Cancelled',         bg: 'bg-gray-50',   border: 'border-gray-200',   dot: 'bg-gray-300',   text: 'text-gray-400' },
+  cancelled:        { label: 'Cancelled',         bg: 'bg-gray-50',   border: 'border-gray-200 dark:border-gray-700',   dot: 'bg-gray-300',   text: 'text-gray-400 dark:text-gray-500' },
 }
 
 // --- Undo toast ---
@@ -357,13 +357,13 @@ export default function Schedule() {
   return (
     <div className="flex flex-col h-full lg:flex-row">
       {/* Left panel — calendar */}
-      <div className="lg:w-[380px] lg:shrink-0 lg:border-r lg:border-gray-100 lg:overflow-y-auto lg:h-full">
+      <div className="lg:w-[380px] lg:shrink-0 lg:border-r lg:border-gray-100 dark:border-gray-700 lg:overflow-y-auto lg:h-full">
       {/* Header */}
       <div className="p-4 pt-6 pb-0 md:pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
-            <p className="text-gray-500 text-sm">{monthLabel()}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Schedule</h1>
+            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm">{monthLabel()}</p>
           </div>
           <div className="flex items-center gap-1.5">
             {selecting ? (
@@ -388,7 +388,7 @@ export default function Schedule() {
                 )}
                 <button
                   onClick={() => { setSelecting(false); setSelectedVisits(new Set()) }}
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-600 active:bg-gray-50"
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 bg-white text-gray-600 dark:text-gray-300 active:bg-gray-50"
                 >
                   Done
                 </button>
@@ -404,7 +404,7 @@ export default function Schedule() {
                 </button>
                 <button
                   onClick={() => navigate('/clients')}
-                  className="flex items-center gap-1 bg-white border border-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-xs active:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold px-3 py-1.5 rounded-lg text-xs active:bg-gray-50 transition-colors"
                 >
                   <Users size={13} />
                   Clients
@@ -416,11 +416,11 @@ export default function Schedule() {
 
         {/* View toggle + Today button */}
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex bg-gray-100 rounded-xl p-1 flex-1">
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 flex-1">
             <button
               onClick={() => setViewMode('week')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                viewMode === 'week' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                viewMode === 'week' ? 'bg-white text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500'
               }`}
             >
               Week
@@ -428,7 +428,7 @@ export default function Schedule() {
             <button
               onClick={() => setViewMode('month')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                viewMode === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                viewMode === 'month' ? 'bg-white text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500'
               }`}
             >
               Month
@@ -452,7 +452,7 @@ export default function Schedule() {
             <div className="flex items-center gap-2 mb-3">
               <button
                 onClick={() => { setWeekStart(addDays(weekStart, -7)); setSelectedDay(addDays(weekStart, -7)) }}
-                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 active:bg-gray-100"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -468,11 +468,11 @@ export default function Schedule() {
                       onClick={() => setSelectedDay(day)}
                       className={`flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
-                      <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400'}`}>
+                      <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400 dark:text-gray-500'}`}>
                         {DAY_LABELS[i]}
                       </span>
                       <span className={`text-sm font-bold ${
-                        isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800'
+                        isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800 dark:text-gray-100'
                       }`}>
                         {day.getDate()}
                       </span>
@@ -487,14 +487,14 @@ export default function Schedule() {
               </div>
               <button
                 onClick={() => { setWeekStart(addDays(weekStart, 7)); setSelectedDay(addDays(weekStart, 7)) }}
-                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 active:bg-gray-100"
               >
                 <ChevronRight size={18} />
               </button>
             </div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-semibold text-gray-700">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
                 {selectedDayHoliday && (
@@ -504,7 +504,7 @@ export default function Schedule() {
                     {selectedDayHoliday.name}
                   </span>
                 )}
-                <span className="text-gray-400 text-sm font-normal">
+                <span className="text-gray-400 dark:text-gray-500 text-sm font-normal">
                   {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
                 </span>
               </div>
@@ -514,7 +514,7 @@ export default function Schedule() {
                   else setSelecting(true)
                 }}
                 className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
-                  selecting ? 'bg-green-50 text-green-600 active:bg-green-100' : 'text-gray-400 active:text-gray-600'
+                  selecting ? 'bg-green-50 text-green-600 active:bg-green-100' : 'text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300'
                 }`}
               >
                 <CheckSquare size={14} />
@@ -530,13 +530,13 @@ export default function Schedule() {
             <div className="flex items-center justify-between mb-3">
               <button
                 onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1))}
-                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 active:bg-gray-100"
               >
                 <ChevronLeft size={18} />
               </button>
 
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-gray-700">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   {MONTH_NAMES[monthDate.getMonth()]} {monthDate.getFullYear()}
                 </p>
                 {/* Income toggle */}
@@ -545,7 +545,7 @@ export default function Schedule() {
                   className={`text-xs font-bold px-2 py-0.5 rounded-full border transition-colors ${
                     showIncome
                       ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white text-gray-400 border-gray-200 active:bg-gray-50'
+                      : 'bg-white text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 active:bg-gray-50'
                   }`}
                 >
                   £
@@ -554,7 +554,7 @@ export default function Schedule() {
 
               <button
                 onClick={() => setMonthDate(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1))}
-                className="p-1.5 rounded-lg text-gray-400 active:bg-gray-100"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 active:bg-gray-100"
               >
                 <ChevronRight size={18} />
               </button>
@@ -563,7 +563,7 @@ export default function Schedule() {
             {/* Day of week headers */}
             <div className="grid grid-cols-7 gap-1 mb-1">
               {DAY_LABELS.map(d => (
-                <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                <div key={d} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{d}</div>
               ))}
             </div>
 
@@ -592,7 +592,7 @@ export default function Schedule() {
                       className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
                       <span className={`text-xs font-bold ${
-                        isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800'
+                        isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800 dark:text-gray-100'
                       }`}>
                         {day.getDate()}
                       </span>
@@ -619,7 +619,7 @@ export default function Schedule() {
 
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-semibold text-gray-700">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                   {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
                 {selectedDayHoliday && (
@@ -629,7 +629,7 @@ export default function Schedule() {
                     {selectedDayHoliday.name}
                   </span>
                 )}
-                <span className="text-gray-400 text-sm font-normal">
+                <span className="text-gray-400 dark:text-gray-500 text-sm font-normal">
                   {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
                 </span>
                 {showIncome && dailyIncome[formatDate(selectedDay)] && (
@@ -644,7 +644,7 @@ export default function Schedule() {
                   else setSelecting(true)
                 }}
                 className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg transition-colors ${
-                  selecting ? 'bg-green-50 text-green-600 active:bg-green-100' : 'text-gray-400 active:text-gray-600'
+                  selecting ? 'bg-green-50 text-green-600 active:bg-green-100' : 'text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300'
                 }`}
               >
                 <CheckSquare size={14} />
@@ -661,7 +661,7 @@ export default function Schedule() {
         {/* Desktop day heading */}
         <div className="hidden lg:flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
               {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             </h2>
             {selectedDayHoliday && (
@@ -677,20 +677,20 @@ export default function Schedule() {
               </span>
             )}
           </div>
-          <span className="text-gray-400 text-sm">
+          <span className="text-gray-400 dark:text-gray-500 text-sm">
             {dayVisits.length === 0 ? 'No jobs' : `${dayVisits.length} job${dayVisits.length > 1 ? 's' : ''}`}
           </span>
         </div>
 
         {loading && (
           <div className="space-y-2">
-            {[1,2].map(i => <div key={i} className="h-20 bg-gray-100 rounded-2xl animate-pulse" />)}
+            {[1,2].map(i => <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl animate-pulse" />)}
           </div>
         )}
 
         {!loading && dayVisits.length === 0 && (
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 text-center mt-2">
-            <p className="text-gray-400 text-sm">No jobs scheduled</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-center mt-2">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">No jobs scheduled</p>
           </div>
         )}
 
@@ -700,7 +700,7 @@ export default function Schedule() {
           const isExpanded = expandedId === visit.id
 
           return (
-            <div key={visit.id} className={`bg-white rounded-2xl border-2 ${s.border} shadow-sm overflow-hidden transition-all`}>
+            <div key={visit.id} className={`bg-white dark:bg-gray-800 rounded-2xl border-2 ${s.border} shadow-sm overflow-hidden transition-all`}>
               {/* Card header — always visible */}
               <button
                 className="w-full p-4 text-left flex items-center gap-3"
@@ -732,7 +732,7 @@ export default function Schedule() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-gray-900">{client?.name || 'Unknown client'}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{client?.name || 'Unknown client'}</p>
                     {visit.amount && (
                       <p className="font-bold text-green-600 text-sm">£{parseFloat(visit.amount).toFixed(2)}</p>
                     )}
@@ -740,13 +740,13 @@ export default function Schedule() {
 
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {visit.scheduled_time && (
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
                         <Clock size={11} />
                         {visit.scheduled_time.slice(0, 5)}
                       </span>
                     )}
                     {visit.duration_minutes && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         · {visit.duration_minutes >= 60
                           ? `${Math.floor(visit.duration_minutes/60)}${visit.duration_minutes%60 ? `.${visit.duration_minutes%60}` : ''} hrs`
                           : `${visit.duration_minutes} mins`}
@@ -756,7 +756,7 @@ export default function Schedule() {
 
                   {(client?.address || client?.postcode) && (
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-400 flex-1">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 flex-1">
                         {[client.address, client.postcode].filter(Boolean).join(', ')}
                       </span>
                       <a
@@ -792,7 +792,7 @@ export default function Schedule() {
                       </span>
                     )}
                     {visit.notes && (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500">
                         📝 {visit.notes.length > 20 ? visit.notes.slice(0, 20) + '…' : visit.notes}
                       </span>
                     )}
@@ -850,7 +850,7 @@ export default function Schedule() {
                     {visit.status !== 'scheduled' && (
                       <button
                         onClick={() => updateStatus(visit.id, 'scheduled', visit.status)}
-                        className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
+                        className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
                       >
                         <Clock size={14} />
                         Reschedule
@@ -863,7 +863,7 @@ export default function Schedule() {
                       <Car size={14} />
                       Log mileage
                     </button>
-                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-500 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
+                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
                       <Pencil size={14} />
                       Edit visit
                     </button>
@@ -895,17 +895,17 @@ export default function Schedule() {
       {/* Bulk delete confirm */}
       {confirmBulkDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <p className="font-semibold text-gray-900 mb-1">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">
               {confirmBulkDelete === 'delete' ? 'Delete' : 'Cancel'} {selectedVisits.size} job{selectedVisits.size > 1 ? 's' : ''}?
             </p>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
               {confirmBulkDelete === 'delete'
                 ? 'This cannot be undone — the jobs will be permanently removed.'
                 : 'They will be marked as cancelled. You can still see them in the schedule.'}
             </p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmBulkDelete(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Keep them</button>
+              <button onClick={() => setConfirmBulkDelete(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Keep them</button>
               <button
                 onClick={confirmBulkDelete === 'delete' ? bulkDeleteVisits : bulkCancelVisits}
                 className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium"

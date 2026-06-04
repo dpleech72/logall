@@ -62,13 +62,13 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
-      <div className="bg-white rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
         {/* Handle */}
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
 
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">{income ? 'Edit payment' : 'Log a payment'}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400"><X size={20} /></button>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{income ? 'Edit payment' : 'Log a payment'}</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500"><X size={20} /></button>
         </div>
 
         {error && (
@@ -98,7 +98,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
 
           {/* Client */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Client (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Client (optional)</label>
             <select
               value={form.client_id}
               onChange={async (e) => {
@@ -130,7 +130,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
                   amount,
                 }))
               }}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="">No specific client</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -139,7 +139,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
 
           {/* Payment method */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">How did they pay?</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">How did they pay?</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'cash', label: '💵 Cash' },
@@ -153,7 +153,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
                   className={`py-2.5 px-2 rounded-xl text-xs font-semibold border-2 transition-colors text-center ${
                     form.payment_method === opt.value
                       ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 text-gray-600'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                   }`}
                 >
                   {opt.label}
@@ -164,31 +164,31 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Date received</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Date received</label>
             <input
               type="date"
               value={form.received_date}
               onChange={set('received_date')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Note (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Note (optional)</label>
             <input
               type="text"
               placeholder="e.g. Weekly clean, extra rooms"
               value={form.description}
               onChange={set('description')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
+            className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
@@ -252,8 +252,8 @@ export default function Income() {
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Income</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Payments received</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Income</h1>
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">Payments received</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -275,10 +275,10 @@ export default function Income() {
 
       {/* Empty state */}
       {!loading && income.length === 0 && (
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
           <div className="text-4xl">💷</div>
-          <p className="font-semibold text-gray-700">No payments logged yet</p>
-          <p className="text-gray-400 text-sm">Tap "Log payment" to record your first payment</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-200">No payments logged yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Tap "Log payment" to record your first payment</p>
         </div>
       )}
 
@@ -286,14 +286,14 @@ export default function Income() {
       {groups.map(group => (
         <div key={group.label} className="mb-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-gray-500">{group.label}</p>
-            <p className="text-sm font-bold text-gray-700">£{group.total.toFixed(2)}</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.label}</p>
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-200">£{group.total.toFixed(2)}</p>
           </div>
           <div className="space-y-2">
             {group.items.map(item => {
               const client = clientMap[item.client_id]
               return (
-                <div key={item.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5 flex items-center gap-3">
+                <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3">
                   {/* Client avatar or money icon */}
                   {client ? (
                     <div
@@ -309,11 +309,11 @@ export default function Income() {
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                       {item.description || client?.name || 'Payment'}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         {new Date(item.received_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
                       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${paymentColour[item.payment_method]}`}>
@@ -343,11 +343,11 @@ export default function Income() {
       {/* Delete confirmation */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <p className="font-semibold text-gray-900 mb-1">Delete this payment?</p>
-            <p className="text-sm text-gray-500 mb-4">This can't be undone.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this payment?</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">This can't be undone.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
+              <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
             </div>
           </div>

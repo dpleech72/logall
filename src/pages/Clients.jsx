@@ -52,9 +52,9 @@ export default function Clients() {
     return (
       <div className="p-4 space-y-3 pt-6">
         {[1,2,3].map(i => (
-          <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 animate-pulse">
-            <div className="h-4 bg-gray-100 rounded w-1/3 mb-2" />
-            <div className="h-3 bg-gray-100 rounded w-1/2" />
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 animate-pulse">
+            <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-1/3 mb-2" />
+            <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded w-1/2" />
           </div>
         ))}
       </div>
@@ -66,12 +66,12 @@ export default function Clients() {
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 active:text-gray-600">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 dark:text-gray-500 active:text-gray-600 dark:text-gray-300">
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-            <p className="text-gray-500 text-sm mt-0.5">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clients</h1>
+            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">
               {selecting
                 ? `${selected.size} selected`
                 : `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}`}
@@ -92,7 +92,7 @@ export default function Clients() {
               )}
               <button
                 onClick={() => { setSelecting(false); setSelected(new Set()) }}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 active:bg-gray-50"
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 active:bg-gray-50"
               >
                 Cancel
               </button>
@@ -101,7 +101,7 @@ export default function Clients() {
             <>
               <button
                 onClick={() => setSelecting(true)}
-                className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-gray-50 transition-colors"
               >
                 <CheckSquare size={16} />
                 Select
@@ -120,10 +120,10 @@ export default function Clients() {
 
       {/* Empty state */}
       {clients.length === 0 && (
-        <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
           <div className="text-4xl">👤</div>
-          <p className="font-semibold text-gray-700">No clients yet</p>
-          <p className="text-gray-400 text-sm">Add your first client to get started</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-200">No clients yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Add your first client to get started</p>
           <button
             onClick={() => navigate('/clients/add')}
             className="mt-2 bg-green-600 text-white font-semibold px-6 py-2.5 rounded-xl active:bg-green-700 transition-colors text-sm"
@@ -147,8 +147,8 @@ export default function Clients() {
                 navigate(`/clients/${client.id}`)
               }
             }}
-            className={`w-full bg-white rounded-2xl p-4 border shadow-sm text-left transition-colors flex items-center gap-3 ${
-              selected.has(client.id) ? 'border-red-300 bg-red-50' : 'border-gray-100 active:bg-gray-50'
+            className={`w-full bg-white dark:bg-gray-800 rounded-2xl p-4 border shadow-sm text-left transition-colors flex items-center gap-3 ${
+              selected.has(client.id) ? 'border-red-300 bg-red-50' : 'border-gray-100 dark:border-gray-700 active:bg-gray-50'
             }`}
           >
             {selecting ? (
@@ -168,10 +168,10 @@ export default function Clients() {
             )}
 
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900">{client.name}</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{client.name}</p>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 {client.mobile && (
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
                     <Phone size={11} />
                     {client.mobile}
                   </span>
@@ -180,7 +180,7 @@ export default function Clients() {
                   {paymentLabel[client.payment_method]}
                 </span>
                 {client.hourly_rate && (
-                  <span className="text-xs text-gray-400">£{client.hourly_rate}/hr</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">£{client.hourly_rate}/hr</span>
                 )}
               </div>
             </div>
@@ -193,11 +193,11 @@ export default function Clients() {
       {/* Confirm delete modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
-            <p className="font-semibold text-gray-900 mb-1">Delete {selected.size} client{selected.size > 1 ? 's' : ''}?</p>
-            <p className="text-sm text-gray-500 mb-4">Their history will be kept but they'll be removed from your client list.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+            <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete {selected.size} client{selected.size > 1 ? 's' : ''}?</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">Their history will be kept but they'll be removed from your client list.</p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmDelete(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
+              <button onClick={() => setConfirmDelete(false)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={bulkDelete} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
             </div>
           </div>
