@@ -14,7 +14,7 @@ async function getCoords(address) {
   )
   const data = await res.json()
   if (!data?.[0]) throw new Error(`Could not find location: ${address}`)
-  return [parseFloat(data[0].lon), parseFloat(data[0].lat)] // [lng, lat]
+  return [parseFloat(data[0].lon), parseFloat(data[0].lat)]
 }
 
 async function calcDistance(fromCoords, toCoords) {
@@ -24,7 +24,7 @@ async function calcDistance(fromCoords, toCoords) {
   const data = await res.json()
   const metres = data.features?.[0]?.properties?.segments?.[0]?.distance
   if (!metres) throw new Error('Could not calculate distance')
-  return (metres / 1609.344).toFixed(1) // convert to miles
+  return (metres / 1609.344).toFixed(1)
 }
 
 async function getCurrentCoords() {
@@ -35,26 +35,6 @@ async function getCurrentCoords() {
       () => reject(new Error('Could not get your location'))
     )
   })
-}
-
-async function reverseGeocode(lng, lat) {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      { headers: { 'User-Agent': 'LogAll/1.0' } }
-    )
-    const data = await res.json()
-    // Build a friendly address from the result
-    const a = data.address || {}
-    const parts = [
-      a.house_number && a.road ? `${a.house_number} ${a.road}` : a.road,
-      a.town || a.city || a.village || a.suburb,
-      a.postcode,
-    ].filter(Boolean)
-    return parts.length > 0 ? parts.join(', ') : data.display_name?.split(',').slice(0, 3).join(',').trim()
-  } catch {
-    return null
-  }
 }
 
 function groupByMonth(journeys) {
@@ -76,29 +56,59 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
     client_id: journey?.client_id || prefillClientId || '',
     journey_date: journey?.journey_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
     from_location: journey?.from_location || '',
-    to_location: journey?.to_location || '',
+    to_locations: journey?.to_location
+      ? journey.to_location.split(' → ').filter(Boolean)
+      : [''],
     miles: journey?.miles ? String(journey.miles) : '',
     notes: journey?.notes || '',
   })
-  const [coordsCache, setCoordsCache] = useState({}) // cache by location string
-  const fromLocationRef = useRef('')
+  const [coordsCache, setCoordsCache] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [calculating, setCalculating] = useState(false)
 
+  // Helpers for managing stops
+  const updateStop = (i, val) => setForm(f => {
+    const locs = [...f.to_locations]; locs[i] = val; return { ...f, to_locations: locs }
+  })
+  const removeStop = (i) => setForm(f => ({
+    ...f, to_locations: f.to_locations.filter((_, idx) => idx !== i)
+  }))
+  const addStop = () => setForm(f => ({ ...f, to_locations: [...f.to_locations, ''] }))
+
+  const quickFillStop = (val) => setForm(f => {
+    const locs = [...f.to_locations]
+    const emptyIdx = locs.findIndex(l => !l.trim())
+    if (emptyIdx !== -1) locs[emptyIdx] = val
+    else locs[locs.length - 1] = val
+    return { ...f, to_locations: locs }
+  })
+
+  const handleClientChange = (e) => {
+    const client = clients.find(c => c.id === e.target.value)
+    const dest = client?.postcode || client?.address || ''
+    setForm(f => {
+      const locs = [...f.to_locations]
+      const emptyIdx = locs.findIndex(l => !l.trim())
+      if (emptyIdx !== -1) locs[emptyIdx] = dest
+      else locs[locs.length - 1] = dest
+      return { ...f, client_id: e.target.value, to_locations: locs }
+    })
+  }
+
   async function handleCalculateDistance() {
-    if (!form.to_location.trim()) { setError('Please enter a destination first.'); return }
+    const stops = form.to_locations.filter(l => l.trim())
+    if (stops.length === 0) { setError('Please enter at least one destination.'); return }
     setError('')
     setCalculating(true)
     try {
       // Resolve FROM
-      let resolvedFrom
+      let fromCoords
       if (!form.from_location.trim()) {
-        resolvedFrom = await getCurrentCoords()
-        // Try reverse geocode — if it works, fill in the address
+        fromCoords = await getCurrentCoords()
         try {
           const res = await fetch(
-            `https://api.openrouteservice.org/geocode/reverse?api_key=${ORS_KEY}&point.lon=${resolvedFrom[0]}&point.lat=${resolvedFrom[1]}&size=1`
+            `https://api.openrouteservice.org/geocode/reverse?api_key=${ORS_KEY}&point.lon=${fromCoords[0]}&point.lat=${fromCoords[1]}&size=1`
           )
           const data = await res.json()
           const props = data.features?.[0]?.properties
@@ -113,23 +123,32 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
           }
         } catch (_) {}
       } else if (coordsCache[form.from_location.trim()]) {
-        resolvedFrom = coordsCache[form.from_location.trim()]
+        fromCoords = coordsCache[form.from_location.trim()]
       } else {
-        resolvedFrom = await getCoords(form.from_location)
-        setCoordsCache(c => ({ ...c, [form.from_location]: resolvedFrom }))
+        fromCoords = await getCoords(form.from_location)
+        setCoordsCache(c => ({ ...c, [form.from_location]: fromCoords }))
       }
 
-      // Resolve TO
-      let resolvedTo
-      if (coordsCache[form.to_location.trim()]) {
-        resolvedTo = coordsCache[form.to_location.trim()]
-      } else {
-        resolvedTo = await getCoords(form.to_location)
-        setCoordsCache(c => ({ ...c, [form.to_location]: resolvedTo }))
+      // Resolve each stop
+      const allCoords = [fromCoords]
+      for (const stop of stops) {
+        let coords
+        if (coordsCache[stop.trim()]) {
+          coords = coordsCache[stop.trim()]
+        } else {
+          coords = await getCoords(stop)
+          setCoordsCache(c => ({ ...c, [stop]: coords }))
+        }
+        allCoords.push(coords)
       }
 
-      const miles = await calcDistance(resolvedFrom, resolvedTo)
-      setForm(f => ({ ...f, miles }))
+      // Sum each leg
+      let totalMiles = 0
+      for (let i = 0; i < allCoords.length - 1; i++) {
+        const miles = await calcDistance(allCoords[i], allCoords[i + 1])
+        totalMiles += parseFloat(miles)
+      }
+      setForm(f => ({ ...f, miles: totalMiles.toFixed(1) }))
     } catch (err) {
       setError(err.message)
     }
@@ -138,33 +157,22 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
-  // Auto-fill to_location from client address
-  const handleClientChange = (e) => {
-    const client = clients.find(c => c.id === e.target.value)
-    setForm(f => ({
-      ...f,
-      client_id: e.target.value,
-      to_location: client?.postcode || (client?.address ? client.address : f.to_location),
-    }))
-  }
-
   const claimable = form.miles ? (parseFloat(form.miles) * RATE).toFixed(2) : '0.00'
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     if (!form.from_location.trim()) { setError('Please enter a starting location.'); return }
-    if (!form.to_location.trim()) { setError('Please enter a destination.'); return }
+    if (!form.to_locations.some(l => l.trim())) { setError('Please enter at least one destination.'); return }
     if (!form.miles || parseFloat(form.miles) <= 0) { setError('Please enter the number of miles.'); return }
 
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-
     const payload = {
       client_id: form.client_id || null,
       journey_date: form.journey_date,
       from_location: form.from_location,
-      to_location: form.to_location,
+      to_location: form.to_locations.filter(Boolean).join(' → '),
       miles: parseFloat(form.miles),
       rate_per_mile: RATE,
       notes: form.notes || null,
@@ -225,7 +233,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             />
           </div>
 
-          {/* From / To with swap */}
+          {/* From */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">From</label>
             <input
@@ -235,7 +243,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
               onChange={set('from_location')}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
             />
-            {/* Quick-fill buttons */}
             <div>
               <p className="text-xs text-gray-400 mb-1.5">Quick fill:</p>
               <div className="flex flex-wrap gap-2">
@@ -243,24 +250,17 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                   type="button"
                   onClick={() => setForm(f => ({ ...f, from_location: homeAddress || 'Home' }))}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors"
-                  title={homeAddress || 'Add your address in Profile'}
                 >
                   🏠 Home
                 </button>
-                {clients.filter(c => c.address).map(c => (
+                {clients.filter(c => c.address || c.postcode).map(c => (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setForm(f => ({
-                      ...f,
-                      from_location: c.postcode || `${c.address}`,
-                    }))}
+                    onClick={() => setForm(f => ({ ...f, from_location: c.postcode || c.address }))}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
                   >
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: c.colour || '#16a34a' }}
-                    />
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.colour || '#16a34a' }} />
                     {c.name}
                   </button>
                 ))}
@@ -268,11 +268,14 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </div>
           </div>
 
-          {/* Swap button */}
+          {/* Swap */}
           <div className="flex justify-center -my-1">
             <button
               type="button"
-              onClick={() => setForm(f => ({ ...f, from_location: f.to_location, to_location: f.from_location }))}
+              onClick={() => setForm(f => {
+                const firstTo = f.to_locations[0] || ''
+                return { ...f, from_location: firstTo, to_locations: [f.from_location, ...f.to_locations.slice(1)] }
+              })}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium active:bg-gray-200 transition-colors"
             >
               <ArrowLeftRight size={13} />
@@ -280,42 +283,66 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </button>
           </div>
 
+          {/* To — multiple stops */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">To</label>
-            <input
-              type="text"
-              placeholder="e.g. Mrs Johnson, 12 Oak Street"
-              value={form.to_location}
-              onChange={set('to_location')}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
-            />
-            {/* Quick-fill buttons */}
+            <div className="space-y-2 mb-2">
+              {form.to_locations.map((loc, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  {form.to_locations.length > 1 && (
+                    <span className="text-xs text-gray-400 w-4 flex-shrink-0 text-center">{i + 1}</span>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="e.g. postcode or address"
+                    value={loc}
+                    onChange={e => updateStop(i, e.target.value)}
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  {form.to_locations.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeStop(i)}
+                      className="p-2 text-red-400 active:text-red-600 flex-shrink-0"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Add another stop */}
+            <button
+              type="button"
+              onClick={addStop}
+              className="text-xs font-medium text-blue-600 active:opacity-70 mb-3"
+            >
+              + Add another stop
+            </button>
+
+            {/* Quick fill for To */}
             <div>
               <p className="text-xs text-gray-400 mb-1.5">Quick fill:</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => setForm(f => ({ ...f, to_location: homeAddress || 'Home' }))}
+                  onClick={() => quickFillStop(homeAddress || 'Home')}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors"
-                  title={homeAddress || 'Add your address in Profile'}
                 >
                   🏠 Home
                 </button>
-                {clients.filter(c => c.address).map(c => (
+                {clients.filter(c => c.address || c.postcode).map(c => (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setForm(f => ({
-                      ...f,
-                      to_location: c.postcode || `${c.address}`,
-                      client_id: f.client_id || c.id,
-                    }))}
+                    onClick={() => {
+                      quickFillStop(c.postcode || c.address)
+                      setForm(f => ({ ...f, client_id: f.client_id || c.id }))
+                    }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
                   >
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: c.colour || '#16a34a' }}
-                    />
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.colour || '#16a34a' }} />
                     {c.name}
                   </button>
                 ))}
@@ -325,7 +352,12 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 
           {/* Miles */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Miles</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Miles
+              {form.to_locations.length > 1 && (
+                <span className="ml-2 text-xs font-normal text-gray-400">total for all stops</span>
+              )}
+            </label>
             <div className="relative mb-2">
               <input
                 type="number"
@@ -344,10 +376,14 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
               disabled={calculating}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-600 text-xs font-semibold active:bg-blue-100 disabled:opacity-60 transition-colors"
             >
-              {calculating ? <><Loader size={14} className="animate-spin" /> Calculating...</> : <><Navigation size={14} /> Calculate distance automatically</>}
+              {calculating
+                ? <><Loader size={14} className="animate-spin" /> Calculating...</>
+                : <><Navigation size={14} /> Calculate distance automatically</>}
             </button>
             <p className="text-xs text-gray-400 mt-1.5 text-center">
-              Uses your current location if "From" is empty
+              {form.to_locations.length > 1
+                ? 'Adds up each leg of the journey'
+                : 'Uses your current location if "From" is empty'}
             </p>
           </div>
 
@@ -363,21 +399,12 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             />
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
-          >
+          <button type="button" onClick={onClose} className="w-full bg-gray-100 text-gray-600 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors">
             Cancel
           </button>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-          >
+          <button type="submit" disabled={loading} className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2">
             <Check size={16} />
-{loading ? 'Saving...' : journey ? 'Save changes' : 'Log journey'}
+            {loading ? 'Saving...' : journey ? 'Save changes' : 'Log journey'}
           </button>
         </form>
       </div>
@@ -423,37 +450,26 @@ export default function Mileage() {
     setDeleteId(null)
   }
 
-  // Tax year totals (April to April)
   const now = new Date()
   const taxYearStart = new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6)
-  const taxYearMiles = journeys
-    .filter(j => new Date(j.journey_date) >= taxYearStart)
-    .reduce((sum, j) => sum + parseFloat(j.miles), 0)
-  const taxYearClaimable = journeys
-    .filter(j => new Date(j.journey_date) >= taxYearStart)
-    .reduce((sum, j) => sum + parseFloat(j.claimable_amount), 0)
+  const taxYearMiles = journeys.filter(j => new Date(j.journey_date) >= taxYearStart).reduce((sum, j) => sum + parseFloat(j.miles), 0)
+  const taxYearClaimable = journeys.filter(j => new Date(j.journey_date) >= taxYearStart).reduce((sum, j) => sum + parseFloat(j.claimable_amount), 0)
   const progressPct = Math.min((taxYearMiles / THRESHOLD) * 100, 100)
-
   const groups = groupByMonth(journeys)
 
   return (
     <div className="p-4">
-      {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mileage</h1>
           <p className="text-gray-500 text-sm mt-0.5">55p/mile — HMRC approved</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors"
-        >
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
           <Plus size={16} />
           Log journey
         </button>
       </div>
 
-      {/* Tax year summary card */}
       <div className="bg-blue-600 rounded-2xl p-4 mb-4 text-white">
         <p className="text-blue-100 text-xs font-medium mb-1">This tax year</p>
         <div className="flex items-end justify-between mb-3">
@@ -466,33 +482,24 @@ export default function Mileage() {
             <p className="text-blue-100 text-xs">miles</p>
           </div>
         </div>
-
-        {/* 10,000 mile progress bar */}
         <div>
           <div className="flex justify-between text-xs text-blue-100 mb-1">
             <span>{taxYearMiles.toFixed(0)} of 10,000 miles</span>
             <span>{progressPct.toFixed(0)}%</span>
           </div>
           <div className="h-2 bg-blue-400/40 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white rounded-full transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
+            <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
           </div>
           <p className="text-blue-100 text-xs mt-1">
-            {taxYearMiles >= THRESHOLD
-              ? 'Over 10,000 miles — rate drops to 25p/mile'
-              : `${(THRESHOLD - taxYearMiles).toFixed(0)} miles until rate drops to 25p/mile`}
+            {taxYearMiles >= THRESHOLD ? 'Over 10,000 miles — rate drops to 25p/mile' : `${(THRESHOLD - taxYearMiles).toFixed(0)} miles until rate drops to 25p/mile`}
           </p>
         </div>
       </div>
 
-      {/* EV warning */}
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-xs text-amber-700">
         ⚡ Electric vehicle? You still claim 55p/mile — but you cannot also claim charging costs. One or the other.
       </div>
 
-      {/* Empty state */}
       {!loading && journeys.length === 0 && (
         <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3">
           <div className="text-4xl">🚗</div>
@@ -501,7 +508,6 @@ export default function Mileage() {
         </div>
       )}
 
-      {/* Journey groups */}
       {groups.map(group => (
         <div key={group.label} className="mb-5">
           <div className="flex items-center justify-between mb-2">
@@ -528,9 +534,7 @@ export default function Mileage() {
                         {new Date(journey.journey_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
                       <span className="text-xs text-gray-400">{parseFloat(journey.miles).toFixed(1)} miles</span>
-                      {client && (
-                        <span className="text-xs text-gray-400">{client.name}</span>
-                      )}
+                      {client && <span className="text-xs text-gray-400">{client.name}</span>}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 mr-1">
@@ -551,7 +555,6 @@ export default function Mileage() {
         </div>
       ))}
 
-      {/* Delete confirmation */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-24">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
@@ -565,7 +568,6 @@ export default function Mileage() {
         </div>
       )}
 
-      {/* Log journey sheet */}
       {showForm && (
         <LogJourneySheet
           clients={clients}
