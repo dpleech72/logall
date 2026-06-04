@@ -243,28 +243,27 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
               onChange={set('from_location')}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
             />
-            <div>
-              <p className="text-xs text-gray-400 mb-1.5">Quick fill:</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, from_location: homeAddress || 'Home' }))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors"
-                >
-                  🏠 Home
-                </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, from_location: homeAddress || 'Home' }))}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors flex-shrink-0"
+              >
+                🏠 Home
+              </button>
+              <select
+                defaultValue=""
+                onChange={e => {
+                  if (e.target.value) setForm(f => ({ ...f, from_location: e.target.value }))
+                  e.target.value = ''
+                }}
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              >
+                <option value="">Select a client...</option>
                 {clients.filter(c => c.address || c.postcode).map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, from_location: c.postcode || c.address }))}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
-                  >
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.colour || '#16a34a' }} />
-                    {c.name}
-                  </button>
+                  <option key={c.id} value={c.postcode || c.address}>{c.name}</option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 
@@ -322,31 +321,30 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </button>
 
             {/* Quick fill for To */}
-            <div>
-              <p className="text-xs text-gray-400 mb-1.5">Quick fill:</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => quickFillStop(homeAddress || 'Home')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors"
-                >
-                  🏠 Home
-                </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => quickFillStop(homeAddress || 'Home')}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors flex-shrink-0"
+              >
+                🏠 Home
+              </button>
+              <select
+                defaultValue=""
+                onChange={e => {
+                  if (!e.target.value) return
+                  const client = clients.find(c => (c.postcode || c.address) === e.target.value)
+                  quickFillStop(e.target.value)
+                  if (client) setForm(f => ({ ...f, client_id: f.client_id || client.id }))
+                  e.target.value = ''
+                }}
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              >
+                <option value="">Select a client...</option>
                 {clients.filter(c => c.address || c.postcode).map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      quickFillStop(c.postcode || c.address)
-                      setForm(f => ({ ...f, client_id: f.client_id || c.id }))
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white active:bg-gray-50 transition-colors"
-                  >
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.colour || '#16a34a' }} />
-                    {c.name}
-                  </button>
+                  <option key={c.id} value={c.postcode || c.address}>{c.name}</option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 
