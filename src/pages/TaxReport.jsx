@@ -35,7 +35,7 @@ function calcTax(profit) {
 
 function Row({ label, value, bold, topBorder, negative }) {
   return (
-    <div className={`flex justify-between px-4 py-2.5 ${topBorder ? 'border-t-2 border-gray-800 bg-gray-50' : 'border-t border-gray-100 dark:border-gray-700 first:border-0'}`}>
+    <div className={`flex justify-between px-4 py-2.5 ${topBorder ? 'border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700' : 'border-t border-gray-100 dark:border-gray-700 first:border-0'}`}>
       <span className={`text-sm ${bold ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>{label}</span>
       <span className={`text-sm font-semibold ${negative ? 'text-red-600' : 'text-gray-900 dark:text-white'}`}>
         {negative ? `−£${Math.abs(value).toFixed(2)}` : `£${value.toFixed(2)}`}
@@ -108,20 +108,20 @@ export default function TaxReport() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <p className="text-gray-400 dark:text-gray-500 text-sm">Preparing report…</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
       {/* Screen-only toolbar */}
       <div className="print:hidden sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 flex items-center justify-between z-10">
         <button
           onClick={() => navigate('/tax')}
-          className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm active:text-gray-700 dark:text-gray-200"
+          className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm active:text-gray-700 dark:text-gray-200"
         >
           <ArrowLeft size={18} />
           Back
@@ -139,10 +139,10 @@ export default function TaxReport() {
       <div className="max-w-2xl mx-auto px-6 py-8 print:px-0 print:py-0">
 
         {/* Header */}
-        <div className="flex items-start justify-between pb-5 mb-6 border-b-2 border-gray-900">
+        <div className="flex items-start justify-between pb-5 mb-6 border-b-2 border-gray-900 dark:border-gray-600">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tax Report</h1>
-            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-1">
+            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 dark:text-gray-400 text-sm mt-1">
               Tax year {taxYearLabel} · 6 April {tyStart} – 5 April {tyStart + 1}
             </p>
             {profileName && (
@@ -158,7 +158,7 @@ export default function TaxReport() {
         {/* Summary */}
         <section className="mb-8">
           <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Summary</h2>
-          <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
             <Row label="Total income" value={totalIncome} />
             <Row label="Business expenses" value={totalExpenses} negative />
             <Row label="Mileage claim (55p/mile)" value={totalMileage} negative />
@@ -171,7 +171,7 @@ export default function TaxReport() {
         {/* Estimated tax */}
         <section className="mb-8">
           <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Estimated Tax Bill</h2>
-          <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
             <Row label="Income Tax (20% basic rate)" value={tax.incomeTax} />
             <Row label="Class 4 National Insurance (9%)" value={tax.class4} />
             <Row label="Class 2 National Insurance (£3.45/week)" value={tax.class2} />
@@ -192,7 +192,7 @@ export default function TaxReport() {
           {Object.keys(incomeByMonth).length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500 italic px-1">No income recorded this tax year.</p>
           ) : (
-            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
               {Object.entries(incomeByMonth).map(([month, data], i) => (
                 <div key={month} className={`flex justify-between px-4 py-2.5 ${i > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}`}>
                   <span className="text-sm text-gray-600 dark:text-gray-300">{month}</span>
@@ -202,7 +202,7 @@ export default function TaxReport() {
                   </div>
                 </div>
               ))}
-              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-800 bg-gray-50">
+              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Total</span>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">£{totalIncome.toFixed(2)}</span>
               </div>
@@ -219,14 +219,14 @@ export default function TaxReport() {
           {Object.keys(expensesByCategory).length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500 italic px-1">No expenses recorded this tax year.</p>
           ) : (
-            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
               {Object.entries(expensesByCategory).map(([cat, total], i) => (
                 <div key={cat} className={`flex justify-between px-4 py-2.5 ${i > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}`}>
                   <span className="text-sm text-gray-600 dark:text-gray-300">{cat}</span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">£{total.toFixed(2)}</span>
                 </div>
               ))}
-              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-800 bg-gray-50">
+              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Total</span>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">£{totalExpenses.toFixed(2)}</span>
               </div>
@@ -243,7 +243,7 @@ export default function TaxReport() {
           {mileage.length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500 italic px-1">No mileage recorded this tax year.</p>
           ) : (
-            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
               <div className="flex justify-between px-4 py-2.5">
                 <span className="text-sm text-gray-600 dark:text-gray-300">Journeys logged</span>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">{mileage.length}</span>
@@ -256,7 +256,7 @@ export default function TaxReport() {
                 <span className="text-sm text-gray-600 dark:text-gray-300">Rate (HMRC approved)</span>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">55p per mile</span>
               </div>
-              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-800 bg-gray-50">
+              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Claimable amount</span>
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">£{totalMileage.toFixed(2)}</span>
               </div>
