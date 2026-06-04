@@ -166,7 +166,7 @@ export default function VisitEditForm() {
               { value: 'scheduled',        label: '📅 Scheduled',        colour: 'border-blue-500 bg-blue-50 text-blue-700' },
               { value: 'done_paid',        label: '✅ Done & paid',       colour: 'border-green-500 bg-green-50 text-green-700' },
               { value: 'awaiting_payment', label: '⏳ Awaiting payment',  colour: 'border-amber-500 bg-amber-50 text-amber-700' },
-              { value: 'cancelled',        label: '❌ Cancelled',         colour: 'border-gray-300 bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
+              { value: 'cancelled',        label: '❌ Cancelled',         colour: 'border-gray-300 bg-gray-50 text-gray-500 dark:text-gray-400' },
             ].map(opt => (
               <button
                 key={opt.value}

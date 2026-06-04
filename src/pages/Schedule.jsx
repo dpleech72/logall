@@ -363,7 +363,7 @@ export default function Schedule() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Schedule</h1>
-            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm">{monthLabel()}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{monthLabel()}</p>
           </div>
           <div className="flex items-center gap-1.5">
             {selecting ? (
@@ -420,7 +420,7 @@ export default function Schedule() {
             <button
               onClick={() => setViewMode('week')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                viewMode === 'week' ? 'bg-white text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500'
+                viewMode === 'week' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'
               }`}
             >
               Week
@@ -428,7 +428,7 @@ export default function Schedule() {
             <button
               onClick={() => setViewMode('month')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                viewMode === 'month' ? 'bg-white text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500'
+                viewMode === 'month' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'
               }`}
             >
               Month
@@ -792,7 +792,7 @@ export default function Schedule() {
                       </span>
                     )}
                     {visit.notes && (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400">
                         📝 {visit.notes.length > 20 ? visit.notes.slice(0, 20) + '…' : visit.notes}
                       </span>
                     )}
@@ -850,7 +850,7 @@ export default function Schedule() {
                     {visit.status !== 'scheduled' && (
                       <button
                         onClick={() => updateStatus(visit.id, 'scheduled', visit.status)}
-                        className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
+                        className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors"
                       >
                         <Clock size={14} />
                         Reschedule
@@ -863,7 +863,7 @@ export default function Schedule() {
                       <Car size={14} />
                       Log mileage
                     </button>
-                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
+                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold py-2.5 rounded-xl text-xs col-span-2 active:bg-gray-50 transition-colors">
                       <Pencil size={14} />
                       Edit visit
                     </button>
@@ -899,7 +899,7 @@ export default function Schedule() {
             <p className="font-semibold text-gray-900 dark:text-white mb-1">
               {confirmBulkDelete === 'delete' ? 'Delete' : 'Cancel'} {selectedVisits.size} job{selectedVisits.size > 1 ? 's' : ''}?
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               {confirmBulkDelete === 'delete'
                 ? 'This cannot be undone — the jobs will be permanently removed.'
                 : 'They will be marked as cancelled. You can still see them in the schedule.'}
