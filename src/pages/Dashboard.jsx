@@ -6,10 +6,10 @@ import { PoundSterling, TrendingUp, AlertCircle, Car, LogOut, Users, ChevronRigh
 
 function StatCard({ label, value, sub, colour, onClick }) {
   const colours = {
-    green: 'bg-green-50 text-green-700',
-    amber: 'bg-amber-50 text-amber-700',
-    red:   'bg-red-50 text-red-700',
-    grey:  'bg-gray-50 text-gray-600 dark:text-gray-300',
+    green: 'bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-400',
+    amber: 'bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400',
+    red:   'bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-400',
+    grey:  'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
   }
   return (
     <div
