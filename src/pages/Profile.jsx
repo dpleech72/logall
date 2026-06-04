@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon } from 'lucide-react'
+import { useDarkMode } from '../hooks/useDarkMode'
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -39,6 +40,7 @@ function formatHolidayDates(startDate, endDate) {
 export default function Profile() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const [dark, setDark] = useDarkMode()
 
   const [form, setForm] = useState({
     full_name: '',
@@ -395,8 +397,24 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Sign out */}
+      {/* Dark mode toggle */}
       <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+        <button
+          onClick={() => setDark(d => !d)}
+          className="w-full flex items-center justify-between text-sm font-medium text-gray-700 dark:text-gray-200 py-1"
+        >
+          <span className="flex items-center gap-2">
+            {dark ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-gray-400" />}
+            {dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          </span>
+          <span className={`w-10 h-6 rounded-full flex items-center px-1 transition-colors ${dark ? 'bg-green-600' : 'bg-gray-200'}`}>
+            <span className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${dark ? 'translate-x-4' : 'translate-x-0'}`} />
+          </span>
+        </button>
+      </div>
+
+      {/* Sign out */}
+      <div className="mt-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
         <button
           onClick={signOut}
           className="w-full flex items-center justify-center gap-2 text-red-500 font-semibold py-2 text-sm active:opacity-70 transition-colors"
