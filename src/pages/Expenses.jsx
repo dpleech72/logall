@@ -385,8 +385,8 @@ export default function Expenses() {
           <button onClick={() => setShowGuide(true)} className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50">
             <Info size={18} />
           </button>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
-            <Plus size={16} />
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-xs active:bg-green-700 transition-colors">
+            <Plus size={14} />
             Add
           </button>
         </div>
@@ -463,7 +463,10 @@ export default function Expenses() {
                     </p>
                   </>
                 ) : (
-                  <p className="text-sm font-bold text-transparent">£0</p>
+                  <>
+                    <p className="text-sm font-bold text-transparent">£0</p>
+                    <p className="text-xs mt-0.5 text-transparent">-</p>
+                  </>
                 )}
               </button>
             )

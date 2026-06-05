@@ -386,8 +386,8 @@ export default function Income() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Income</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Payments received</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
-          <Plus size={16} />
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-xs active:bg-green-700 transition-colors">
+          <Plus size={14} />
           Log payment
         </button>
       </div>
@@ -445,7 +445,10 @@ export default function Income() {
                     <p className="text-xs text-green-600">{summary.count} {summary.count === 1 ? 'pmt' : 'pmts'}</p>
                   </>
                 ) : (
-                  <p className="text-sm font-bold text-transparent">£0</p>
+                  <>
+                    <p className="text-sm font-bold text-transparent">£0</p>
+                    <p className="text-xs mt-0.5 text-transparent">-</p>
+                  </>
                 )}
               </button>
             )

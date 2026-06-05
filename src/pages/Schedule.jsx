@@ -355,9 +355,9 @@ export default function Schedule() {
   const selectedDayHoliday = getHolidayInfo(formatDate(selectedDay))
 
   return (
-    <div className="flex flex-col h-full lg:flex-row">
+    <div className="flex flex-col h-full md:flex-row">
       {/* Left panel — calendar */}
-      <div className="lg:w-[380px] lg:shrink-0 lg:border-r lg:border-gray-100 dark:border-gray-700 lg:overflow-y-auto lg:h-full">
+      <div className="md:w-[300px] lg:w-[380px] md:shrink-0 md:border-r md:border-gray-100 dark:border-gray-700 md:overflow-y-auto md:h-full">
       {/* Header */}
       <div className="p-4 pt-6 pb-0 md:pb-4">
         <div className="flex items-center justify-between mb-4">
@@ -561,14 +561,14 @@ export default function Schedule() {
             </div>
 
             {/* Day of week headers */}
-            <div className="grid grid-cols-7 gap-1 mb-1">
+            <div className="grid grid-cols-7 gap-0.5 mb-0.5">
               {DAY_LABELS.map(d => (
-                <div key={d} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{d}</div>
+                <div key={d} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-0.5">{d}</div>
               ))}
             </div>
 
             {/* Month grid */}
-            <div className="grid grid-cols-7 gap-1 mb-3">
+            <div className="grid grid-cols-7 gap-0.5 mb-2">
               {(() => {
                 const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
                 const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
@@ -589,21 +589,21 @@ export default function Schedule() {
                     <button
                       key={i}
                       onClick={() => { setSelectedDay(day) }}
-                      className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
+                      className={`flex flex-col items-center py-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
                       <span className={`text-xs font-bold ${
                         isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800 dark:text-gray-100'
                       }`}>
                         {day.getDate()}
                       </span>
-                      <div className="flex gap-0.5 mt-0.5 h-2">
+                      <div className="flex gap-0.5 mt-0.5 h-1.5">
                         {dots.slice(0, 3).map((dot, j) => (
-                          <div key={j} className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white opacity-90' : dot}`} />
+                          <div key={j} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white opacity-90' : dot}`} />
                         ))}
                       </div>
                       {/* Income amount — space always reserved when toggle is on */}
                       {showIncome && (
-                        <span className={`text-xs font-semibold leading-none mt-1 h-3 ${
+                        <span className={`text-xs font-semibold leading-none mt-0.5 h-3 ${
                           dayIncome
                             ? isSelected ? 'text-green-100' : 'text-green-600'
                             : 'text-transparent'
@@ -657,9 +657,9 @@ export default function Schedule() {
       </div>{/* end left panel */}
 
       {/* Right panel — job cards */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 lg:px-6 lg:pt-6 lg:pb-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 md:px-6 md:pt-6 md:pb-6">
         {/* Desktop day heading */}
-        <div className="hidden lg:flex items-center justify-between mb-2">
+        <div className="hidden md:flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
               {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
