@@ -87,32 +87,34 @@ function LogPaymentSheet({ clients, income, onClose, onSaved, onDelete }) {
             <select
               value={form.client_id}
               onChange={async (e) => {
-                const client = clients.find(c => c.id === e.target.value)
-                let amount = client?.hourly_rate ? String(client.hourly_rate) : ''
+                const clientId = e.target.value
+                const client = clients.find(c => c.id === clientId)
 
-                if (client?.hourly_rate && e.target.value) {
+                // Update immediately so the select shows the chosen client without waiting
+                setForm(f => ({
+                  ...f,
+                  client_id: clientId,
+                  payment_method: client?.payment_method || f.payment_method,
+                  amount: client?.hourly_rate ? String(client.hourly_rate) : f.amount,
+                }))
+
+                // Then try to refine amount from today's visit duration
+                if (client?.hourly_rate && clientId) {
                   const today = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
                   const { data: visits } = await supabase
                     .from('visits')
                     .select('duration_minutes')
-                    .eq('client_id', e.target.value)
+                    .eq('client_id', clientId)
                     .eq('scheduled_date', today)
                     .neq('status', 'cancelled')
                     .order('scheduled_time')
                     .limit(1)
 
                   if (visits?.[0]?.duration_minutes) {
-                    const hours = visits[0].duration_minutes / 60
-                    amount = (hours * client.hourly_rate).toFixed(2)
+                    const amount = (visits[0].duration_minutes / 60 * client.hourly_rate).toFixed(2)
+                    setForm(f => ({ ...f, amount }))
                   }
                 }
-
-                setForm(f => ({
-                  ...f,
-                  client_id: e.target.value,
-                  payment_method: client?.payment_method || f.payment_method,
-                  amount: amount || f.amount,
-                }))
               }}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
