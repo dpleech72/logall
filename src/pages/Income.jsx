@@ -95,7 +95,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved, onDelete }) {
                   ...f,
                   client_id: clientId,
                   payment_method: client?.payment_method || f.payment_method,
-                  amount: client?.hourly_rate ? String(client.hourly_rate) : f.amount,
+                  amount: client?.hourly_rate ? parseFloat(client.hourly_rate).toFixed(2) : f.amount,
                 }))
 
                 // Then try to refine amount from today's visit duration
