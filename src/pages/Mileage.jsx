@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, Pencil } from 'lucide-react'
+import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
 
 const RATE = 0.55
 const THRESHOLD = 10000
 const ORS_KEY = import.meta.env.VITE_ORS_API_KEY
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 async function getCoords(address) {
   const res = await fetch(
@@ -37,21 +38,7 @@ async function getCurrentCoords() {
   })
 }
 
-function groupByMonth(journeys) {
-  const groups = {}
-  journeys.forEach(item => {
-    const date = new Date(item.journey_date)
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    const label = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-    if (!groups[key]) groups[key] = { label, items: [], miles: 0, claimable: 0 }
-    groups[key].items.push(item)
-    groups[key].miles += parseFloat(item.miles)
-    groups[key].claimable += parseFloat(item.claimable_amount)
-  })
-  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v)
-}
-
-function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClose, onSaved }) {
+function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClose, onSaved, onDelete }) {
   const [form, setForm] = useState({
     client_id: journey?.client_id || prefillClientId || '',
     journey_date: journey?.journey_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
@@ -67,7 +54,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
   const [loading, setLoading] = useState(false)
   const [calculating, setCalculating] = useState(false)
 
-  // Helpers for managing stops
   const updateStop = (i, val) => setForm(f => {
     const locs = [...f.to_locations]; locs[i] = val; return { ...f, to_locations: locs }
   })
@@ -102,7 +88,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
     setError('')
     setCalculating(true)
     try {
-      // Resolve FROM
       let fromCoords
       if (!form.from_location.trim()) {
         fromCoords = await getCurrentCoords()
@@ -129,7 +114,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
         setCoordsCache(c => ({ ...c, [form.from_location]: fromCoords }))
       }
 
-      // Resolve each stop
       const allCoords = [fromCoords]
       for (const stop of stops) {
         let coords
@@ -142,7 +126,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
         allCoords.push(coords)
       }
 
-      // Sum each leg
       let totalMiles = 0
       for (let i = 0; i < allCoords.length - 1; i++) {
         const miles = await calcDistance(allCoords[i], allCoords[i + 1])
@@ -156,7 +139,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
   }
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
-
   const claimable = form.miles ? (parseFloat(form.miles) * RATE).toFixed(2) : '0.00'
 
   async function handleSubmit(e) {
@@ -195,7 +177,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
           <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500"><X size={20} /></button>
         </div>
 
-        {/* Live claimable preview */}
         <div className="bg-blue-50 rounded-2xl p-4 text-center mb-4">
           <p className="text-xs font-medium text-blue-600 mb-1">You can claim</p>
           <p className="text-3xl font-bold text-blue-700">£{claimable}</p>
@@ -209,7 +190,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Client */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Client (optional)</label>
             <select
@@ -222,7 +202,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </select>
           </div>
 
-          {/* Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Date</label>
             <input
@@ -233,7 +212,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             />
           </div>
 
-          {/* From */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">From</label>
             <input
@@ -267,7 +245,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </div>
           </div>
 
-          {/* Swap */}
           <div className="flex justify-center -my-1">
             <button
               type="button"
@@ -275,14 +252,13 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                 const firstTo = f.to_locations[0] || ''
                 return { ...f, from_location: firstTo, to_locations: [f.from_location, ...f.to_locations.slice(1)] }
               })}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500 text-xs font-medium active:bg-gray-200 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400 text-xs font-medium active:bg-gray-200 transition-colors"
             >
               <ArrowLeftRight size={13} />
               Swap
             </button>
           </div>
 
-          {/* To — multiple stops */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">To</label>
             <div className="space-y-2 mb-2">
@@ -311,7 +287,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
               ))}
             </div>
 
-            {/* Add another stop */}
             <button
               type="button"
               onClick={addStop}
@@ -320,7 +295,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
               + Add another stop
             </button>
 
-            {/* Quick fill for To */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -348,7 +322,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </div>
           </div>
 
-          {/* Miles */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
               Miles
@@ -385,7 +358,6 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             </p>
           </div>
 
-          {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Notes (optional)</label>
             <input
@@ -404,6 +376,16 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
             <Check size={16} />
             {loading ? 'Saving...' : journey ? 'Save changes' : 'Log journey'}
           </button>
+
+          {journey && onDelete && (
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+              <button type="button" onClick={() => onDelete(journey.id)}
+                className="flex items-center gap-2 text-red-500 text-sm font-medium mx-auto">
+                <Trash2 size={15} />
+                Delete this journey
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
@@ -413,113 +395,138 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
 export default function Mileage() {
   const [searchParams] = useSearchParams()
   const prefillClientId = searchParams.get('client_id') || ''
+  const now = new Date()
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(null)
+  const [monthSummaries, setMonthSummaries] = useState([])
   const [journeys, setJourneys] = useState([])
   const [clients, setClients] = useState([])
   const [clientMap, setClientMap] = useState({})
   const [homeAddress, setHomeAddress] = useState('')
   const [loading, setLoading] = useState(true)
+  const [recent7, setRecent7] = useState([])
+  const [taxYearMiles, setTaxYearMiles] = useState(0)
+  const [taxYearClaimable, setTaxYearClaimable] = useState(0)
   const [showForm, setShowForm] = useState(!!prefillClientId)
   const [deleteId, setDeleteId] = useState(null)
   const [editJourney, setEditJourney] = useState(null)
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchClients() }, [])
+  useEffect(() => { fetchTaxYearTotals() }, [])
+  useEffect(() => { fetchYearSummary() }, [selectedYear])
+  useEffect(() => { if (selectedMonth !== null) fetchMonthJourneys() }, [selectedMonth, selectedYear])
 
-  async function fetchData() {
-    const [{ data: mileageData }, { data: clientData }, { data: profileData }] = await Promise.all([
-      supabase.from('mileage').select('*').order('journey_date', { ascending: false }),
+  async function fetchTaxYearTotals() {
+    const taxYearStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+    const taxYearStartDate = `${taxYearStartYear}-04-06`
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+    const { data } = await supabase.from('mileage').select('miles, claimable_amount')
+      .gte('journey_date', taxYearStartDate)
+      .lte('journey_date', todayStr)
+    setTaxYearMiles((data || []).reduce((s, j) => s + parseFloat(j.miles), 0))
+    setTaxYearClaimable((data || []).reduce((s, j) => s + parseFloat(j.claimable_amount), 0))
+  }
+
+  async function fetchClients() {
+    const [{ data: clientData }, { data: profileData }] = await Promise.all([
       supabase.from('clients').select('id, name, colour, address, postcode').eq('is_active', true).order('name'),
       supabase.from('profiles').select('address, postcode').single(),
     ])
-    if (profileData) {
-      const parts = [profileData.address, profileData.postcode].filter(Boolean)
-      setHomeAddress(parts.join(', '))
-    }
-    setJourneys(mileageData || [])
     setClients(clientData || [])
     const map = {}
     ;(clientData || []).forEach(c => { map[c.id] = c })
     setClientMap(map)
+    if (profileData) {
+      const parts = [profileData.address, profileData.postcode].filter(Boolean)
+      setHomeAddress(parts.join(', '))
+    }
+  }
+
+  async function fetchYearSummary() {
+    setLoading(true)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+    const sevenDaysAgoStr = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth()+1).padStart(2,'0')}-${String(sevenDaysAgo.getDate()).padStart(2,'0')}`
+    const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
+
+    const [{ data }, { data: recent }] = await Promise.all([
+      supabase.from('mileage').select('journey_date, miles, claimable_amount')
+        .gte('journey_date', `${selectedYear}-01-01`)
+        .lte('journey_date', `${selectedYear}-12-31`),
+      supabase.from('mileage').select('*')
+        .gte('journey_date', sevenDaysAgoStr)
+        .lte('journey_date', todayStr)
+        .order('journey_date', { ascending: false }),
+    ])
+    setRecent7(recent || [])
+
+    const summaries = Array.from({ length: 12 }, (_, i) => ({ month: i, miles: 0, claimable: 0 }))
+    ;(data || []).forEach(j => {
+      const month = parseInt(j.journey_date.split('-')[1]) - 1
+      summaries[month].miles += parseFloat(j.miles)
+      summaries[month].claimable += parseFloat(j.claimable_amount)
+    })
+    setMonthSummaries(summaries)
+    setLoading(false)
+  }
+
+  async function fetchMonthJourneys() {
+    setLoading(true)
+    const monthStr = String(selectedMonth + 1).padStart(2, '0')
+    const lastDay = new Date(selectedYear, selectedMonth + 1, 0).getDate()
+    const { data } = await supabase
+      .from('mileage')
+      .select('*')
+      .gte('journey_date', `${selectedYear}-${monthStr}-01`)
+      .lte('journey_date', `${selectedYear}-${monthStr}-${String(lastDay).padStart(2,'0')}`)
+      .order('journey_date', { ascending: false })
+    setJourneys(data || [])
     setLoading(false)
   }
 
   async function handleDelete(id) {
     await supabase.from('mileage').delete().eq('id', id)
     setJourneys(prev => prev.filter(j => j.id !== id))
+    setRecent7(prev => prev.filter(j => j.id !== id))
+    fetchYearSummary()
+    fetchTaxYearTotals()
     setDeleteId(null)
   }
 
-  const now = new Date()
-  const taxYearStart = new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6)
-  const taxYearMiles = journeys.filter(j => new Date(j.journey_date) >= taxYearStart).reduce((sum, j) => sum + parseFloat(j.miles), 0)
-  const taxYearClaimable = journeys.filter(j => new Date(j.journey_date) >= taxYearStart).reduce((sum, j) => sum + parseFloat(j.claimable_amount), 0)
-  const progressPct = Math.min((taxYearMiles / THRESHOLD) * 100, 100)
-  const groups = groupByMonth(journeys)
-
-  return (
-    <div className="p-4">
-      <div className="pt-2 flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mileage</h1>
-          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">55p/mile — HMRC approved</p>
-        </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
-          <Plus size={16} />
-          Log journey
-        </button>
-      </div>
-
-      <div className="bg-blue-600 rounded-2xl p-4 mb-4 text-white">
-        <p className="text-blue-100 text-xs font-medium mb-1">This tax year</p>
-        <div className="flex items-end justify-between mb-3">
+  // Month detail view
+  if (selectedMonth !== null) {
+    return (
+      <div className="p-4">
+        <div className="pt-2 flex items-center gap-3 mb-4">
+          <button onClick={() => setSelectedMonth(null)} className="p-2 -ml-2 text-gray-400">
+            <ArrowLeft size={20} />
+          </button>
           <div>
-            <p className="text-3xl font-bold">£{taxYearClaimable.toFixed(2)}</p>
-            <p className="text-blue-100 text-xs mt-0.5">claimable so far</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{MONTH_NAMES[selectedMonth]} {selectedYear}</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{journeys.length} journey{journeys.length !== 1 ? 's' : ''}</p>
           </div>
-          <div className="text-right">
-            <p className="text-xl font-bold">{taxYearMiles.toFixed(1)}</p>
-            <p className="text-blue-100 text-xs">miles</p>
-          </div>
+          <button onClick={() => setShowForm(true)}
+            className="ml-auto flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700">
+            <Plus size={16} />
+            Log
+          </button>
         </div>
-        <div>
-          <div className="flex justify-between text-xs text-blue-100 mb-1">
-            <span>{taxYearMiles.toFixed(0)} of 10,000 miles</span>
-            <span>{progressPct.toFixed(0)}%</span>
-          </div>
-          <div className="h-2 bg-blue-400/40 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
-          </div>
-          <p className="text-blue-100 text-xs mt-1">
-            {taxYearMiles >= THRESHOLD ? 'Over 10,000 miles — rate drops to 25p/mile' : `${(THRESHOLD - taxYearMiles).toFixed(0)} miles until rate drops to 25p/mile`}
-          </p>
-        </div>
-      </div>
 
-      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-xs text-amber-700">
-        ⚡ Electric vehicle? You still claim 55p/mile — but you cannot also claim charging costs. One or the other.
-      </div>
-
-      {!loading && journeys.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
-          <div className="text-4xl">🚗</div>
-          <p className="font-semibold text-gray-700 dark:text-gray-200">No journeys logged yet</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Every mile you drive for work saves you tax</p>
-        </div>
-      )}
-
-      {groups.map(group => (
-        <div key={group.label} className="mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.label}</p>
-            <div className="text-right">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">£{group.claimable.toFixed(2)}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">{group.miles.toFixed(1)} miles</p>
-            </div>
-          </div>
+        {loading ? (
           <div className="space-y-2">
-            {group.items.map(journey => {
+            {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}
+          </div>
+        ) : journeys.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 text-center">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">No journeys in {MONTH_NAMES[selectedMonth]}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {journeys.map(journey => {
               const client = clientMap[journey.client_id]
               return (
-                <div key={journey.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3">
+                <button key={journey.id} onClick={() => setEditJourney(journey)}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
                   <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                     <Car size={16} className="text-blue-600" />
                   </div>
@@ -529,35 +536,188 @@ export default function Mileage() {
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {new Date(journey.journey_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        {new Date(journey.journey_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">{parseFloat(journey.miles).toFixed(1)} miles</span>
                       {client && <span className="text-xs text-gray-400 dark:text-gray-500">{client.name}</span>}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0 mr-1">
-                    <p className="font-bold text-blue-600">£{parseFloat(journey.claimable_amount).toFixed(2)}</p>
+                  <p className="font-bold text-blue-600 flex-shrink-0">£{parseFloat(journey.claimable_amount).toFixed(2)}</p>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {deleteId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this journey?</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">This can't be undone.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
+                <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(showForm || editJourney) && (
+          <LogJourneySheet
+            clients={clients}
+            journey={editJourney}
+            homeAddress={homeAddress}
+            prefillClientId={prefillClientId}
+            onClose={() => { setShowForm(false); setEditJourney(null) }}
+            onSaved={() => { setShowForm(false); setEditJourney(null); fetchMonthJourneys(); fetchYearSummary(); fetchTaxYearTotals() }}
+            onDelete={(id) => { setEditJourney(null); setDeleteId(id) }}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // Year overview
+  return (
+    <div className="p-4">
+      <div className="pt-2 flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mileage</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">55p/mile — HMRC approved</p>
+        </div>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
+          <Plus size={16} />
+          Log journey
+        </button>
+      </div>
+
+      {(() => {
+        const tyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+        const tyLabel = `${tyStartYear}/${String(tyStartYear + 1).slice(2)}`
+        const tyProgress = Math.min((taxYearMiles / THRESHOLD) * 100, 100)
+        return (
+          <div className="bg-blue-600 rounded-2xl p-4 mb-4 text-white">
+            <p className="text-blue-100 text-xs font-medium mb-1">Tax year {tyLabel}</p>
+            <div className="flex items-end justify-between mb-3">
+              <div>
+                <p className="text-3xl font-bold">£{taxYearClaimable.toFixed(2)}</p>
+                <p className="text-blue-100 text-xs mt-0.5">claimable so far</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold">{taxYearMiles.toFixed(1)}</p>
+                <p className="text-blue-100 text-xs">miles</p>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs text-blue-100 mb-1">
+                <span>{taxYearMiles.toFixed(0)} of 10,000 miles</span>
+                <span>{tyProgress.toFixed(0)}%</span>
+              </div>
+              <div className="h-2 bg-blue-400/40 rounded-full overflow-hidden">
+                <div className="h-full bg-white rounded-full transition-all" style={{ width: `${tyProgress}%` }} />
+              </div>
+              <p className="text-blue-100 text-xs mt-1">
+                {taxYearMiles >= THRESHOLD ? 'Over 10,000 miles — rate drops to 25p/mile' : `${(THRESHOLD - taxYearMiles).toFixed(0)} miles until rate drops to 25p/mile`}
+              </p>
+            </div>
+          </div>
+        )
+      })()}
+
+      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-xs text-amber-700">
+        ⚡ Electric vehicle? You still claim 55p/mile — but you cannot also claim charging costs. One or the other.
+      </div>
+
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => setSelectedYear(y => y - 1)} className="p-2 text-gray-400 active:text-gray-600">
+          <ChevronLeft size={20} />
+        </button>
+        <p className="text-lg font-bold text-gray-900 dark:text-white">{selectedYear}</p>
+        <button onClick={() => setSelectedYear(y => y + 1)} disabled={selectedYear >= now.getFullYear()} className="p-2 text-gray-400 active:text-gray-600 disabled:opacity-30">
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-4 gap-1.5">
+          {Array.from({length:12}).map((_,i) => <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl animate-pulse" />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-1.5">
+          {monthSummaries.map((summary, i) => {
+            const isCurrentMonth = i === now.getMonth() && selectedYear === now.getFullYear()
+            const hasMileage = summary.miles > 0
+            const isFuture = selectedYear > now.getFullYear() || (selectedYear === now.getFullYear() && i > now.getMonth())
+            return (
+              <button
+                key={i}
+                onClick={() => !isFuture && setSelectedMonth(i)}
+                disabled={isFuture}
+                className={`rounded-xl p-2 text-left transition-colors border-2 ${
+                  isCurrentMonth ? 'border-green-500 bg-green-50'
+                  : hasMileage ? 'border-blue-200 bg-blue-50 active:bg-blue-100'
+                  : isFuture ? 'border-gray-100 bg-gray-50 opacity-40'
+                  : 'border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 active:bg-gray-50'
+                }`}
+              >
+                <p className={`text-xs font-bold mb-1 ${isCurrentMonth ? 'text-green-700' : hasMileage ? 'text-blue-700' : 'text-gray-400'}`}>
+                  {MONTH_NAMES[i].slice(0, 3)}
+                </p>
+                {hasMileage ? (
+                  <>
+                    <p className={`text-sm font-bold ${isCurrentMonth ? 'text-green-700' : 'text-blue-700'}`}>
+                      £{summary.claimable.toFixed(2)}
+                    </p>
+                    <p className={`text-xs mt-0.5 ${isCurrentMonth ? 'text-green-600' : 'text-blue-500'}`}>
+                      {summary.miles.toFixed(1)} mi
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm font-bold text-transparent">£0</p>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {recent7.length > 0 && (
+        <div className="mt-5">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Last 7 days</h2>
+          <div className="space-y-2">
+            {recent7.map(journey => {
+              const client = clientMap[journey.client_id]
+              return (
+                <button key={journey.id} onClick={() => setEditJourney(journey)}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Car size={16} className="text-blue-600" />
                   </div>
-                  <div className="flex flex-row gap-1 flex-shrink-0">
-                    <button onClick={() => setEditJourney(journey)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-400 active:bg-blue-100">
-                      <Pencil size={20} />
-                    </button>
-                    <button onClick={() => setDeleteId(journey.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 active:bg-red-100">
-                      <Trash2 size={20} />
-                    </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                      {journey.from_location} → {journey.to_location}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {new Date(journey.journey_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{parseFloat(journey.miles).toFixed(1)} miles</span>
+                      {client && <span className="text-xs text-gray-400 dark:text-gray-500">{client.name}</span>}
+                    </div>
                   </div>
-                </div>
+                  <p className="font-bold text-blue-600 flex-shrink-0">£{parseFloat(journey.claimable_amount).toFixed(2)}</p>
+                </button>
               )
             })}
           </div>
         </div>
-      ))}
+      )}
 
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-24">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
             <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this journey?</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">This can't be undone.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">This can't be undone.</p>
             <div className="flex gap-2">
               <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
@@ -572,7 +732,8 @@ export default function Mileage() {
           homeAddress={homeAddress}
           prefillClientId={prefillClientId}
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); fetchData() }}
+          onSaved={() => { setShowForm(false); fetchYearSummary(); fetchTaxYearTotals() }}
+          onDelete={(id) => { setShowForm(false); setDeleteId(id) }}
         />
       )}
       {editJourney && (
@@ -581,7 +742,8 @@ export default function Mileage() {
           homeAddress={homeAddress}
           journey={editJourney}
           onClose={() => setEditJourney(null)}
-          onSaved={() => { setEditJourney(null); fetchData() }}
+          onSaved={() => { setEditJourney(null); fetchYearSummary(); fetchTaxYearTotals() }}
+          onDelete={(id) => { setEditJourney(null); setDeleteId(id) }}
         />
       )}
     </div>

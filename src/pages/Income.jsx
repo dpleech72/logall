@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, PoundSterling, Trash2, AlertCircle, X, Check, Pencil } from 'lucide-react'
+import { Plus, PoundSterling, Trash2, AlertCircle, X, Check, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 const paymentLabel = { cash: 'Cash', bank_transfer: 'Bank transfer', cheque: 'Cheque' }
 const paymentColour = {
@@ -10,20 +11,7 @@ const paymentColour = {
   cheque: 'bg-purple-50 text-purple-700',
 }
 
-function groupByMonth(income) {
-  const groups = {}
-  income.forEach(item => {
-    const date = new Date(item.received_date)
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    const label = date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-    if (!groups[key]) groups[key] = { label, items: [], total: 0 }
-    groups[key].items.push(item)
-    groups[key].total += parseFloat(item.amount)
-  })
-  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([, v]) => v)
-}
-
-function LogPaymentSheet({ clients, income, onClose, onSaved }) {
+function LogPaymentSheet({ clients, income, onClose, onSaved, onDelete }) {
   const [form, setForm] = useState({
     client_id: income?.client_id || '',
     amount: income?.amount ? String(income.amount) : '',
@@ -63,7 +51,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40">
       <div className="bg-white dark:bg-gray-800 rounded-t-3xl p-5 pb-24 max-h-[90vh] overflow-y-auto">
-        {/* Handle */}
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
 
         <div className="flex items-center justify-between mb-5">
@@ -78,7 +65,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Amount — big and prominent */}
           <div className="bg-green-50 rounded-2xl p-4 text-center">
             <p className="text-xs font-medium text-green-600 mb-2">Amount received</p>
             <div className="flex items-center justify-center gap-1">
@@ -96,7 +82,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
             </div>
           </div>
 
-          {/* Client */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Client (optional)</label>
             <select
@@ -105,7 +90,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
                 const client = clients.find(c => c.id === e.target.value)
                 let amount = client?.hourly_rate ? String(client.hourly_rate) : ''
 
-                // Try to find today's visit and calculate hours x rate
                 if (client?.hourly_rate && e.target.value) {
                   const today = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
                   const { data: visits } = await supabase
@@ -127,7 +111,7 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
                   ...f,
                   client_id: e.target.value,
                   payment_method: client?.payment_method || f.payment_method,
-                  amount,
+                  amount: amount || f.amount,
                 }))
               }}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -137,7 +121,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
             </select>
           </div>
 
-          {/* Payment method */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">How did they pay?</label>
             <div className="grid grid-cols-3 gap-2">
@@ -162,7 +145,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
             </div>
           </div>
 
-          {/* Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Date received</label>
             <input
@@ -173,7 +155,6 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Note (optional)</label>
             <input
@@ -185,22 +166,23 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors"
-          >
+          <button type="button" onClick={onClose} className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors">
             Cancel
           </button>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-          >
+          <button type="submit" disabled={loading} className="w-full bg-green-600 text-white font-semibold py-3.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2">
             <Check size={16} />
-{loading ? 'Saving...' : income ? 'Save changes' : 'Log payment'}
+            {loading ? 'Saving...' : income ? 'Save changes' : 'Log payment'}
           </button>
+
+          {income && onDelete && (
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+              <button type="button" onClick={() => onDelete(income.id)}
+                className="flex items-center gap-2 text-red-500 text-sm font-medium mx-auto">
+                <Trash2 size={15} />
+                Delete this payment
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
@@ -208,98 +190,139 @@ function LogPaymentSheet({ clients, income, onClose, onSaved }) {
 }
 
 export default function Income() {
-  const [income, setIncome] = useState([])
+  const now = new Date()
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(null)
+  const [monthSummaries, setMonthSummaries] = useState([])
+  const [payments, setPayments] = useState([])
   const [clients, setClients] = useState([])
   const [clientMap, setClientMap] = useState({})
   const [loading, setLoading] = useState(true)
+  const [recent7, setRecent7] = useState([])
+  const [taxYearTotal, setTaxYearTotal] = useState(0)
   const [showForm, setShowForm] = useState(false)
-  const [deleteId, setDeleteId] = useState(null)
   const [editIncome, setEditIncome] = useState(null)
+  const [deleteId, setDeleteId] = useState(null)
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchClients() }, [])
+  useEffect(() => { fetchTaxYearTotal() }, [])
+  useEffect(() => { fetchYearSummary() }, [selectedYear])
+  useEffect(() => { if (selectedMonth !== null) fetchMonthPayments() }, [selectedMonth, selectedYear])
 
-  async function fetchData() {
-    const [{ data: incomeData }, { data: clientData }] = await Promise.all([
-      supabase.from('income').select('*').order('received_date', { ascending: false }),
-      supabase.from('clients').select('id, name, colour, hourly_rate, payment_method').eq('is_active', true).order('name'),
-    ])
-    setIncome(incomeData || [])
-    setClients(clientData || [])
+  async function fetchTaxYearTotal() {
+    const taxYearStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+    const taxYearStartDate = `${taxYearStartYear}-04-06`
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+    const { data } = await supabase.from('income').select('amount')
+      .gte('received_date', taxYearStartDate)
+      .lte('received_date', todayStr)
+    setTaxYearTotal((data || []).reduce((s, i) => s + parseFloat(i.amount), 0))
+  }
+
+  async function fetchClients() {
+    const { data } = await supabase.from('clients').select('id, name, colour, hourly_rate, payment_method').eq('is_active', true).order('name')
+    setClients(data || [])
     const map = {}
-    ;(clientData || []).forEach(c => { map[c.id] = c })
+    ;(data || []).forEach(c => { map[c.id] = c })
     setClientMap(map)
+  }
+
+  async function fetchYearSummary() {
+    setLoading(true)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+    const sevenDaysAgoStr = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth()+1).padStart(2,'0')}-${String(sevenDaysAgo.getDate()).padStart(2,'0')}`
+    const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
+
+    const [{ data }, { data: recent }] = await Promise.all([
+      supabase.from('income').select('received_date, amount')
+        .gte('received_date', `${selectedYear}-01-01`)
+        .lte('received_date', `${selectedYear}-12-31`),
+      supabase.from('income').select('*')
+        .gte('received_date', sevenDaysAgoStr)
+        .lte('received_date', todayStr)
+        .order('received_date', { ascending: false }),
+    ])
+    setRecent7(recent || [])
+
+    const summaries = Array.from({ length: 12 }, (_, i) => ({ month: i, total: 0, count: 0 }))
+    ;(data || []).forEach(item => {
+      const month = parseInt(item.received_date.split('-')[1]) - 1
+      summaries[month].total += parseFloat(item.amount)
+      summaries[month].count++
+    })
+    setMonthSummaries(summaries)
+    setLoading(false)
+  }
+
+  async function fetchMonthPayments() {
+    setLoading(true)
+    const monthStr = String(selectedMonth + 1).padStart(2, '0')
+    const lastDay = new Date(selectedYear, selectedMonth + 1, 0).getDate()
+    const { data } = await supabase.from('income').select('*')
+      .gte('received_date', `${selectedYear}-${monthStr}-01`)
+      .lte('received_date', `${selectedYear}-${monthStr}-${String(lastDay).padStart(2,'0')}`)
+      .order('received_date', { ascending: false })
+    setPayments(data || [])
     setLoading(false)
   }
 
   async function handleDelete(id) {
     await supabase.from('income').delete().eq('id', id)
-    setIncome(prev => prev.filter(i => i.id !== id))
+    setPayments(prev => prev.filter(p => p.id !== id))
+    setRecent7(prev => prev.filter(p => p.id !== id))
+    fetchYearSummary()
+    fetchTaxYearTotal()
     setDeleteId(null)
+    setEditIncome(null)
   }
 
-  const thisMonth = new Date()
-  const monthTotal = income
-    .filter(i => {
-      const d = new Date(i.received_date)
-      return d.getMonth() === thisMonth.getMonth() && d.getFullYear() === thisMonth.getFullYear()
-    })
-    .reduce((sum, i) => sum + parseFloat(i.amount), 0)
+  const yearTotal = monthSummaries.reduce((s, m) => s + m.total, 0)
 
-  const groups = groupByMonth(income)
-
-  return (
-    <div className="p-4">
-      {/* Header */}
-      <div className="pt-2 flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Income</h1>
-          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mt-0.5">Payments received</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors"
-        >
-          <Plus size={16} />
-          Log payment
-        </button>
-      </div>
-
-      {/* This month summary */}
-      <div className="bg-green-600 rounded-2xl p-4 mb-5 text-white">
-        <p className="text-green-100 text-xs font-medium mb-1">
-          {thisMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
-        </p>
-        <p className="text-3xl font-bold">£{monthTotal.toFixed(2)}</p>
-        <p className="text-green-100 text-xs mt-1">total income this month</p>
-      </div>
-
-      {/* Empty state */}
-      {!loading && income.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center gap-3">
-          <div className="text-4xl">💷</div>
-          <p className="font-semibold text-gray-700 dark:text-gray-200">No payments logged yet</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Tap "Log payment" to record your first payment</p>
-        </div>
-      )}
-
-      {/* Income groups */}
-      {groups.map(group => (
-        <div key={group.label} className="mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.label}</p>
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200">£{group.total.toFixed(2)}</p>
+  // Month detail view
+  if (selectedMonth !== null) {
+    const monthTotal = payments.reduce((s, p) => s + parseFloat(p.amount), 0)
+    return (
+      <div className="p-4">
+        <div className="pt-2 flex items-center gap-3 mb-4">
+          <button onClick={() => setSelectedMonth(null)} className="p-2 -ml-2 text-gray-400">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{MONTH_NAMES[selectedMonth]} {selectedYear}</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{payments.length} payment{payments.length !== 1 ? 's' : ''}</p>
           </div>
+          <button onClick={() => setShowForm(true)}
+            className="ml-auto flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700">
+            <Plus size={16} />
+            Log
+          </button>
+        </div>
+
+        <div className="bg-green-600 rounded-2xl p-4 mb-4 text-white">
+          <p className="text-green-100 text-xs font-medium mb-1">{MONTH_NAMES[selectedMonth]} {selectedYear}</p>
+          <p className="text-3xl font-bold">£{monthTotal.toFixed(2)}</p>
+          <p className="text-green-100 text-xs mt-1">total income</p>
+        </div>
+
+        {loading ? (
           <div className="space-y-2">
-            {group.items.map(item => {
+            {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 text-center">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">No payments in {MONTH_NAMES[selectedMonth]}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {payments.map(item => {
               const client = clientMap[item.client_id]
               return (
-                <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3">
-                  {/* Client avatar or money icon */}
+                <button key={item.id} onClick={() => setEditIncome(item)}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
                   {client ? (
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                      style={{ backgroundColor: client.colour || '#16a34a' }}
-                    >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: client.colour || '#16a34a' }}>
                       {client.name.charAt(0)}
                     </div>
                   ) : (
@@ -307,45 +330,170 @@ export default function Income() {
                       <PoundSterling size={16} className="text-green-600" />
                     </div>
                   )}
-
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                       {item.description || client?.name || 'Payment'}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {new Date(item.received_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        {new Date(item.received_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>
                       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${paymentColour[item.payment_method]}`}>
                         {paymentLabel[item.payment_method]}
                       </span>
                     </div>
                   </div>
+                  <p className="font-bold text-green-600 flex-shrink-0">£{parseFloat(item.amount).toFixed(2)}</p>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
-                  <div className="text-right flex-shrink-0 mr-1">
-                    <p className="font-bold text-green-600">£{parseFloat(item.amount).toFixed(2)}</p>
+        {deleteId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this payment?</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">This can't be undone.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
+                <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(showForm || editIncome) && (
+          <LogPaymentSheet
+            clients={clients}
+            income={editIncome}
+            onClose={() => { setShowForm(false); setEditIncome(null) }}
+            onSaved={() => { setShowForm(false); setEditIncome(null); fetchMonthPayments(); fetchYearSummary(); fetchTaxYearTotal() }}
+            onDelete={(id) => { setEditIncome(null); setDeleteId(id) }}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // Year overview
+  return (
+    <div className="p-4">
+      <div className="pt-2 flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Income</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Payments received</p>
+        </div>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700 transition-colors">
+          <Plus size={16} />
+          Log payment
+        </button>
+      </div>
+
+      {(() => {
+        const tyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+        const tyLabel = `${tyStartYear}/${String(tyStartYear + 1).slice(2)}`
+        return (
+          <div className="bg-green-600 rounded-2xl p-4 mb-4 text-white">
+            <p className="text-green-100 text-xs font-medium mb-1">Tax year {tyLabel}</p>
+            <p className="text-3xl font-bold">£{taxYearTotal.toFixed(2)}</p>
+            <p className="text-green-100 text-xs mt-1">total income</p>
+          </div>
+        )
+      })()}
+
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => setSelectedYear(y => y - 1)} className="p-2 text-gray-400 active:text-gray-600">
+          <ChevronLeft size={20} />
+        </button>
+        <p className="text-lg font-bold text-gray-900 dark:text-white">{selectedYear}</p>
+        <button onClick={() => setSelectedYear(y => y + 1)} disabled={selectedYear >= now.getFullYear()} className="p-2 text-gray-400 active:text-gray-600 disabled:opacity-30">
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-4 gap-1.5">
+          {Array.from({length:12}).map((_,i) => <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl animate-pulse" />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-1.5">
+          {monthSummaries.map((summary, i) => {
+            const isCurrentMonth = i === now.getMonth() && selectedYear === now.getFullYear()
+            const hasIncome = summary.total > 0
+            const isFuture = selectedYear > now.getFullYear() || (selectedYear === now.getFullYear() && i > now.getMonth())
+            return (
+              <button
+                key={i}
+                onClick={() => !isFuture && setSelectedMonth(i)}
+                disabled={isFuture}
+                className={`rounded-xl p-2 text-left transition-colors border-2 ${
+                  isCurrentMonth ? 'border-green-500 bg-green-50'
+                  : hasIncome ? 'border-green-200 bg-green-50 active:bg-green-100'
+                  : isFuture ? 'border-gray-100 bg-gray-50 opacity-40'
+                  : 'border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 active:bg-gray-50'
+                }`}
+              >
+                <p className={`text-xs font-bold mb-1 ${isCurrentMonth || hasIncome ? 'text-green-700' : 'text-gray-400'}`}>
+                  {MONTH_NAMES[i].slice(0, 3)}
+                </p>
+                {hasIncome ? (
+                  <>
+                    <p className="text-sm font-bold text-green-700">£{summary.total.toFixed(2)}</p>
+                    <p className="text-xs text-green-600">{summary.count} {summary.count === 1 ? 'pmt' : 'pmts'}</p>
+                  </>
+                ) : (
+                  <p className="text-sm font-bold text-transparent">£0</p>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {recent7.length > 0 && (
+        <div className="mt-5">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Last 7 days</h2>
+          <div className="space-y-2">
+            {recent7.map(item => {
+              const client = clientMap[item.client_id]
+              return (
+                <button key={item.id} onClick={() => setEditIncome(item)}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
+                  {client ? (
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: client.colour || '#16a34a' }}>
+                      {client.name.charAt(0)}
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <PoundSterling size={16} className="text-green-600" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{item.description || client?.name || 'Payment'}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {new Date(item.received_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${paymentColour[item.payment_method]}`}>
+                        {paymentLabel[item.payment_method]}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-row gap-1 flex-shrink-0">
-                    <button onClick={() => setEditIncome(item)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-400 active:bg-blue-100">
-                      <Pencil size={20} />
-                    </button>
-                    <button onClick={() => setDeleteId(item.id)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 active:bg-red-100">
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
-                </div>
+                  <p className="font-bold text-green-600 flex-shrink-0">£{parseFloat(item.amount).toFixed(2)}</p>
+                </button>
               )
             })}
           </div>
         </div>
-      ))}
+      )}
 
-      {/* Delete confirmation */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 pb-24">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm">
             <p className="font-semibold text-gray-900 dark:text-white mb-1">Delete this payment?</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">This can't be undone.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">This can't be undone.</p>
             <div className="flex gap-2">
               <button onClick={() => setDeleteId(null)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-medium">Delete</button>
@@ -354,12 +502,12 @@ export default function Income() {
         </div>
       )}
 
-      {/* Log payment sheet */}
       {showForm && (
         <LogPaymentSheet
           clients={clients}
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); fetchData() }}
+          onSaved={() => { setShowForm(false); fetchYearSummary(); fetchTaxYearTotal() }}
+          onDelete={(id) => { setShowForm(false); setDeleteId(id) }}
         />
       )}
       {editIncome && (
@@ -367,7 +515,8 @@ export default function Income() {
           clients={clients}
           income={editIncome}
           onClose={() => setEditIncome(null)}
-          onSaved={() => { setEditIncome(null); fetchData() }}
+          onSaved={() => { setEditIncome(null); fetchYearSummary(); fetchTaxYearTotal() }}
+          onDelete={(id) => { setEditIncome(null); setDeleteId(id) }}
         />
       )}
     </div>
