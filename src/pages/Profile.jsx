@@ -155,17 +155,10 @@ export default function Profile() {
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
-  async function handleConnect() {
-    setProviderConnecting(true)
+  function handleConnect() {
     setProviderError('')
-    try {
-      const email = await connectGoogleDrive()
-      await supabase.from('profiles').update({ receipt_provider: 'google', google_drive_email: email }).eq('id', user.id)
-      setGoogleEmail(email)
-    } catch (err) {
-      setProviderError(err.message)
-    }
-    setProviderConnecting(false)
+    setProviderConnecting(true)
+    connectGoogleDrive() // navigates away — page will reload on return
   }
 
   async function handleDisconnect() {

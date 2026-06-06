@@ -93,23 +93,12 @@ function googleAuthUrl(extras = {}) {
 }
 
 /**
- * Connect Google Drive.
- * - Desktop: opens a popup (non-blocking, stays on page)
- * - Mobile:  redirects to Google sign-in and returns to /profile
- *            (call completeGoogleConnect() on the profile page after return)
+ * Connect Google Drive — always uses redirect flow (works on all devices/browsers).
+ * Navigates to Google sign-in; Profile page picks up the result on return
+ * via completeMobileConnect().
  */
-export async function connectGoogleDrive() {
-  if (isMobile()) {
-    // Redirect flow — navigates away; profile page picks up the result on return
-    window.location.href = googleAuthUrl({ prompt: 'select_account' })
-    return null  // never resolves — page navigates away
-  }
-
-  const token = await popupOAuth(
-    googleAuthUrl({ prompt: 'select_account' }),
-    'logall_google_token'
-  )
-  return fetchGoogleEmail(token)
+export function connectGoogleDrive() {
+  window.location.href = googleAuthUrl({ prompt: 'select_account' })
 }
 
 /** Fetch the Google account email for a given access token */
