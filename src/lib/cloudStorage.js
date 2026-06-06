@@ -11,69 +11,30 @@
 
 const REDIRECT_URI = `${window.location.origin}/oauth-callback.html`
 
-const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-
 // ─────────────────────────────────────────────
-// Generic OAuth popup helper
+// Token storage (localStorage so it persists across PWA sessions)
 // ─────────────────────────────────────────────
 
-function popupOAuth(authUrl, storageKey) {
-  // Return cached token if still fresh
-  const cached = sessionStorage.getItem(storageKey)
-  if (cached) {
-    try {
-      const { token, expiresAt } = JSON.parse(cached)
-      if (Date.now() < expiresAt) return Promise.resolve(token)
-    } catch { /* ignore */ }
+const TOKEN_KEY = 'logall_google_token'
+
+function saveToken(token) {
+  localStorage.setItem(TOKEN_KEY, JSON.stringify({
+    token,
+    expiresAt: Date.now() + 55 * 60 * 1000,
+  }))
+}
+
+function getCachedToken() {
+  try {
+    const cached = localStorage.getItem(TOKEN_KEY)
+    if (!cached) return null
+    const { token, expiresAt } = JSON.parse(cached)
+    if (Date.now() < expiresAt) return token
+    localStorage.removeItem(TOKEN_KEY)
+    return null
+  } catch {
+    return null
   }
-
-  return new Promise((resolve, reject) => {
-    const w = window.screen.width  / 2
-    const h = window.screen.height / 2
-    const left = (window.screen.width  - 520) / 2
-    const top  = (window.screen.height - 640) / 2
-    const popup = window.open(authUrl, 'oauth_popup',
-      `width=520,height=640,left=${left},top=${top}`)
-
-    if (!popup) {
-      reject(new Error('Pop-up blocked — please allow pop-ups for this site and try again.'))
-      return
-    }
-
-    const onMessage = (event) => {
-      if (event.origin !== window.location.origin) return
-      if (event.data?.type !== 'oauth_callback') return
-      cleanup()
-      if (event.data.error) {
-        reject(new Error(`Sign-in failed: ${event.data.error}`))
-      } else if (event.data.token) {
-        sessionStorage.setItem(storageKey, JSON.stringify({
-          token: event.data.token,
-          expiresAt: Date.now() + 55 * 60 * 1000,
-        }))
-        resolve(event.data.token)
-      } else {
-        reject(new Error('No access token received.'))
-      }
-    }
-
-    const watchClosed = setInterval(() => {
-      if (popup.closed) { cleanup(); reject(new Error('Sign-in window was closed.')) }
-    }, 500)
-
-    const timeout = setTimeout(() => {
-      cleanup(); reject(new Error('Sign-in timed out.'))
-    }, 5 * 60 * 1000)
-
-    function cleanup() {
-      window.removeEventListener('message', onMessage)
-      clearInterval(watchClosed)
-      clearTimeout(timeout)
-      try { popup.close() } catch { /* ignore */ }
-    }
-
-    window.addEventListener('message', onMessage)
-  })
 }
 
 // ─────────────────────────────────────────────
@@ -181,7 +142,8 @@ async function getOrCreateGoogleFolder(token) {
 
 /** Upload a compressed receipt blob to Google Drive. Returns a viewable URL. */
 export async function uploadToGoogleDrive(blob, filename) {
-  const token = await popupOAuth(googleAuthUrl(), 'logall_google_token')
+  const token = getCachedToken()
+  if (!token) throw new Error('Google Drive session expired — please reconnect in Profile → Receipt storage.')
   const folderId = await getOrCreateGoogleFolder(token)
 
   const metadata = { name: filename, parents: [folderId] }
@@ -235,6 +197,6 @@ export async function uploadToGoogleDrive(blob, filename) {
 
 /** Clear the cached Google token and folder ID (e.g. on disconnect) */
 export function clearProviderToken() {
-  sessionStorage.removeItem('logall_google_token')
+  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(GOOGLE_FOLDER_KEY)
 }

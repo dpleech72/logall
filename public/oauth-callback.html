@@ -22,7 +22,7 @@
     // Store the token using the same key/format that cloudStorage.js expects,
     // so upload calls find it automatically without re-authenticating.
     if (token) {
-      sessionStorage.setItem('logall_google_token', JSON.stringify({
+      localStorage.setItem('logall_google_token', JSON.stringify({
         token,
         expiresAt: Date.now() + 55 * 60 * 1000,
       }))
