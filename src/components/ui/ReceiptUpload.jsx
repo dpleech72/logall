@@ -18,6 +18,7 @@ export default function ReceiptUpload({ value, onChange }) {
   const [compressed, setCompressed]   = useState(null)
   const [uploadedUrl, setUploadedUrl] = useState(value || null)
   const [error, setError]             = useState('')
+  const [notice, setNotice]           = useState('')
 
   // Sync when an existing receipt_url is loaded into the form (e.g. editing an expense)
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function ReceiptUpload({ value, onChange }) {
       setPhase('idle')
     }
   }, [value])
+
+  // Check if we just returned from a silent Google Drive re-auth
+  useEffect(() => {
+    if (localStorage.getItem('logall_reauth_pending')) {
+      localStorage.removeItem('logall_reauth_pending')
+      setNotice('Google Drive reconnected — please re-select your photo.')
+      setTimeout(() => setNotice(''), 6000)
+    }
+  }, [])
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0]
@@ -54,6 +64,10 @@ export default function ReceiptUpload({ value, onChange }) {
       setPhase('done')
       onChange(url)
     } catch (err) {
+      if (err.message === '__reauth__') {
+        // Silently redirecting to Google for re-auth — don't show an error
+        return
+      }
       setError(err.message)
       setPhase('idle')
     }
@@ -158,6 +172,9 @@ export default function ReceiptUpload({ value, onChange }) {
           Choose file
         </button>
       </div>
+      {notice && (
+        <p className="mt-1.5 text-xs text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-300 rounded-lg p-2">{notice}</p>
+      )}
       {error && (
         <p className="mt-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">{error}</p>
       )}

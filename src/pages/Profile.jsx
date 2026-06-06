@@ -162,8 +162,16 @@ export default function Profile() {
   }
 
   async function handleDisconnect() {
-    await supabase.from('profiles').update({ receipt_provider: null, google_drive_email: null }).eq('id', user.id)
-    clearProviderToken('google')
+    setProviderError('')
+    const { error } = await supabase
+      .from('profiles')
+      .update({ receipt_provider: null, google_drive_email: null })
+      .eq('id', user.id)
+    if (error) {
+      setProviderError('Could not disconnect: ' + error.message)
+      return
+    }
+    clearProviderToken()
     setGoogleEmail(null)
   }
 

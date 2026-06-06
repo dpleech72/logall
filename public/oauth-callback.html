@@ -18,7 +18,7 @@
     )
     window.close()
   } else {
-    // ── Redirect flow (mobile) ────────────────────────────────
+    // ── Redirect flow (mobile / PWA) ──────────────────────────
     // Store the token using the same key/format that cloudStorage.js expects,
     // so upload calls find it automatically without re-authenticating.
     if (token) {
@@ -26,14 +26,35 @@
         token,
         expiresAt: Date.now() + 55 * 60 * 1000,
       }))
-      sessionStorage.setItem('logall_oauth_return', 'google')
+
+      // Was this a silent re-auth triggered by an expired token during upload?
+      const reauthPath = localStorage.getItem('logall_reauth_return_path')
+      if (reauthPath) {
+        localStorage.removeItem('logall_reauth_return_path')
+        // Keep logall_reauth_pending so the target page can show "reconnected" notice
+        window.location.replace(window.location.origin + reauthPath)
+      } else {
+        // Normal connect flow — return to Profile
+        sessionStorage.setItem('logall_oauth_return', 'google')
+        window.location.replace(window.location.origin + '/profile')
+      }
     }
     if (error) {
-      sessionStorage.setItem('logall_oauth_error', error)
-      sessionStorage.setItem('logall_oauth_return', 'google')
+      // Check if this was a silent re-auth attempt
+      const reauthPath = localStorage.getItem('logall_reauth_return_path')
+      if (reauthPath) {
+        localStorage.removeItem('logall_reauth_return_path')
+        localStorage.removeItem('logall_reauth_pending')
+        // Silent re-auth failed — send user to profile to reconnect manually
+        sessionStorage.setItem('logall_oauth_error', 'Session expired. Please reconnect Google Drive.')
+        sessionStorage.setItem('logall_oauth_return', 'google')
+        window.location.replace(window.location.origin + '/profile')
+      } else {
+        sessionStorage.setItem('logall_oauth_error', error)
+        sessionStorage.setItem('logall_oauth_return', 'google')
+        window.location.replace(window.location.origin + '/profile')
+      }
     }
-    // Send user back to the profile page
-    window.location.replace(window.location.origin + '/profile')
   }
 </script>
 </body>

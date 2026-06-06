@@ -169,10 +169,25 @@ async function getOrCreateGoogleFolder(token) {
   return subId
 }
 
+/**
+ * Trigger a silent re-authentication with Google (prompt=none).
+ * Saves the current path and a flag so the page can show a "reconnected" notice.
+ */
+export function silentReauth() {
+  localStorage.setItem('logall_reauth_return_path', window.location.pathname)
+  localStorage.setItem('logall_reauth_pending', 'true')
+  window.location.href = googleAuthUrl({ prompt: 'none' })
+}
+
 /** Upload a compressed receipt blob to Google Drive. Returns a viewable URL. */
 export async function uploadToGoogleDrive(blob, filename) {
   const token = getCachedToken()
-  if (!token) throw new Error('Google Drive session expired — please reconnect in Profile → Receipt storage.')
+  if (!token) {
+    // Token expired — silently re-authenticate and return to this page
+    silentReauth()
+    // Throw so the caller's catch knows we redirected (the page will navigate away)
+    throw new Error('__reauth__')
+  }
   const folderId = await getOrCreateGoogleFolder(token)
 
   const metadata = { name: filename, parents: [folderId] }
@@ -224,8 +239,14 @@ export async function uploadToGoogleDrive(blob, filename) {
   return `https://drive.google.com/file/d/${id}/view`
 }
 
-/** Clear the cached Google token and folder ID (e.g. on disconnect) */
+/** Clear the cached Google token and all folder IDs (e.g. on disconnect) */
 export function clearProviderToken() {
   localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(GOOGLE_FOLDER_KEY)
+  localStorage.removeItem(GOOGLE_ROOT_FOLDER_KEY)
+  // Clear any cached tax-year subfolder IDs
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith('logall_gdrive_subfolder_')) {
+      localStorage.removeItem(key)
+    }
+  }
 }
