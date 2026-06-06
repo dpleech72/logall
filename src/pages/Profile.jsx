@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink } from 'lucide-react'
 import { useDarkMode } from '../hooks/useDarkMode'
-import { connectGoogleDrive, clearProviderToken } from '../lib/cloudStorage'
+import { connectGoogleDrive, completeMobileConnect, clearProviderToken } from '../lib/cloudStorage'
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -71,6 +71,17 @@ export default function Profile() {
   useEffect(() => {
     fetchProfile()
     fetchHolidays()
+    // Complete a mobile OAuth redirect if we just came back from Google
+    completeMobileConnect()
+      .then(async result => {
+        if (!result) return
+        await supabase.from('profiles').update({
+          receipt_provider: 'google',
+          google_drive_email: result.email,
+        }).eq('id', user.id)
+        setGoogleEmail(result.email)
+      })
+      .catch(err => setProviderError(err.message))
   }, [])
 
   async function fetchProfile() {

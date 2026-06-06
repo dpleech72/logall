@@ -11,6 +11,8 @@
 
 const REDIRECT_URI = `${window.location.origin}/oauth-callback.html`
 
+const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
 // ─────────────────────────────────────────────
 // Generic OAuth popup helper
 // ─────────────────────────────────────────────
@@ -91,21 +93,58 @@ function googleAuthUrl(extras = {}) {
 }
 
 /**
- * Connect Google Drive: opens Google sign-in popup, returns the user's email.
- * Call this from the Profile page "Connect Google Drive" button.
+ * Connect Google Drive.
+ * - Desktop: opens a popup (non-blocking, stays on page)
+ * - Mobile:  redirects to Google sign-in and returns to /profile
+ *            (call completeGoogleConnect() on the profile page after return)
  */
 export async function connectGoogleDrive() {
+  if (isMobile()) {
+    // Redirect flow — navigates away; profile page picks up the result on return
+    window.location.href = googleAuthUrl({ prompt: 'select_account' })
+    return null  // never resolves — page navigates away
+  }
+
   const token = await popupOAuth(
     googleAuthUrl({ prompt: 'select_account' }),
     'logall_google_token'
   )
-  // Fetch the signed-in account's email
+  return fetchGoogleEmail(token)
+}
+
+/** Fetch the Google account email for a given access token */
+export async function fetchGoogleEmail(token) {
   const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) throw new Error('Could not fetch Google account info.')
   const { email } = await res.json()
   return email
+}
+
+/**
+ * Call this on the Profile page on mount to complete a mobile OAuth redirect.
+ * Returns { email } if we just came back from Google, null otherwise.
+ */
+export async function completeMobileConnect() {
+  const provider = sessionStorage.getItem('logall_oauth_return')
+  if (!provider) return null
+
+  sessionStorage.removeItem('logall_oauth_return')
+
+  const error = sessionStorage.getItem('logall_oauth_error')
+  if (error) {
+    sessionStorage.removeItem('logall_oauth_error')
+    throw new Error(`Sign-in failed: ${error}`)
+  }
+
+  // Token was already stored by oauth-callback.html in the correct format
+  const cached = sessionStorage.getItem('logall_google_token')
+  if (!cached) throw new Error('No token found after sign-in.')
+
+  const { token } = JSON.parse(cached)
+  const email = await fetchGoogleEmail(token)
+  return { provider, email }
 }
 
 const GOOGLE_FOLDER_KEY = 'logall_gdrive_folder_id'

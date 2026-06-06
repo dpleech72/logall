@@ -3,7 +3,6 @@
 <head><meta charset="utf-8"><title>Connecting…</title></head>
 <body>
 <script>
-  // Parse token from URL hash (implicit grant) or search params (error)
   const hash   = window.location.hash.slice(1)
   const search = window.location.search.slice(1)
   const params = new URLSearchParams(hash || search)
@@ -12,13 +11,29 @@
   const error = params.get('error') || params.get('error_description')
 
   if (window.opener) {
+    // ── Popup flow (desktop) ──────────────────────────────────
     window.opener.postMessage(
       { type: 'oauth_callback', token, error: error || null },
       window.location.origin
     )
     window.close()
   } else {
-    document.body.innerText = 'Authentication complete. You may close this window.'
+    // ── Redirect flow (mobile) ────────────────────────────────
+    // Store the token using the same key/format that cloudStorage.js expects,
+    // so upload calls find it automatically without re-authenticating.
+    if (token) {
+      sessionStorage.setItem('logall_google_token', JSON.stringify({
+        token,
+        expiresAt: Date.now() + 55 * 60 * 1000,
+      }))
+      sessionStorage.setItem('logall_oauth_return', 'google')
+    }
+    if (error) {
+      sessionStorage.setItem('logall_oauth_error', error)
+      sessionStorage.setItem('logall_oauth_return', 'google')
+    }
+    // Send user back to the profile page
+    window.location.replace(window.location.origin + '/profile')
   }
 </script>
 </body>
