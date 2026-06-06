@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Camera, X, ExternalLink, Loader2 } from 'lucide-react'
+import { Camera, Upload, X, ExternalLink, Loader2 } from 'lucide-react'
 import { compressImage, formatBytes } from '../../lib/imageCompress'
 import { uploadToGoogleDrive } from '../../lib/cloudStorage'
 
@@ -11,7 +11,8 @@ import { uploadToGoogleDrive } from '../../lib/cloudStorage'
  *   onChange    {fn(url|null)}  – called with the uploaded URL or null on remove
  */
 export default function ReceiptUpload({ value, onChange }) {
-  const fileInputRef = useRef(null)
+  const fileInputRef    = useRef(null)
+  const galleryInputRef = useRef(null)
   const [phase, setPhase]             = useState('idle')
   const [preview, setPreview]         = useState(null)
   const [compressed, setCompressed]   = useState(null)
@@ -114,7 +115,8 @@ export default function ReceiptUpload({ value, onChange }) {
 
   // ── Idle ──────────────────────────────────────────────────────
   return (
-    <div>
+    <div className="space-y-2">
+      {/* Camera input — opens camera directly */}
       <input
         ref={fileInputRef}
         type="file"
@@ -123,14 +125,32 @@ export default function ReceiptUpload({ value, onChange }) {
         className="hidden"
         onChange={handleFileChange}
       />
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-green-400 hover:text-green-600 active:bg-gray-50 transition-colors text-sm font-medium"
-      >
-        <Camera size={17} />
-        Add receipt photo
-      </button>
+      {/* File picker input — no capture, opens photo library */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 active:bg-gray-50 transition-colors text-sm font-medium"
+        >
+          <Camera size={17} />
+          Take photo
+        </button>
+        <button
+          type="button"
+          onClick={() => galleryInputRef.current?.click()}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 active:bg-gray-50 transition-colors text-sm font-medium"
+        >
+          <Upload size={17} />
+          Choose file
+        </button>
+      </div>
       {error && (
         <p className="mt-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">{error}</p>
       )}
