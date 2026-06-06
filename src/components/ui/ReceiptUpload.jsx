@@ -41,7 +41,14 @@ export default function ReceiptUpload({ value, onChange }) {
       setCompressed({ blob, originalSize, compressedSize: blob.size })
       setPhase('uploading')
 
-      const filename = `receipt_${Date.now()}.jpg`
+      const now = new Date()
+      const stamp = now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') + '_' +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0')
+      const filename = `receipt_${stamp}.jpg`
       const url = await uploadToGoogleDrive(blob, filename)
       setUploadedUrl(url)
       setPhase('done')
