@@ -245,6 +245,25 @@ export async function uploadToGoogleDrive(blob, filename) {
   return `https://drive.google.com/file/d/${id}/view`
 }
 
+/**
+ * Delete a file from Google Drive by its viewable URL.
+ * URL format: https://drive.google.com/file/d/{fileId}/view
+ * Returns true on success, false if the file wasn't found or token is missing.
+ */
+export async function deleteFromGoogleDrive(url) {
+  const match = url && url.match(/\/file\/d\/([^/]+)/)
+  if (!match) return false
+  const fileId = match[1]
+  const token = getCachedToken()
+  if (!token) return false
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  // 204 = deleted, 404 = already gone — both are fine
+  return res.status === 204 || res.status === 404
+}
+
 /** Clear the cached Google token and all folder IDs (e.g. on disconnect) */
 export function clearProviderToken() {
   localStorage.removeItem(TOKEN_KEY)

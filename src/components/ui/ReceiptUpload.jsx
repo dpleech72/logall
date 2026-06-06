@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Camera, Upload, X, ExternalLink, Loader2 } from 'lucide-react'
 import { compressImage, formatBytes } from '../../lib/imageCompress'
-import { uploadToGoogleDrive, hasValidToken, silentReauth } from '../../lib/cloudStorage'
+import { uploadToGoogleDrive, hasValidToken, silentReauth, deleteFromGoogleDrive } from '../../lib/cloudStorage'
 
 /**
  * ReceiptUpload
@@ -19,6 +19,8 @@ export default function ReceiptUpload({ value, onChange }) {
   const [uploadedUrl, setUploadedUrl] = useState(value || null)
   const [error, setError]             = useState('')
   const [notice, setNotice]           = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting]           = useState(false)
 
   // Sync when an existing receipt_url is loaded into the form (e.g. editing an expense)
   useEffect(() => {
@@ -85,7 +87,15 @@ export default function ReceiptUpload({ value, onChange }) {
     setUploadedUrl(null)
     setPhase('idle')
     setError('')
+    setConfirmDelete(false)
     onChange(null)
+  }
+
+  async function handleRemoveAndDelete() {
+    setDeleting(true)
+    await deleteFromGoogleDrive(uploadedUrl)
+    setDeleting(false)
+    handleRemove()
   }
 
   // ── Already uploaded ─────────────────────────────────────────
@@ -102,10 +112,49 @@ export default function ReceiptUpload({ value, onChange }) {
             <p className="text-sm font-semibold text-green-800 dark:text-green-200">Receipt saved</p>
             <p className="text-xs text-green-600 dark:text-green-400">Google Drive</p>
           </div>
-          <button type="button" onClick={handleRemove} className="p-2 text-gray-400 active:opacity-70 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="p-2 text-gray-400 active:opacity-70 flex-shrink-0"
+          >
             <X size={16} />
           </button>
         </div>
+
+        {/* Delete confirmation */}
+        {confirmDelete && (
+          <div className="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 space-y-2">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-200">Also delete from Google Drive?</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleRemoveAndDelete}
+                className="flex-1 py-2 rounded-lg bg-red-500 text-white text-xs font-semibold active:opacity-70 disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                {deleting ? <Loader2 size={13} className="animate-spin" /> : null}
+                Yes, delete
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleRemove}
+                className="flex-1 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-semibold active:opacity-70"
+              >
+                Remove only
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setConfirmDelete(false)}
+                className="py-2 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs active:opacity-70"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         <a
           href={uploadedUrl}
           target="_blank"
