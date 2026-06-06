@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { Camera, Upload, X, ExternalLink, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Camera, X, ExternalLink, Loader2 } from 'lucide-react'
 import { compressImage, formatBytes } from '../../lib/imageCompress'
 import { uploadToGoogleDrive } from '../../lib/cloudStorage'
 
@@ -12,11 +12,19 @@ import { uploadToGoogleDrive } from '../../lib/cloudStorage'
  */
 export default function ReceiptUpload({ value, onChange }) {
   const fileInputRef = useRef(null)
-  const [phase, setPhase]           = useState('idle')  // idle | compressing | uploading | done
-  const [preview, setPreview]       = useState(null)
-  const [compressed, setCompressed] = useState(null)
+  const [phase, setPhase]             = useState('idle')
+  const [preview, setPreview]         = useState(null)
+  const [compressed, setCompressed]   = useState(null)
   const [uploadedUrl, setUploadedUrl] = useState(value || null)
-  const [error, setError]           = useState('')
+  const [error, setError]             = useState('')
+
+  // Sync when an existing receipt_url is loaded into the form (e.g. editing an expense)
+  useEffect(() => {
+    if (value && value !== uploadedUrl) {
+      setUploadedUrl(value)
+      setPhase('idle')
+    }
+  }, [value])
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0]
@@ -57,25 +65,30 @@ export default function ReceiptUpload({ value, onChange }) {
   // ── Already uploaded ─────────────────────────────────────────
   if (uploadedUrl && (phase === 'done' || phase === 'idle')) {
     return (
-      <div className="rounded-xl border-2 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 p-3 flex items-center gap-3">
-        {preview ? (
-          <img src={preview} alt="Receipt" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
-        ) : (
-          <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-800 flex items-center justify-center flex-shrink-0 text-xl">🧾</div>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-green-800 dark:text-green-200">Receipt uploaded</p>
-          <p className="text-xs text-green-600 dark:text-green-400">Google Drive</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <a href={uploadedUrl} target="_blank" rel="noopener noreferrer"
-            className="p-2 text-green-600 dark:text-green-400 active:opacity-70">
-            <ExternalLink size={16} />
-          </a>
-          <button type="button" onClick={handleRemove} className="p-2 text-gray-400 active:opacity-70">
+      <div className="rounded-xl border-2 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 p-3 space-y-2">
+        <div className="flex items-center gap-3">
+          {preview ? (
+            <img src={preview} alt="Receipt" className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-800 flex items-center justify-center flex-shrink-0 text-xl">🧾</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-green-800 dark:text-green-200">Receipt saved</p>
+            <p className="text-xs text-green-600 dark:text-green-400">Google Drive</p>
+          </div>
+          <button type="button" onClick={handleRemove} className="p-2 text-gray-400 active:opacity-70 flex-shrink-0">
             <X size={16} />
           </button>
         </div>
+        <a
+          href={uploadedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 text-xs font-semibold active:opacity-70"
+        >
+          <ExternalLink size={13} />
+          View receipt in Google Drive
+        </a>
       </div>
     )
   }
