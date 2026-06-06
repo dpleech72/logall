@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Camera, Upload, X, ExternalLink, Loader2 } from 'lucide-react'
 import { compressImage, formatBytes } from '../../lib/imageCompress'
-import { uploadToGoogleDrive } from '../../lib/cloudStorage'
+import { uploadToGoogleDrive, hasValidToken, silentReauth } from '../../lib/cloudStorage'
 
 /**
  * ReceiptUpload
@@ -30,10 +30,14 @@ export default function ReceiptUpload({ value, onChange }) {
 
   // Check if we just returned from a silent Google Drive re-auth
   useEffect(() => {
-    if (localStorage.getItem('logall_reauth_pending')) {
+    const intent = localStorage.getItem('logall_reauth_pending')
+    if (intent) {
       localStorage.removeItem('logall_reauth_pending')
-      setNotice('Google Drive reconnected — please re-select your photo.')
-      setTimeout(() => setNotice(''), 6000)
+      const action = intent === 'camera' ? 'take your photo'
+                   : intent === 'gallery' ? 'choose your file'
+                   : 're-select your photo'
+      setNotice(`Google Drive reconnected — tap "${intent === 'camera' ? 'Take photo' : intent === 'gallery' ? 'Choose file' : ''}" to ${action}.`)
+      setTimeout(() => setNotice(''), 8000)
     }
   }, [])
 
@@ -157,7 +161,10 @@ export default function ReceiptUpload({ value, onChange }) {
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            if (!hasValidToken()) { silentReauth('camera'); return }
+            fileInputRef.current?.click()
+          }}
           className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 active:bg-gray-50 transition-colors text-sm font-medium"
         >
           <Camera size={17} />
@@ -165,7 +172,10 @@ export default function ReceiptUpload({ value, onChange }) {
         </button>
         <button
           type="button"
-          onClick={() => galleryInputRef.current?.click()}
+          onClick={() => {
+            if (!hasValidToken()) { silentReauth('gallery'); return }
+            galleryInputRef.current?.click()
+          }}
           className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 active:bg-gray-50 transition-colors text-sm font-medium"
         >
           <Upload size={17} />

@@ -169,13 +169,19 @@ async function getOrCreateGoogleFolder(token) {
   return subId
 }
 
+/** Returns true if there is a valid (non-expired) Google token cached */
+export function hasValidToken() {
+  return !!getCachedToken()
+}
+
 /**
  * Trigger a silent re-authentication with Google (prompt=none).
  * Saves the current path and a flag so the page can show a "reconnected" notice.
+ * Pass an optional intent string (e.g. 'camera' or 'gallery') to restore context on return.
  */
-export function silentReauth() {
+export function silentReauth(intent = '') {
   localStorage.setItem('logall_reauth_return_path', window.location.pathname)
-  localStorage.setItem('logall_reauth_pending', 'true')
+  localStorage.setItem('logall_reauth_pending', intent || 'true')
   window.location.href = googleAuthUrl({ prompt: 'none' })
 }
 
