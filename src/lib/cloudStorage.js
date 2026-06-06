@@ -88,11 +88,9 @@ export async function completeMobileConnect() {
     throw new Error(`Sign-in failed: ${error}`)
   }
 
-  // Token was already stored by oauth-callback.html in the correct format
-  const cached = sessionStorage.getItem('logall_google_token')
-  if (!cached) throw new Error('No token found after sign-in.')
-
-  const { token } = JSON.parse(cached)
+  // Token was stored in localStorage by oauth-callback.html
+  const token = getCachedToken()
+  if (!token) throw new Error('No token found after sign-in. Please try connecting again.')
   const email = await fetchGoogleEmail(token)
   return { provider, email }
 }
