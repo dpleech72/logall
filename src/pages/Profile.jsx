@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink } from 'lucide-react'
 import { useDarkMode } from '../hooks/useDarkMode'
+import { connectGoogleDrive, clearProviderToken } from '../lib/cloudStorage'
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -52,6 +53,9 @@ export default function Profile() {
     utr: '',
     vat_number: '',
   })
+  const [googleEmail, setGoogleEmail]     = useState(null)
+  const [providerConnecting, setProviderConnecting] = useState(false)
+  const [providerError, setProviderError] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -87,6 +91,7 @@ export default function Profile() {
         utr: data.utr || '',
         vat_number: data.vat_number || '',
       })
+      setGoogleEmail(data.google_drive_email || null)
     }
     setLoading(false)
   }
@@ -138,6 +143,25 @@ export default function Profile() {
   }
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+
+  async function handleConnect() {
+    setProviderConnecting(true)
+    setProviderError('')
+    try {
+      const email = await connectGoogleDrive()
+      await supabase.from('profiles').update({ receipt_provider: 'google', google_drive_email: email }).eq('id', user.id)
+      setGoogleEmail(email)
+    } catch (err) {
+      setProviderError(err.message)
+    }
+    setProviderConnecting(false)
+  }
+
+  async function handleDisconnect() {
+    await supabase.from('profiles').update({ receipt_provider: null, google_drive_email: null }).eq('id', user.id)
+    clearProviderToken('google')
+    setGoogleEmail(null)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -394,6 +418,58 @@ export default function Profile() {
           </div>
         ) : (
           <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-1">No personal holidays added yet</p>
+        )}
+      </div>
+
+      {/* Receipt storage */}
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
+        <div>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Receipt storage</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Link a cloud account to store your receipt photos. Receipts are compressed before uploading.
+          </p>
+        </div>
+
+        {providerError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 dark:bg-red-900/20 dark:border-red-800 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
+            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+            <span>{providerError}</span>
+          </div>
+        )}
+
+        {/* Google Drive */}
+        {googleEmail ? (
+          <div className="flex items-center gap-3 px-3 py-3 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20 dark:border-green-600">
+            <span className="text-xl">🔵</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-green-700 dark:text-green-300">Google Drive</p>
+              <p className="text-xs text-green-600 dark:text-green-400 truncate">{googleEmail}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDisconnect}
+              className="text-xs text-red-400 font-medium flex items-center gap-1 flex-shrink-0 active:opacity-70"
+            >
+              <Unlink size={13} />
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={providerConnecting}
+            onClick={handleConnect}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 active:bg-gray-100 text-left transition-colors disabled:opacity-60"
+          >
+            <span className="text-xl">🔵</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Connect Google Drive</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Sign in to link your Google account</p>
+            </div>
+            {providerConnecting
+              ? <Loader2 size={16} className="animate-spin text-gray-400 flex-shrink-0" />
+              : <Link size={15} className="text-gray-400 flex-shrink-0" />}
+          </button>
         )}
       </div>
 

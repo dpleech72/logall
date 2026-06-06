@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Plus, X, Check, AlertCircle, Trash2, Receipt, Info, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
+import { Plus, X, Check, AlertCircle, Trash2, Receipt, Info, ChevronLeft, ChevronRight, ArrowLeft, ExternalLink } from 'lucide-react'
+import ReceiptUpload from '../components/ui/ReceiptUpload'
 
 const CATEGORIES = [
   { value: 'cleaning_products', label: 'Cleaning products', emoji: '🧴' },
@@ -55,6 +56,7 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
     expense_date: expense?.expense_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
     is_aia: expense?.is_aia || false,
     notes: expense?.notes || '',
+    receipt_url: expense?.receipt_url || null,
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -83,6 +85,7 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
       expense_date: form.expense_date,
       is_aia: form.is_aia,
       notes: form.notes || null,
+      receipt_url: form.receipt_url || null,
     }
     const { error } = expense
       ? await supabase.from('expenses').update(payload).eq('id', expense.id)
@@ -171,6 +174,14 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
             <input type="text" placeholder="e.g. Bought from Asda"
               value={form.notes} onChange={set('notes')}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Receipt photo (optional)</label>
+            <ReceiptUpload
+              value={form.receipt_url}
+              onChange={(url) => setForm(f => ({ ...f, receipt_url: url }))}
+            />
           </div>
 
           <button type="button" onClick={onClose} className="w-full bg-gray-100 text-gray-600 dark:text-gray-300 font-semibold py-3.5 rounded-xl text-sm active:bg-gray-200 transition-colors">
@@ -335,6 +346,7 @@ export default function Expenses() {
                       </span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">{cat?.label}</span>
                       {expense.is_aia && <span className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-medium">AIA</span>}
+                      {expense.receipt_url && <span className="text-xs bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded-full font-medium">🧾</span>}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
