@@ -95,47 +95,78 @@ export async function completeMobileConnect() {
   return { provider, email }
 }
 
-const GOOGLE_FOLDER_KEY = 'logall_gdrive_folder_id'
+const GOOGLE_ROOT_FOLDER_KEY  = 'logall_gdrive_folder_id'
 const GOOGLE_FOLDER_NAME = 'LogAll Receipts'
 
-async function getOrCreateGoogleFolder(token) {
-  const cached = localStorage.getItem(GOOGLE_FOLDER_KEY)
+/** Returns the UK tax year label for today, e.g. "2025-26" */
+function currentTaxYear() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const startYear = (now.getMonth() >= 3) ? year : year - 1  // April = month 3
+  return `${startYear}-${String(startYear + 1).slice(2)}`
+}
 
-  // Verify the cached ID still exists in Drive before trusting it
-  if (cached) {
-    const check = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${cached}?fields=id,trashed`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    if (check.ok) {
-      const file = await check.json()
-      if (!file.trashed) return cached
-    }
-    // Stale — clear and recreate
-    localStorage.removeItem(GOOGLE_FOLDER_KEY)
-  }
-
-  const q = encodeURIComponent(`name='${GOOGLE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`)
+async function findOrCreateFolder(token, name, parentId = null) {
+  const parentClause = parentId ? ` and '${parentId}' in parents` : ''
+  const q = encodeURIComponent(`name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false${parentClause}`)
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!searchRes.ok) throw new Error('Could not search Google Drive.')
   const { files } = await searchRes.json()
+  if (files?.length) return files[0].id
 
-  if (files?.length) {
-    localStorage.setItem(GOOGLE_FOLDER_KEY, files[0].id)
-    return files[0].id
-  }
-
+  const body = { name, mimeType: 'application/vnd.google-apps.folder' }
+  if (parentId) body.parents = [parentId]
   const createRes = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: GOOGLE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }),
+    body: JSON.stringify(body),
   })
-  if (!createRes.ok) throw new Error('Could not create Google Drive folder.')
+  if (!createRes.ok) throw new Error(`Could not create folder "${name}".`)
   const folder = await createRes.json()
-  localStorage.setItem(GOOGLE_FOLDER_KEY, folder.id)
   return folder.id
+}
+
+async function getOrCreateGoogleFolder(token) {
+  const taxYear = currentTaxYear()
+  const subFolderKey = `logall_gdrive_subfolder_${taxYear}`
+
+  // Check cached subfolder first
+  const cachedSub = localStorage.getItem(subFolderKey)
+  if (cachedSub) {
+    const check = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${cachedSub}?fields=id,trashed`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    if (check.ok) {
+      const file = await check.json()
+      if (!file.trashed) return cachedSub
+    }
+    localStorage.removeItem(subFolderKey)
+  }
+
+  // Get or create root "LogAll Receipts" folder
+  let rootId = localStorage.getItem(GOOGLE_ROOT_FOLDER_KEY)
+  if (rootId) {
+    const check = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${rootId}?fields=id,trashed`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    if (!check.ok || (await check.json()).trashed) {
+      localStorage.removeItem(GOOGLE_ROOT_FOLDER_KEY)
+      rootId = null
+    }
+  }
+  if (!rootId) {
+    rootId = await findOrCreateFolder(token, GOOGLE_FOLDER_NAME)
+    localStorage.setItem(GOOGLE_ROOT_FOLDER_KEY, rootId)
+  }
+
+  // Get or create tax year subfolder, e.g. "2025-26"
+  const subId = await findOrCreateFolder(token, taxYear, rootId)
+  localStorage.setItem(subFolderKey, subId)
+  return subId
 }
 
 /** Upload a compressed receipt blob to Google Drive. Returns a viewable URL. */
