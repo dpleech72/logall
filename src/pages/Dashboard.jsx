@@ -264,8 +264,7 @@ export default function Dashboard() {
         {/* Hero */}
         <button
           onClick={() => navigate('/income')}
-          className="w-full rounded-2xl p-5 text-left active:opacity-90 transition-opacity"
-          style={{ background: 'linear-gradient(135deg, #0E9E6C 0%, #085041 100%)' }}
+          className="w-full rounded-2xl p-5 text-left active:opacity-90 transition-opacity bg-green-600"
         >
           <p className="text-green-100 text-xs font-semibold uppercase tracking-wide mb-2">
             Income this month
