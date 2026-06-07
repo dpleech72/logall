@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { PoundSterling, TrendingUp, Car, Users, ChevronRight, X } from 'lucide-react'
+import { PoundSterling, TrendingUp, Car, Users, ChevronRight, X, UserCircle, HelpCircle } from 'lucide-react'
 
 const paymentColour = {
   cash:         'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400',
@@ -194,6 +194,8 @@ export default function Dashboard() {
     { icon: Car,           label: 'Log journey',  colour: 'text-blue-600',   to: '/mileage'  },
     { icon: TrendingUp,    label: 'Log expense',  colour: 'text-purple-600', to: '/expenses' },
     { icon: Users,         label: 'Clients',      colour: 'text-teal-600',   to: '/clients'  },
+    { icon: UserCircle,    label: 'My profile',   colour: 'text-gray-600 dark:text-gray-300',   to: '/profile'  },
+    { icon: HelpCircle,    label: 'Help',         colour: 'text-amber-600',  to: '/help'     },
   ]
 
   return (
