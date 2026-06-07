@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink, Mail } from 'lucide-react'
 import { useDarkMode } from '../hooks/useDarkMode'
 import { connectGoogleDrive, completeMobileConnect, clearProviderToken } from '../lib/cloudStorage'
 
@@ -60,6 +60,11 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+
+  const [newEmail, setNewEmail]           = useState('')
+  const [emailSaving, setEmailSaving]     = useState(false)
+  const [emailSent, setEmailSent]         = useState(false)
+  const [emailError, setEmailError]       = useState('')
 
   const [holidays, setHolidays] = useState([])
   const [newHolidayStart, setNewHolidayStart] = useState('')
@@ -173,6 +178,27 @@ export default function Profile() {
     }
     clearProviderToken()
     setGoogleEmail(null)
+  }
+
+  async function handleEmailChange() {
+    setEmailError('')
+    if (!newEmail.trim() || !newEmail.includes('@')) {
+      setEmailError('Please enter a valid email address.')
+      return
+    }
+    if (newEmail.trim().toLowerCase() === user?.email?.toLowerCase()) {
+      setEmailError('That is already your current email address.')
+      return
+    }
+    setEmailSaving(true)
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() })
+    setEmailSaving(false)
+    if (error) {
+      setEmailError(error.message)
+    } else {
+      setEmailSent(true)
+      setNewEmail('')
+    }
   }
 
   async function handleSubmit(e) {
@@ -348,6 +374,48 @@ export default function Profile() {
           {saving ? 'Saving...' : 'Save profile'}
         </button>
       </form>
+
+      {/* Change email */}
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
+        <div>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Change email address</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Current: <span className="font-medium text-gray-600 dark:text-gray-300">{user?.email}</span>
+          </p>
+        </div>
+
+        {emailError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />{emailError}
+          </div>
+        )}
+
+        {emailSent ? (
+          <div className="flex items-start gap-2 bg-green-50 border border-green-100 rounded-xl p-3 text-sm text-green-700">
+            <Check size={15} className="flex-shrink-0 mt-0.5" />
+            <span>Confirmation email sent! Check your new inbox and click the link to complete the change.</span>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="email"
+              placeholder="New email address"
+              value={newEmail}
+              onChange={e => { setNewEmail(e.target.value); setEmailError('') }}
+              className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+            />
+            <button
+              type="button"
+              onClick={handleEmailChange}
+              disabled={emailSaving || !newEmail.trim()}
+              className="bg-green-600 text-white font-semibold px-4 py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 flex items-center gap-1.5 flex-shrink-0"
+            >
+              {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
+              {emailSaving ? '' : 'Send'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* My holidays */}
       <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-4">
