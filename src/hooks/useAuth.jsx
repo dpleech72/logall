@@ -32,6 +32,11 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
+  const getMfaLevel = async () => {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    return data
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
   }
@@ -44,7 +49,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, resetPassword }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, resetPassword, getMfaLevel }}>
       {children}
     </AuthContext.Provider>
   )

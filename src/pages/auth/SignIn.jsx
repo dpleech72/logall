@@ -1,15 +1,22 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import { LogIn, Mail, Lock, AlertCircle, ShieldCheck } from 'lucide-react'
 
 export default function SignIn() {
-  const { signIn } = useAuth()
+  const { signIn, getMfaLevel } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // MFA step
+  const [mfaRequired, setMfaRequired] = useState(false)
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaError, setMfaError] = useState('')
+  const [mfaLoading, setMfaLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -21,11 +28,115 @@ export default function SignIn() {
     if (error) {
       setError('Email or password is incorrect. Please try again.')
       setLoading(false)
+      return
+    }
+
+    // Check if MFA elevation is needed
+    const aal = await getMfaLevel()
+    if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
+      setMfaRequired(true)
+      setLoading(false)
     } else {
       navigate('/dashboard')
     }
   }
 
+  const handleMfaVerify = async (e) => {
+    e.preventDefault()
+    setMfaError('')
+    setMfaLoading(true)
+
+    // Get the verified TOTP factor
+    const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors()
+    if (factorsError || !factorsData?.totp?.length) {
+      setMfaError('Could not find 2FA factor. Please try signing in again.')
+      setMfaLoading(false)
+      return
+    }
+
+    const factorId = factorsData.totp[0].id
+
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId,
+      code: mfaCode.replace(/\s/g, ''),
+    })
+
+    setMfaLoading(false)
+
+    if (error) {
+      setMfaError('Invalid code — please check your authenticator app and try again.')
+      setMfaCode('')
+    } else {
+      navigate('/dashboard')
+    }
+  }
+
+  // ── MFA code screen ──
+  if (mfaRequired) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-green-600 rounded-2xl mb-4">
+            <ShieldCheck size={28} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Log<span className="text-green-600">All</span></h1>
+          <p className="text-gray-500 mt-1 text-sm">Log all. Worry none.</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-sm mx-auto w-full">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Two-factor authentication</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Open your authenticator app and enter the 6-digit code for LogAll.
+          </p>
+
+          {mfaError && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 mb-4 text-sm text-red-700">
+              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+              {mfaError}
+            </div>
+          )}
+
+          <form onSubmit={handleMfaVerify} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Verification code
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9 ]*"
+                maxLength={7}
+                value={mfaCode}
+                onChange={e => setMfaCode(e.target.value)}
+                placeholder="000 000"
+                autoFocus
+                required
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-center tracking-widest text-lg font-mono focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={mfaLoading || mfaCode.replace(/\s/g, '').length < 6}
+              className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors"
+            >
+              {mfaLoading ? 'Verifying...' : 'Verify'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMfaRequired(false); setMfaCode(''); setMfaError('') }}
+              className="w-full text-sm text-gray-400 py-1"
+            >
+              ← Back to sign in
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Normal sign in screen ──
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
       {/* Logo */}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink, Mail } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink, Mail, ShieldCheck, ShieldOff, QrCode } from 'lucide-react'
 import { useDarkMode } from '../hooks/useDarkMode'
 import { connectGoogleDrive, completeMobileConnect, clearProviderToken } from '../lib/cloudStorage'
 
@@ -61,6 +61,18 @@ export default function Profile() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
+  const [mfaFactor, setMfaFactor]         = useState(null)
+  const [mfaEnrolling, setMfaEnrolling]   = useState(false)
+  const [mfaQR, setMfaQR]                 = useState('')
+  const [mfaSecret, setMfaSecret]         = useState('')
+  const [mfaFactorId, setMfaFactorId]     = useState('')
+  const [mfaCode, setMfaCode]             = useState('')
+  const [mfaVerifying, setMfaVerifying]   = useState(false)
+  const [mfaError, setMfaError]           = useState('')
+  const [mfaSuccess, setMfaSuccess]       = useState(false)
+  const [mfaDisabling, setMfaDisabling]   = useState(false)
+  const [mfaConfirm, setMfaConfirm]       = useState(false)
+
   const [newEmail, setNewEmail]           = useState('')
   const [emailSaving, setEmailSaving]     = useState(false)
   const [emailSent, setEmailSent]         = useState(false)
@@ -76,6 +88,7 @@ export default function Profile() {
   useEffect(() => {
     fetchProfile()
     fetchHolidays()
+    checkMfa()
     // Complete a mobile OAuth redirect if we just came back from Google
     completeMobileConnect()
       .then(async result => {
@@ -178,6 +191,59 @@ export default function Profile() {
     }
     clearProviderToken()
     setGoogleEmail(null)
+  }
+
+  async function checkMfa() {
+    const { data } = await supabase.auth.mfa.listFactors()
+    const verified = (data?.totp || []).find(f => f.status === 'verified')
+    setMfaFactor(verified || null)
+  }
+
+  async function startMfaEnroll() {
+    setMfaError('')
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    if (error) { setMfaError(error.message); return }
+    setMfaFactorId(data.id)
+    setMfaQR(data.totp.qr_code)
+    setMfaSecret(data.totp.secret)
+    setMfaEnrolling(true)
+  }
+
+  async function cancelMfaEnroll() {
+    if (mfaFactorId) await supabase.auth.mfa.unenroll({ factorId: mfaFactorId })
+    setMfaEnrolling(false)
+    setMfaQR('')
+    setMfaSecret('')
+    setMfaFactorId('')
+    setMfaCode('')
+    setMfaError('')
+  }
+
+  async function verifyMfaEnroll() {
+    setMfaError('')
+    setMfaVerifying(true)
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId })
+    if (chErr) { setMfaError(chErr.message); setMfaVerifying(false); return }
+    const { error } = await supabase.auth.mfa.verify({ factorId: mfaFactorId, challengeId: ch.id, code: mfaCode.replace(/\s/g, '') })
+    setMfaVerifying(false)
+    if (error) { setMfaError('Invalid code — please try again.'); setMfaCode(''); return }
+    setMfaEnrolling(false)
+    setMfaQR('')
+    setMfaSecret('')
+    setMfaCode('')
+    setMfaSuccess(true)
+    setTimeout(() => setMfaSuccess(false), 5000)
+    checkMfa()
+  }
+
+  async function disableMfa() {
+    setMfaDisabling(true)
+    setMfaError('')
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactor.id })
+    setMfaDisabling(false)
+    if (error) { setMfaError(error.message); return }
+    setMfaFactor(null)
+    setMfaConfirm(false)
   }
 
   async function handleEmailChange() {
@@ -553,6 +619,142 @@ export default function Profile() {
               ? <Loader2 size={16} className="animate-spin text-gray-400 flex-shrink-0" />
               : <Link size={15} className="text-gray-400 flex-shrink-0" />}
           </button>
+        )}
+      </div>
+
+      {/* Two-factor authentication */}
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-gray-900 dark:text-white">Two-factor authentication</h2>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              Add an extra layer of security. Each time you sign in you'll be asked for a code from your authenticator app.
+            </p>
+          </div>
+          {mfaFactor && (
+            <span className="flex-shrink-0 flex items-center gap-1 text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-medium">
+              <ShieldCheck size={12} /> On
+            </span>
+          )}
+        </div>
+
+        {mfaError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />{mfaError}
+          </div>
+        )}
+
+        {mfaSuccess && (
+          <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl p-3 text-sm text-green-700">
+            <ShieldCheck size={15} />Two-factor authentication is now enabled!
+          </div>
+        )}
+
+        {/* Enrolled — show disable option */}
+        {mfaFactor && !mfaSuccess && (
+          mfaConfirm ? (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600 dark:text-gray-300">Are you sure? This will remove 2FA from your account.</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMfaConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={disableMfa}
+                  disabled={mfaDisabling}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium disabled:opacity-60"
+                >
+                  {mfaDisabling ? 'Disabling...' : 'Yes, disable'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMfaConfirm(true)}
+              className="flex items-center gap-2 text-sm text-red-500 font-medium"
+            >
+              <ShieldOff size={15} />
+              Disable two-factor authentication
+            </button>
+          )
+        )}
+
+        {/* Not enrolled — enroll flow */}
+        {!mfaFactor && !mfaSuccess && (
+          mfaEnrolling ? (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Scan this QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, etc.), then enter the 6-digit code to confirm.
+              </p>
+
+              {/* QR code */}
+              <div className="flex justify-center">
+                <div
+                  className="bg-white p-3 rounded-xl border border-gray-200"
+                  dangerouslySetInnerHTML={{ __html: mfaQR }}
+                  style={{ width: 180, height: 180 }}
+                />
+              </div>
+
+              {/* Manual entry */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                  <QrCode size={12} /> Can't scan? Enter this code manually:
+                </p>
+                <p className="text-sm font-mono font-semibold text-gray-800 dark:text-gray-100 break-all">{mfaSecret}</p>
+              </div>
+
+              {/* Verify code */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  Enter the 6-digit code from the app
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9 ]*"
+                  maxLength={7}
+                  value={mfaCode}
+                  onChange={e => { setMfaCode(e.target.value); setMfaError('') }}
+                  placeholder="000 000"
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={cancelMfaEnroll}
+                  className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={verifyMfaEnroll}
+                  disabled={mfaVerifying || mfaCode.replace(/\s/g, '').length < 6}
+                  className="flex-1 py-3 rounded-xl bg-green-600 text-white text-sm font-semibold disabled:opacity-60"
+                >
+                  {mfaVerifying ? 'Verifying...' : 'Activate 2FA'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={startMfaEnroll}
+              className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-3 rounded-xl text-sm active:bg-green-700 w-full justify-center"
+            >
+              <ShieldCheck size={16} />
+              Enable two-factor authentication
+            </button>
+          )
         )}
       </div>
 
