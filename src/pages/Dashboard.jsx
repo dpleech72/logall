@@ -4,6 +4,16 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { PoundSterling, TrendingUp, Car, Users, ChevronRight, X } from 'lucide-react'
 
+const paymentColour = {
+  cash:         'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  bank_transfer:'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+  card:         'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+  cheque:       'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
+}
+const paymentLabel = {
+  cash: 'Cash', bank_transfer: 'Bank transfer', card: 'Card', cheque: 'Cheque',
+}
+
 function getInitials(name) {
   if (!name) return '?'
   return name.split(' ').filter(Boolean).map(w => w[0].toUpperCase()).slice(0, 2).join('')
@@ -91,7 +101,7 @@ export default function Dashboard() {
       supabase.from('visits').select('id, scheduled_time, duration_minutes, status')
         .eq('scheduled_date', today).in('status', ['scheduled', 'awaiting_payment']),
       supabase.from('income')
-        .select('amount, received_date, description, client_id')
+        .select('amount, received_date, description, client_id, payment_method')
         .order('received_date', { ascending: false }).limit(3),
       supabase.from('profiles').select('full_name').single(),
       supabase.from('clients').select('id, name, colour'),
@@ -362,36 +372,43 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {stats.recentIncome.map((item, i) => {
-              const client  = clientMap[item.client_id]
-              const label   = item.description || client?.name || 'Payment'
-              const initials = getInitials(client?.name || label)
-              const avatarBg = client?.colour || '#E1F5EE'
+              const client = clientMap[item.client_id]
               return (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 flex items-center gap-3"
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3"
                 >
-                  {/* Avatar */}
-                  <div
-                    className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
-                    style={{ backgroundColor: avatarBg, color: '#085041' }}
-                  >
-                    {initials}
-                  </div>
+                  {/* Avatar — matches Income screen exactly */}
+                  {client ? (
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: client.colour || '#16a34a' }}
+                    >
+                      {client.name.charAt(0)}
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                      <PoundSterling size={16} className="text-green-600" />
+                    </div>
+                  )}
                   {/* Text */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{label}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                      {new Date(item.received_date + 'T12:00:00').toLocaleDateString('en-GB', {
-                        weekday: 'short', day: 'numeric', month: 'short',
-                      })}
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                      {item.description || client?.name || 'Payment'}
                     </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {new Date(item.received_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </span>
+                      {item.payment_method && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${paymentColour[item.payment_method] || paymentColour.cash}`}>
+                          {paymentLabel[item.payment_method] || item.payment_method}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {/* Amount */}
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-green-600">£{parseFloat(item.amount).toFixed(2)}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Paid</p>
-                  </div>
+                  <p className="font-bold text-green-600 flex-shrink-0">£{parseFloat(item.amount).toFixed(2)}</p>
                 </div>
               )
             })}
