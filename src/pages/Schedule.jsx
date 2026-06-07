@@ -355,11 +355,11 @@ export default function Schedule() {
   const selectedDayHoliday = getHolidayInfo(formatDate(selectedDay))
 
   return (
-    <div className="flex flex-col h-full md:flex-row">
+    <div className="flex flex-col h-full lg:flex-row">
       {/* Left panel — calendar */}
-      <div className="md:w-[300px] lg:w-[380px] md:shrink-0 md:border-r md:border-gray-100 dark:border-gray-700 md:overflow-y-auto md:h-full">
+      <div className="lg:w-[380px] lg:shrink-0 lg:border-r lg:border-gray-100 dark:border-gray-700 lg:overflow-y-auto lg:h-full">
       {/* Header */}
-      <div className="p-4 pt-6 pb-0 md:pb-4">
+      <div className="p-4 pt-6 pb-0 lg:pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Schedule</h1>
@@ -657,9 +657,9 @@ export default function Schedule() {
       </div>{/* end left panel */}
 
       {/* Right panel — job cards */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 md:px-6 md:pt-6 md:pb-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 lg:px-6 lg:pt-6 lg:pb-6">
         {/* Desktop day heading */}
-        <div className="hidden md:flex items-center justify-between mb-2">
+        <div className="hidden lg:flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
               {isSameDay(selectedDay, today) ? 'Today' : selectedDay.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}

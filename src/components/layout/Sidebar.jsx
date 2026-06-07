@@ -15,7 +15,7 @@ export default function Sidebar() {
   const [dark, setDark] = useDarkMode()
 
   return (
-    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 h-full">
+    <aside className="hidden lg:flex flex-col w-56 shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 h-full">
       {/* Logo */}
       <div className="px-4 pt-6 pb-5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
         <img src="/icon-192.png" alt="LogAll" className="w-11 h-11 rounded-xl flex-shrink-0" />
