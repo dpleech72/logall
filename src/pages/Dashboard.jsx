@@ -15,6 +15,7 @@ export default function Dashboard() {
 
   const [stats, setStats] = useState({
     incomeThisMonth: 0,
+    incomeLastMonth: 0,
     expensesThisMonth: 0,
     outstanding: 0,
     taxSetAside: 0,
@@ -61,12 +62,15 @@ export default function Dashboard() {
   async function fetchStats() {
     const now = new Date()
     const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-    const monthStart   = localDate(new Date(now.getFullYear(), now.getMonth(), 1))
-    const today        = localDate(now)
-    const taxYearStart = localDate(new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6))
+    const monthStart      = localDate(new Date(now.getFullYear(), now.getMonth(), 1))
+    const lastMonthStart  = localDate(new Date(now.getFullYear(), now.getMonth() - 1, 1))
+    const lastMonthEnd    = localDate(new Date(now.getFullYear(), now.getMonth(), 0))
+    const today           = localDate(now)
+    const taxYearStart    = localDate(new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6))
 
     const [
       { data: incomeMonth },
+      { data: incomeLastMonth },
       { data: expensesMonth },
       { data: outstanding },
       { data: incomeYear },
@@ -78,6 +82,7 @@ export default function Dashboard() {
       { data: clients },
     ] = await Promise.all([
       supabase.from('income').select('amount').gte('received_date', monthStart),
+      supabase.from('income').select('amount').gte('received_date', lastMonthStart).lte('received_date', lastMonthEnd),
       supabase.from('expenses').select('amount').gte('expense_date', monthStart),
       supabase.from('visits').select('amount').eq('status', 'awaiting_payment'),
       supabase.from('income').select('amount').gte('received_date', taxYearStart),
@@ -110,8 +115,9 @@ export default function Dashboard() {
       (profit > 12570 ? 3.45 * 52 : 0)
 
     setStats({
-      incomeThisMonth:  (incomeMonth  || []).reduce((s, i) => s + parseFloat(i.amount), 0),
-      expensesThisMonth:(expensesMonth|| []).reduce((s, i) => s + parseFloat(i.amount), 0),
+      incomeThisMonth:  (incomeMonth     || []).reduce((s, i) => s + parseFloat(i.amount), 0),
+      incomeLastMonth:  (incomeLastMonth || []).reduce((s, i) => s + parseFloat(i.amount), 0),
+      expensesThisMonth:(expensesMonth   || []).reduce((s, i) => s + parseFloat(i.amount), 0),
       outstanding:      (outstanding  || []).reduce((s, i) => s + parseFloat(i.amount || 0), 0),
       taxSetAside: Math.round(estimatedTax / 12),
       jobsToday: (() => {
@@ -257,7 +263,27 @@ export default function Dashboard() {
           <p className="text-4xl font-bold text-white leading-none">
             {loading ? '—' : `£${stats.incomeThisMonth.toFixed(2)}`}
           </p>
-          <p className="text-green-300 text-xs mt-2">Tap to view all income →</p>
+
+          {/* Progress bar vs last month */}
+          {!loading && stats.incomeLastMonth > 0 && (() => {
+            const pct = Math.min(100, Math.round((stats.incomeThisMonth / stats.incomeLastMonth) * 100))
+            return (
+              <div className="mt-4">
+                <div className="w-full rounded-full overflow-hidden" style={{ height: 4, backgroundColor: 'rgba(255,255,255,0.25)' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%`, backgroundColor: 'rgba(255,255,255,0.85)' }}
+                  />
+                </div>
+                <p className="text-green-100 text-xs mt-1.5">
+                  {pct}% of last month · £{stats.incomeLastMonth.toFixed(2)} target
+                </p>
+              </div>
+            )
+          })()}
+          {!loading && stats.incomeLastMonth === 0 && (
+            <p className="text-green-300 text-xs mt-3">Tap to view all income →</p>
+          )}
         </button>
 
         {/* Secondary stats */}
