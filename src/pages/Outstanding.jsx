@@ -247,7 +247,7 @@ export default function Outstanding() {
   const total = visits.reduce((sum, v) => sum + parseFloat(v.amount || 0), 0)
 
   return (
-    <div className="p-4">
+    <div className="p-4 md:max-w-3xl md:mx-auto lg:max-w-4xl lg:p-8">
       {/* Header */}
       <div className="pt-2 flex items-center gap-3 mb-4">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-400 dark:text-gray-500">
