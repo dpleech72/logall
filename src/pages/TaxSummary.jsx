@@ -113,7 +113,7 @@ export default function TaxSummary() {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 md:max-w-3xl md:mx-auto lg:max-w-4xl lg:p-8 space-y-4">
       {/* Header */}
       <div className="pt-2">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tax Summary</h1>
