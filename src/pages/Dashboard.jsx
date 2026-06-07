@@ -387,7 +387,7 @@ export default function Dashboard() {
                 <button
                   key={visit.id || i}
                   onClick={() => navigate('/outstanding')}
-                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-amber-100 dark:border-amber-800/40 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-amber-50 transition-colors"
+                  className="w-full bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/40 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-amber-100 transition-colors"
                 >
                   {client ? (
                     <div
