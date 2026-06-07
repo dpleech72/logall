@@ -407,8 +407,11 @@ export default function Dashboard() {
                       )}
                     </div>
                   </div>
-                  {/* Amount */}
-                  <p className="font-bold text-green-600 flex-shrink-0">£{parseFloat(item.amount).toFixed(2)}</p>
+                  {/* Amount + status */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-green-600">£{parseFloat(item.amount).toFixed(2)}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Paid</p>
+                  </div>
                 </div>
               )
             })}
