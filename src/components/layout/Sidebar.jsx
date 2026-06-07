@@ -18,9 +18,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 h-full">
       {/* Logo */}
       <div className="px-4 pt-6 pb-5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
-        <div className="w-9 h-9 bg-white dark:bg-gray-800 border-2 border-green-600 rounded-xl flex items-center justify-center text-green-600 font-bold text-sm flex-shrink-0">
-          LA
-        </div>
+        <img src="/icon-192.png" alt="LogAll" className="w-11 h-11 rounded-xl flex-shrink-0" />
         <div>
           <p className="text-lg font-bold text-green-600">LogAll</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Log all. Worry none.</p>
