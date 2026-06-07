@@ -31,10 +31,12 @@ export default function Dashboard() {
     taxSetAside: 0,
     jobsToday: 0,
     recentIncome: [],
+    outstandingVisits: [],
   })
   const [firstName, setFirstName]   = useState('')
   const [fullName, setFullName]     = useState('')
   const [clientMap, setClientMap]   = useState({})
+  const [hasClients, setHasClients] = useState(false)
   const [loading, setLoading]       = useState(true)
   const [backfillVisits, setBackfillVisits]       = useState([])
   const [backfillDismissed, setBackfillDismissed] = useState(false)
@@ -90,6 +92,7 @@ export default function Dashboard() {
       { data: recentIncome },
       { data: profile },
       { data: clients },
+      { data: outstandingVisits },
     ] = await Promise.all([
       supabase.from('income').select('amount').gte('received_date', monthStart),
       supabase.from('income').select('amount').gte('received_date', lastMonthStart).lte('received_date', lastMonthEnd),
@@ -105,6 +108,10 @@ export default function Dashboard() {
         .order('received_date', { ascending: false }).limit(3),
       supabase.from('profiles').select('full_name').single(),
       supabase.from('clients').select('id, name, colour'),
+      supabase.from('visits')
+        .select('id, client_id, amount, scheduled_date, description')
+        .eq('status', 'awaiting_payment')
+        .order('scheduled_date', { ascending: true }),
     ])
 
     const name = profile?.full_name || ''
@@ -114,6 +121,7 @@ export default function Dashboard() {
     const map = {}
     ;(clients || []).forEach(c => { map[c.id] = c })
     setClientMap(map)
+    setHasClients((clients || []).length > 0)
 
     const totalIncome   = (incomeYear   || []).reduce((s, i) => s + parseFloat(i.amount), 0)
     const totalExpenses = (expensesYear || []).reduce((s, i) => s + parseFloat(i.amount), 0)
@@ -141,6 +149,7 @@ export default function Dashboard() {
         }).length
       })(),
       recentIncome: recentIncome || [],
+      outstandingVisits: outstandingVisits || [],
     })
     setLoading(false)
   }
@@ -360,6 +369,59 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Outstanding payments ── */}
+      {!loading && stats.outstandingVisits.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              Awaiting payment
+            </h2>
+            <button onClick={() => navigate('/outstanding')} className="text-xs text-amber-600 font-medium">
+              See all
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {stats.outstandingVisits.slice(0, 4).map((visit, i) => {
+              const client = clientMap[visit.client_id]
+              return (
+                <button
+                  key={visit.id || i}
+                  onClick={() => navigate('/outstanding')}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-amber-100 dark:border-amber-800/40 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-amber-50 transition-colors"
+                >
+                  {client ? (
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: client.colour || '#16a34a' }}
+                    >
+                      {client.name.charAt(0)}
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                      <PoundSterling size={16} className="text-amber-600" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                      {client?.name || 'Client'}
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                      {visit.scheduled_date
+                        ? new Date(visit.scheduled_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                        : visit.description || 'Visit'}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-amber-600">£{parseFloat(visit.amount || 0).toFixed(2)}</p>
+                    <p className="text-xs text-amber-400 mt-0.5">Unpaid</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Idea 4: Richer recent payments ── */}
       {!loading && stats.recentIncome.length > 0 && (
         <div>
@@ -421,8 +483,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Empty state ── */}
-      {!loading && stats.incomeThisMonth === 0 && stats.recentIncome.length === 0 && (
+      {/* ── Empty state — only shown to brand new users with no clients ── */}
+      {!loading && !hasClients && stats.recentIncome.length === 0 && stats.outstandingVisits.length === 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm text-center">
           <p className="text-gray-400 dark:text-gray-500 text-sm">
             No activity yet — start by adding a client and logging your first job.
