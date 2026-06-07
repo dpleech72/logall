@@ -585,7 +585,7 @@ export default function Mileage() {
 
   // Year overview
   return (
-    <div className="p-4 md:max-w-3xl md:mx-auto">
+    <div className="p-4 md:max-w-3xl md:mx-auto lg:max-w-4xl lg:p-8">
       <div className="pt-2 flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mileage</h1>
