@@ -382,6 +382,9 @@ export default function Profile() {
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
             Current: <span className="font-medium text-gray-600 dark:text-gray-300">{user?.email}</span>
           </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            You'll receive <span className="font-medium text-gray-600 dark:text-gray-300">two confirmation emails</span> — one to your current address and one to the new one. You must click the link in both to complete the change. <span className="font-medium text-gray-600 dark:text-gray-300">Check your junk/spam folder</span> if they don't arrive within a few minutes.
+          </p>
         </div>
 
         {emailError && (
