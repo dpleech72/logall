@@ -201,7 +201,7 @@ export default function Profile() {
 
   async function startMfaEnroll() {
     setMfaError('')
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', issuer: 'LogAll', friendlyName: 'LogAll' })
     if (error) { setMfaError(error.message); return }
     setMfaFactorId(data.id)
     setMfaQR(data.totp.qr_code)
