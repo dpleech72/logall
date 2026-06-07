@@ -373,9 +373,10 @@ export default function Dashboard() {
             {stats.recentIncome.map((item, i) => {
               const client = clientMap[item.client_id]
               return (
-                <div
+                <button
                   key={i}
-                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3"
+                  onClick={() => navigate('/income')}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors"
                 >
                   {/* Avatar — matches Income screen exactly */}
                   {client ? (
@@ -411,7 +412,7 @@ export default function Dashboard() {
                     <p className="font-bold text-green-600">£{parseFloat(item.amount).toFixed(2)}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Paid</p>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
