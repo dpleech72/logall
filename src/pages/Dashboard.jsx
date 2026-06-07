@@ -197,7 +197,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="p-4 lg:p-8 lg:max-w-4xl lg:mx-auto space-y-5">
+    <div className="p-4 md:max-w-3xl md:mx-auto lg:max-w-4xl lg:p-8 space-y-5">
       {/* Header */}
       <div className="pt-2">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{greeting()}{firstName ? `, ${firstName}` : ''}</h1>
@@ -304,7 +304,7 @@ export default function Dashboard() {
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-wide">Recent payments</h2>
             <button onClick={() => navigate('/income')} className="text-xs text-green-600 font-medium">See all</button>
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {stats.recentIncome.map((item, i) => (
               <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 flex items-center justify-between">
                 <div>

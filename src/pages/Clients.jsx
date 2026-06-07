@@ -62,7 +62,7 @@ export default function Clients() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 md:max-w-3xl md:mx-auto">
       {/* Header */}
       <div className="pt-2 flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export default function Clients() {
       )}
 
       {/* Client list */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {clients.map(client => (
           <button
             key={client.id}

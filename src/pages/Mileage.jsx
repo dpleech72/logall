@@ -519,7 +519,7 @@ export default function Mileage() {
         </div>
 
         {loading ? (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}
           </div>
         ) : journeys.length === 0 ? (
@@ -527,7 +527,7 @@ export default function Mileage() {
             <p className="text-gray-400 dark:text-gray-500 text-sm">No journeys in {MONTH_NAMES[selectedMonth]}</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {journeys.map(journey => {
               const client = clientMap[journey.client_id]
               return (
@@ -585,7 +585,7 @@ export default function Mileage() {
 
   // Year overview
   return (
-    <div className="p-4">
+    <div className="p-4 md:max-w-3xl md:mx-auto">
       <div className="pt-2 flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mileage</h1>
@@ -693,7 +693,7 @@ export default function Mileage() {
       {recent7.length > 0 && (
         <div className="mt-5">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Last 7 days</h2>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recent7.map(journey => {
               const client = clientMap[journey.client_id]
               return (
