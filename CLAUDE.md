@@ -127,3 +127,4 @@ Domain `logall.co.uk` is registered at **IONOS**. DNS is being transferred to Cl
 ## Planned Features (not yet started)
 - **Stripe** — subscription billing for LogAll users (or client payment acceptance — TBD)
 - **HMRC Make Tax Digital (MTD)** — quarterly digital submissions to HMRC for Income Tax Self Assessment; requires HMRC developer registration and OAuth with HMRC API; mandated from April 2026 for sole traders earning £50k+
+- **Passkey / Biometric login (WebAuthn)** — fingerprint (Touch ID) and face scan (Face ID / Windows Hello) login using Supabase's WebAuthn beta; works on iPhone, Android, Mac, Windows; ⚠️ must be implemented AFTER `logall.co.uk` custom domain is live as passkeys are tied to the domain — registering on `logall.pages.dev` first would require users to re-register after domain switch
