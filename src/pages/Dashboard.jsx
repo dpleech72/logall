@@ -109,7 +109,7 @@ export default function Dashboard() {
       supabase.from('profiles').select('full_name').single(),
       supabase.from('clients').select('id, name, colour'),
       supabase.from('visits')
-        .select('id, client_id, amount, scheduled_date, description')
+        .select('id, client_id, amount, scheduled_date')
         .eq('status', 'awaiting_payment')
         .order('scheduled_date', { ascending: true }),
     ])
@@ -408,7 +408,7 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       {visit.scheduled_date
                         ? new Date(visit.scheduled_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                        : visit.description || 'Visit'}
+                        : 'Visit'}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
