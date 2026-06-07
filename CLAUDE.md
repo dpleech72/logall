@@ -6,7 +6,7 @@ A PWA (Progressive Web App) for sole traders in the UK to track income, expenses
 ## Tech Stack
 - **Frontend:** React 19, Vite, Tailwind CSS v4
 - **Backend/DB:** Supabase (Postgres) — project ID `xwvohiefikozspcyxthe`, region `eu-central-1`
-- **Hosting:** Cloudflare Pages — live at `https://logall.pages.dev`
+- **Hosting:** Cloudflare Pages — live at `https://logall.pages.dev` (custom domain `logall.co.uk` in progress — see below)
 - **Repo:** GitHub — `https://github.com/dpleech72/logall.git`, branch `main`
 - **Icons:** lucide-react
 - **Routing:** react-router-dom v7
@@ -37,6 +37,18 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 - `src/components/ui/ReceiptUpload.jsx` — receipt photo capture/upload/delete component
 - `public/oauth-callback.html` — OAuth redirect callback handler
 
+## Responsive Layout
+- **< 768px** (phones): bottom nav, single-column lists
+- **768–1023px** (foldables / portrait tablets): bottom nav, 2-column card grids, `max-w-3xl` centred content
+- **≥ 1024px** (landscape tablet / desktop): sidebar, wider layout
+- Sidebar breakpoint: `lg:` (1024px) — changed from `md:` to fix portrait tablet/foldable crushing
+
+## App Icons
+- Source: 1024×1024 PNG (in `public/icon-1024.png`)
+- Crop: white border removed, 8% zoom inward, shifted up 20px vertically, transparent background (flood-fill from corners)
+- Sizes: `icon-512.png`, `icon-192.png`, `apple-touch-icon.png` (180px), `favicon.ico` (16/32/48px)
+- Sidebar shows `icon-192.png` at `w-11 h-11` (44px)
+
 ## Google Drive Integration
 - Uses OAuth 2.0 implicit grant — **always redirect flow** (no popups; popups are blocked on mobile/PWA)
 - Token stored in `localStorage` as `logall_google_token` with 55-min TTL
@@ -47,6 +59,7 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 - Images compressed to max 1200px / 72% JPEG quality before upload
 - Connected account email stored in `profiles.google_drive_email`
 - Google Cloud Console project: authorised origins include `http://localhost:5173` and `https://logall.pages.dev`
+- ⚠️ When `logall.co.uk` goes live, add `https://logall.co.uk` and `https://www.logall.co.uk` to Google OAuth authorised origins
 - App is published (not in Testing mode) so any Google account can connect
 
 ### Token expiry & silent re-auth
@@ -90,3 +103,27 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 ## Users
 - Developer/owner: `dpleech@msn.com`
 - Test user: Rachel
+
+## Custom Domain — IN PROGRESS
+Domain `logall.co.uk` is registered at **IONOS**. DNS is being transferred to Cloudflare.
+
+### What's been done
+- Cloudflare free plan set up for `logall.co.uk`
+- DNS records imported from IONOS (MX/TXT/CNAME for email kept intact)
+- Old A and AAAA records (IONOS hosting IPs) deleted
+- `www` CNAME added → `logall.pages.dev` (proxied)
+- IONOS nameservers replaced with:
+  - `keenan.ns.cloudflare.com`
+  - `nia.ns.cloudflare.com`
+- Cloudflare notified ("I updated my nameservers")
+- Propagation can take up to 48hrs — Cloudflare will send an email when active
+
+### Still to do once DNS propagates
+1. In Cloudflare Pages → logall → Custom domains: add `logall.co.uk` and `www.logall.co.uk`
+2. In Google Cloud Console → OAuth → Authorised JavaScript origins: add `https://logall.co.uk` and `https://www.logall.co.uk`
+3. Update `VITE_SUPABASE_URL` allowed origins if needed in Supabase dashboard
+4. Test Google Drive connect/disconnect on the new domain
+
+## Planned Features (not yet started)
+- **Stripe** — subscription billing for LogAll users (or client payment acceptance — TBD)
+- **HMRC Make Tax Digital (MTD)** — quarterly digital submissions to HMRC for Income Tax Self Assessment; requires HMRC developer registration and OAuth with HMRC API; mandated from April 2026 for sole traders earning £50k+
