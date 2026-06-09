@@ -786,7 +786,16 @@ export default function Profile() {
         )}
 
         {notifPermission === 'denied' && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">Notifications are blocked. Enable them in your browser settings then return here.</p>
+          <div className="space-y-2">
+            <button onClick={handleEnableNotifications}
+              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2.5 rounded-xl text-sm active:bg-green-700">
+              <Bell size={15} />
+              Enable notifications
+            </button>
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center leading-relaxed">
+              If the button doesn't work, open Chrome Settings → Privacy and security → Site settings → Notifications → add <strong>logall.co.uk</strong> to "Allowed".
+            </p>
+          </div>
         )}
 
         {notifPermission === 'default' && (
