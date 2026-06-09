@@ -142,13 +142,38 @@ export default function TaxReport() {
             <ArrowLeft size={18} />
             Back
           </button>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-xl text-sm active:bg-green-700"
-          >
-            <Printer size={15} />
-            Print / Save PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                downloadCSV(
+                  income.map(i => [i.received_date, i.description || '', i.payment_method || '', parseFloat(i.amount).toFixed(2)]),
+                  ['Date', 'Description', 'Payment Method', 'Amount (£)'],
+                  `income-${taxYearLabel.replace('/', '-')}.csv`
+                )
+                setTimeout(() => downloadCSV(
+                  expenses.map(e => [e.expense_date, CATEGORY_LABELS[e.category] || e.category, e.description || '', parseFloat(e.amount).toFixed(2), e.is_aia ? 'Yes' : 'No', e.recurring || 'One-off', e.notes || '']),
+                  ['Date', 'Category', 'Description', 'Amount (£)', 'AIA', 'Recurring', 'Notes'],
+                  `expenses-${taxYearLabel.replace('/', '-')}.csv`
+                ), 300)
+                setTimeout(() => downloadCSV(
+                  mileage.map(m => [m.journey_date, m.from_location || '', m.to_location || '', parseFloat(m.miles).toFixed(1), m.rate_per_mile || 0.55, parseFloat(m.claimable_amount).toFixed(2), m.notes || '']),
+                  ['Date', 'From', 'To', 'Miles', 'Rate (£/mile)', 'Claimable (£)', 'Notes'],
+                  `mileage-${taxYearLabel.replace('/', '-')}.csv`
+                ), 600)
+              }}
+              className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold px-4 py-2 rounded-xl text-sm active:bg-gray-50"
+            >
+              <Download size={15} />
+              Download All
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-xl text-sm active:bg-green-700"
+            >
+              <Printer size={15} />
+              Print / Save PDF
+            </button>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
