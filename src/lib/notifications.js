@@ -6,6 +6,7 @@ const CHECK_KEY  = 'logall_notif_last_check'
 
 const DEFAULT_PREFS = {
   expenses:         true,
+  expenses_days:    7,
   sa_deadline:      true,
   outstanding:      true,
   outstanding_days: 3,
@@ -74,19 +75,20 @@ export async function checkNotifications() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
 
-  // 1. Expense reminder — if no expense in 7+ days
+  // 1. Expense reminder — if no expense in N days
   if (prefs.expenses) {
-    const sevenDaysAgo = new Date(today)
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const days = Math.max(1, parseInt(prefs.expenses_days) || 7)
+    const cutoff = new Date(today)
+    cutoff.setDate(cutoff.getDate() - days)
     const { data } = await supabase
       .from('expenses')
       .select('expense_date')
-      .gte('expense_date', sevenDaysAgo.toISOString().slice(0, 10))
+      .gte('expense_date', cutoff.toISOString().slice(0, 10))
       .limit(1)
     if (!data?.length) {
       fire(
         "Don't forget your expenses 🧾",
-        "You haven't logged any expenses in the last 7 days. Tap to add one.",
+        `You haven't logged any expenses in the last ${days} day${days === 1 ? '' : 's'}. Tap to add one.`,
         'expense_reminder'
       )
     }

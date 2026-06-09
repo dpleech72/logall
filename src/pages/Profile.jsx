@@ -807,7 +807,7 @@ export default function Profile() {
         {notifPermission === 'granted' && (
           <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
             {[
-              { key: 'expenses',    label: 'Weekly expense reminder',  hint: 'If you haven\'t logged expenses in 7 days' },
+              { key: 'expenses',    label: 'Expense reminder',         hint: null },
               { key: 'sa_deadline', label: 'Self Assessment deadline',  hint: '30 days, 7 days, and 1 day before 31 January' },
               { key: 'outstanding', label: 'Overdue payment alert',     hint: null },
             ].map(({ key, label, hint }) => (
@@ -816,6 +816,18 @@ export default function Profile() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-700 dark:text-gray-200">{label}</p>
                     {hint && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{hint}</p>}
+                    {key === 'expenses' && (
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <p className="text-xs text-gray-400 dark:text-gray-500">If no expenses in</p>
+                        <input
+                          type="number" min="1" max="30"
+                          value={notifPrefs.expenses_days ?? 7}
+                          onChange={e => updateNotifPref('expenses_days', Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-14 px-2 py-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg text-center dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <p className="text-xs text-gray-400 dark:text-gray-500">days</p>
+                      </div>
+                    )}
                     {key === 'outstanding' && (
                       <div className="flex items-center gap-2 mt-1.5">
                         <p className="text-xs text-gray-400 dark:text-gray-500">Alert after</p>
