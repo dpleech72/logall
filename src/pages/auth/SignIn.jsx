@@ -74,18 +74,18 @@ export default function SignIn() {
   // ── MFA code screen ──
   if (mfaRequired) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center px-6 py-12">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-green-600 rounded-2xl mb-4">
             <ShieldCheck size={28} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Log<span className="text-green-600">All</span></h1>
-          <p className="text-gray-500 mt-1 text-sm">Log all. Worry none.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Log<span className="text-green-600">All</span></h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Log all. Worry none.</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-sm mx-auto w-full">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Two-factor authentication</h2>
-          <p className="text-sm text-gray-500 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 max-w-sm mx-auto w-full">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Two-factor authentication</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Open your authenticator app and enter the 6-digit code for LogAll.
           </p>
 
@@ -98,7 +98,7 @@ export default function SignIn() {
 
           <form onSubmit={handleMfaVerify} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                 Verification code
               </label>
               <input
@@ -111,7 +111,7 @@ export default function SignIn() {
                 placeholder="000 000"
                 autoFocus
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-center tracking-widest text-lg font-mono focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-center tracking-widest text-lg font-mono focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
               />
             </div>
 
@@ -126,7 +126,7 @@ export default function SignIn() {
             <button
               type="button"
               onClick={() => { setMfaRequired(false); setMfaCode(''); setMfaError('') }}
-              className="w-full text-sm text-gray-400 py-1"
+              className="w-full text-sm text-gray-400 dark:text-gray-500 py-1"
             >
               ← Back to sign in
             </button>
