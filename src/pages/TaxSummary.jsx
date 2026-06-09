@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ChevronDown, ChevronUp, ExternalLink, Info, FileText } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Info, FileText, CheckSquare, Home } from 'lucide-react'
 
 // UK 2025/26 tax constants
 const PERSONAL_ALLOWANCE = 12570
@@ -221,6 +221,30 @@ export default function TaxSummary() {
             <p className="font-bold text-blue-700">£{Math.max(0, projectedProfit - tax.total).toFixed(0)}</p>
           </div>
         </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate('/tax/checklist')}
+          className="flex flex-col items-start bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 active:bg-gray-50 text-left"
+        >
+          <div className="p-2 bg-amber-50 rounded-lg mb-2">
+            <CheckSquare size={18} className="text-amber-600" />
+          </div>
+          <p className="font-semibold text-gray-900 dark:text-white text-sm">SA Checklist</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Are you ready to file?</p>
+        </button>
+        <button
+          onClick={() => navigate('/tax/home-office')}
+          className="flex flex-col items-start bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 active:bg-gray-50 text-left"
+        >
+          <div className="p-2 bg-blue-50 rounded-lg mb-2">
+            <Home size={18} className="text-blue-600" />
+          </div>
+          <p className="font-semibold text-gray-900 dark:text-white text-sm">Home Office</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Calculate your allowance</p>
+        </button>
       </div>
 
       {/* Tax report */}

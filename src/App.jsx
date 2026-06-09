@@ -23,6 +23,8 @@ import VisitForm from './pages/VisitForm'
 import VisitEditForm from './pages/VisitEditForm'
 import TaxSummary from './pages/TaxSummary'
 import TaxReport from './pages/TaxReport'
+import SelfAssessmentChecklist from './pages/SelfAssessmentChecklist'
+import HomeOfficeCalculator from './pages/HomeOfficeCalculator'
 import Profile from './pages/Profile'
 import BulkVisits from './pages/BulkVisits'
 import Outstanding from './pages/Outstanding'
@@ -96,7 +98,15 @@ export default function App() {
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          {/* Tax report is outside AppShell so it prints without the bottom nav */}
+          {/* Tax sub-pages are outside AppShell so they render full-screen without nav */}
+          <Route
+            path="/tax/checklist"
+            element={<ProtectedRoute><SelfAssessmentChecklist /></ProtectedRoute>}
+          />
+          <Route
+            path="/tax/home-office"
+            element={<ProtectedRoute><HomeOfficeCalculator /></ProtectedRoute>}
+          />
           <Route
             path="/tax/report"
             element={
