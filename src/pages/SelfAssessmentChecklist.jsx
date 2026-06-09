@@ -41,6 +41,15 @@ const CHECKLIST = [
     ],
   },
   {
+    group: 'Quarterly MTD updates',
+    items: [
+      { id: 'mtd_q1', label: 'Q1 submitted (6 Apr – 5 Jul)', hint: 'Deadline: 5 August — income and expenses for this quarter' },
+      { id: 'mtd_q2', label: 'Q2 submitted (6 Jul – 5 Oct)', hint: 'Deadline: 5 November' },
+      { id: 'mtd_q3', label: 'Q3 submitted (6 Oct – 5 Jan)', hint: 'Deadline: 5 February' },
+      { id: 'mtd_q4', label: 'Q4 submitted (6 Jan – 5 Apr)', hint: 'Deadline: 5 May — use MTD Export on the Tax Report page' },
+    ],
+  },
+  {
     group: 'Filing',
     items: [
       { id: 'deadline',        label: 'Online deadline noted: 31 January',            hint: 'Paper deadline is 31 October — online filing gives you longer' },

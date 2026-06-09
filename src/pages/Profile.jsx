@@ -807,9 +807,10 @@ export default function Profile() {
         {notifPermission === 'granted' && (
           <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
             {[
-              { key: 'expenses',    label: 'Expense reminder',         hint: null },
-              { key: 'sa_deadline', label: 'Self Assessment deadline',  hint: '30 days, 7 days, and 1 day before 31 January' },
-              { key: 'outstanding', label: 'Overdue payment alert',     hint: null },
+              { key: 'expenses',     label: 'Expense reminder',              hint: null },
+              { key: 'sa_deadline',  label: 'Self Assessment deadline',       hint: '30 days, 7 days, and 1 day before 31 January' },
+              { key: 'mtd_quarterly',label: 'MTD quarterly deadlines',        hint: '30, 7, and 1 day before each quarterly submission (Aug, Nov, Feb, May)' },
+              { key: 'outstanding',  label: 'Overdue payment alert',          hint: null },
             ].map(({ key, label, hint }) => (
               <div key={key} className="py-3">
                 <div className="flex items-center justify-between">

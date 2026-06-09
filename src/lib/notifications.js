@@ -8,6 +8,7 @@ const DEFAULT_PREFS = {
   expenses:         true,
   expenses_days:    7,
   sa_deadline:      true,
+  mtd_quarterly:    true,
   outstanding:      true,
   outstanding_days: 3,
 }
@@ -121,7 +122,28 @@ export async function checkNotifications() {
     }
   }
 
-  // 3. Outstanding payments — any overdue beyond user-configured threshold
+  // 3. MTD quarterly deadlines
+  if (prefs.mtd_quarterly) {
+    const tyStart = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1
+    const quarters = [
+      { label: 'Q1', deadline: new Date(`${tyStart}-08-05`),     tag: `mtd_q1_${tyStart}` },
+      { label: 'Q2', deadline: new Date(`${tyStart}-11-05`),     tag: `mtd_q2_${tyStart}` },
+      { label: 'Q3', deadline: new Date(`${tyStart + 1}-02-05`), tag: `mtd_q3_${tyStart}` },
+      { label: 'Q4', deadline: new Date(`${tyStart + 1}-05-05`), tag: `mtd_q4_${tyStart}` },
+    ]
+    for (const { label, deadline, tag } of quarters) {
+      const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24))
+      if (daysLeft === 30 && !getFired()[`${tag}_30`]) {
+        fire(`📊 MTD ${label} due in 30 days`, `Your quarterly MTD update is due ${deadline.toLocaleDateString('en-GB')}. Export from LogAll Tax Report.`, `${tag}_30`)
+      } else if (daysLeft === 7 && !getFired()[`${tag}_7`]) {
+        fire(`⚠️ MTD ${label} due in 7 days`, `Quarterly MTD update due ${deadline.toLocaleDateString('en-GB')}. Export and submit via your bridging software.`, `${tag}_7`)
+      } else if (daysLeft === 1 && !getFired()[`${tag}_1`]) {
+        fire(`🚨 MTD ${label} due TOMORROW`, `Submit your quarterly MTD update by ${deadline.toLocaleDateString('en-GB')}.`, `${tag}_1`)
+      }
+    }
+  }
+
+  // 4. Outstanding payments — any overdue beyond user-configured threshold
   if (prefs.outstanding) {
     const days = Math.max(1, parseInt(prefs.outstanding_days) || 3)
     const cutoff = new Date(today)
