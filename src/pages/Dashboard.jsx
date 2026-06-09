@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { checkNotifications } from '../lib/notifications'
 import { PoundSterling, TrendingUp, Car, Users, ChevronRight, X, UserCircle, HelpCircle } from 'lucide-react'
 
 const paymentColour = {
@@ -46,6 +47,7 @@ export default function Dashboard() {
     fetchStats()
     checkDailyReminder()
     checkBackfill()
+    checkNotifications()
   }, [])
 
   async function checkDailyReminder() {

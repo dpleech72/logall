@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink, Mail, ShieldCheck, ShieldOff, QrCode } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Info, Plus, Trash2, LogOut, Sun, Moon, Loader2, Link, Unlink, Mail, ShieldCheck, ShieldOff, QrCode, Bell, BellOff } from 'lucide-react'
 import { useDarkMode } from '../hooks/useDarkMode'
 import { connectGoogleDrive, completeMobileConnect, clearProviderToken } from '../lib/cloudStorage'
+import { getPrefs, setPrefs, requestPermission, canNotify } from '../lib/notifications'
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -42,6 +43,21 @@ export default function Profile() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [dark, setDark] = useDarkMode()
+  const [notifPermission, setNotifPermission] = useState(() =>
+    'Notification' in window ? Notification.permission : 'unsupported'
+  )
+  const [notifPrefs, setNotifPrefsState] = useState(getPrefs)
+
+  function updateNotifPref(key, value) {
+    const updated = { ...notifPrefs, [key]: value }
+    setNotifPrefsState(updated)
+    setPrefs(updated)
+  }
+
+  async function handleEnableNotifications() {
+    const result = await requestPermission()
+    setNotifPermission(result)
+  }
 
   const [form, setForm] = useState({
     full_name: '',
@@ -755,6 +771,51 @@ export default function Profile() {
               Enable two-factor authentication
             </button>
           )
+        )}
+      </div>
+
+      {/* Notifications */}
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <Bell size={16} className="text-gray-500 dark:text-gray-400" />
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Notifications</p>
+        </div>
+
+        {notifPermission === 'unsupported' && (
+          <p className="text-xs text-gray-400 dark:text-gray-500">Your browser doesn't support notifications.</p>
+        )}
+
+        {notifPermission === 'denied' && (
+          <p className="text-xs text-amber-600 dark:text-amber-400">Notifications are blocked. Enable them in your browser settings then return here.</p>
+        )}
+
+        {notifPermission === 'default' && (
+          <button onClick={handleEnableNotifications}
+            className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2.5 rounded-xl text-sm active:bg-green-700">
+            <Bell size={15} />
+            Enable notifications
+          </button>
+        )}
+
+        {notifPermission === 'granted' && (
+          <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
+            {[
+              { key: 'expenses',    label: 'Weekly expense reminder',      hint: 'If you haven\'t logged expenses in 7 days' },
+              { key: 'sa_deadline', label: 'Self Assessment deadline',      hint: '30 days, 7 days, and 1 day before 31 January' },
+              { key: 'outstanding', label: 'Overdue payment alert',         hint: 'When a client hasn\'t paid for 14+ days' },
+            ].map(({ key, label, hint }) => (
+              <div key={key} className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm text-gray-700 dark:text-gray-200">{label}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{hint}</p>
+                </div>
+                <button onClick={() => updateNotifPref(key, !notifPrefs[key])}
+                  className={`w-10 h-6 rounded-full flex items-center px-1 transition-colors flex-shrink-0 ml-4 ${notifPrefs[key] ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-600'}`}>
+                  <span className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${notifPrefs[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

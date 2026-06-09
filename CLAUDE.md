@@ -24,15 +24,20 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 - After adding/changing Cloudflare env vars, always push to trigger a rebuild
 
 ## Key Features & Files
-- `src/pages/Expenses.jsx` — expense tracking with receipt photo upload; shows 🧾 badge on items with a receipt
+- `src/pages/Expenses.jsx` — expense tracking with receipt photo upload; shows 🧾 badge on items with a receipt; recurring expenses (monthly/annual) with one-tap "Log for [month]"; month-level CSV export
 - `src/pages/Mileage.jsx` — mileage tracking with automatic distance calculation (ORS API + Nominatim geocoding); each stop has its own Home button and client dropdown
-- `src/pages/Profile.jsx` — user profile, Google Drive connect/disconnect, holidays, dark mode
+- `src/pages/Profile.jsx` — user profile, Google Drive connect/disconnect, holidays, dark mode, push notification settings
 - `src/pages/Clients.jsx` / `ClientDetail.jsx` / `ClientForm.jsx` — client management
 - `src/pages/Income.jsx` — income tracking
 - `src/pages/Schedule.jsx` — work schedule
-- `src/pages/TaxSummary.jsx` / `TaxReport.jsx` — tax year summaries
+- `src/pages/Outstanding.jsx` — unpaid visits tracker with WhatsApp/SMS reminder shortcuts and 14-day overdue alerts
+- `src/pages/TaxSummary.jsx` — tax year summary, NIC calculator, income slider, links to SA Checklist / Home Office / Tax Report
+- `src/pages/TaxReport.jsx` — full printable/PDF report with itemised income, expenses, and mileage; Download All (3 CSVs) + individual CSV buttons
+- `src/pages/SelfAssessmentChecklist.jsx` — persistent SA filing checklist (5 groups, localStorage, progress bar); route `/tax/checklist`
+- `src/pages/HomeOfficeCalculator.jsx` — flat rate vs actual costs comparison for home office allowance; route `/tax/home-office`
 - `src/lib/supabase.js` — Supabase client
 - `src/lib/cloudStorage.js` — Google Drive OAuth + upload/delete (receipt photos)
+- `src/lib/notifications.js` — local push notifications (expense reminder, SA deadline, overdue payments); checks run once/day on Dashboard mount
 - `src/lib/imageCompress.js` — Canvas-based image compression before upload
 - `src/components/ui/ReceiptUpload.jsx` — receipt photo capture/upload/delete component
 - `public/oauth-callback.html` — OAuth redirect callback handler
@@ -85,9 +90,20 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 ## Supabase Tables (key ones)
 - `profiles` — user profile, HMRC details, `receipt_provider` (TEXT, 'google' or null), `google_drive_email`
 - `clients` — client list
-- `expenses` — expenses with `receipt_url` (TEXT, nullable) for Google Drive links
+- `expenses` — expenses with `receipt_url` (TEXT, nullable) for Google Drive links; `recurring` (TEXT, 'monthly'|'annual'|null)
 - `mileage` — journey log
 - `holidays` — user-defined holidays (shown on schedule)
+
+## Notifications
+- Uses browser Notification API (local, no server required)
+- Permission requested from Profile → Notifications section
+- Checks run once per day on Dashboard mount (`src/lib/notifications.js`)
+- Three notification types (each individually toggleable in Profile):
+  - **Expense reminder** — fires if no expense logged in 7+ days
+  - **SA deadline** — fires at 30 days, 7 days, and 1 day before 31 January
+  - **Overdue payments** — fires if any visit is unpaid for 14+ days
+- Prefs stored in `localStorage` as `logall_notif_prefs`
+- Fired timestamps stored in `localStorage` as `logall_notif_fired` to prevent repeat firing
 
 ## Mileage
 - Rate: 55p/mile (HMRC approved)
@@ -115,6 +131,9 @@ Domain `logall.co.uk` is registered at **IONOS**, DNS managed by **Cloudflare**.
 - **New user signups: DISABLED** (deliberately, while app is in development) — to re-enable: Supabase dashboard → Authentication → Sign In / Providers → toggle "Enable new user signups" ON → Save
 
 ## Planned Features (not yet started)
+- **Bank statement CSV import** — parse a CSV exported from a UK bank (Monzo, Starling, generic), auto-suggest expense categories per transaction, user reviews and confirms before saving; priority banks: Monzo, Starling, generic column-mapping fallback
+- **Receipt OCR** — auto-extract amount, date, and vendor from receipt photos to pre-fill the expense form
+- **Simple invoicing** — generate a PDF invoice from a client record and log it as income in one step
 - **Stripe** — subscription billing for LogAll users (or client payment acceptance — TBD)
 - **HMRC Make Tax Digital (MTD)** — quarterly digital submissions to HMRC for Income Tax Self Assessment; requires HMRC developer registration and OAuth with HMRC API; mandated from April 2026 for sole traders earning £50k+
 - **Passkey / Biometric login (WebAuthn)** — fingerprint (Touch ID) and face scan (Face ID / Windows Hello) login using Supabase's WebAuthn beta; works on iPhone, Android, Mac, Windows; ⚠️ must be implemented AFTER `logall.co.uk` custom domain is live as passkeys are tied to the domain — registering on `logall.pages.dev` first would require users to re-register after domain switch
