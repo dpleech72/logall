@@ -310,7 +310,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => navigate('/expenses')}
-            className="rounded-2xl p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-left active:opacity-80"
+            className="rounded-2xl p-3.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-left active:opacity-80"
           >
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Expenses</p>
             <p className="text-lg font-bold text-gray-800 dark:text-gray-100">
@@ -322,7 +322,7 @@ export default function Dashboard() {
             className={`rounded-2xl p-3.5 text-left active:opacity-80 border shadow-sm ${
               stats.outstanding > 0
                 ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                : 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
             }`}
           >
             <p className={`text-xs font-medium mb-1 ${
@@ -340,7 +340,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => navigate('/tax')}
-            className="rounded-2xl p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-left active:opacity-80"
+            className="rounded-2xl p-3.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-left active:opacity-80"
           >
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tax/mo</p>
             <p className="text-lg font-bold text-gray-800 dark:text-gray-100">
