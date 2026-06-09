@@ -58,8 +58,8 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 - Filenames: `receipt_YYYYMMDD_HHMMSS.jpg`
 - Images compressed to max 1200px / 72% JPEG quality before upload
 - Connected account email stored in `profiles.google_drive_email`
-- Google Cloud Console project: authorised origins include `http://localhost:5173` and `https://logall.pages.dev`
-- ⚠️ When `logall.co.uk` goes live, add `https://logall.co.uk` and `https://www.logall.co.uk` to Google OAuth authorised origins
+- Google Cloud Console project: authorised origins include `http://localhost:5173`, `https://logall.pages.dev`, `https://logall.co.uk`, `https://www.logall.co.uk`
+- Authorised redirect URIs include `https://logall.pages.dev/oauth-callback.html`, `https://logall.co.uk/oauth-callback.html`, `https://www.logall.co.uk/oauth-callback.html`
 - App is published (not in Testing mode) so any Google account can connect
 
 ### Token expiry & silent re-auth
@@ -104,25 +104,12 @@ Stored in `.env.local` (local) and Cloudflare Pages environment variables (produ
 - Developer/owner: `dpleech@msn.com`
 - Test user: Rachel
 
-## Custom Domain — IN PROGRESS
-Domain `logall.co.uk` is registered at **IONOS**. DNS is being transferred to Cloudflare.
-
-### What's been done
-- Cloudflare free plan set up for `logall.co.uk`
-- DNS records imported from IONOS (MX/TXT/CNAME for email kept intact)
-- Old A and AAAA records (IONOS hosting IPs) deleted
-- `www` CNAME added → `logall.pages.dev` (proxied)
-- IONOS nameservers replaced with:
-  - `keenan.ns.cloudflare.com`
-  - `nia.ns.cloudflare.com`
-- Cloudflare notified ("I updated my nameservers")
-- Propagation can take up to 48hrs — Cloudflare will send an email when active
-
-### Still to do once DNS propagates
-1. In Cloudflare Pages → logall → Custom domains: add `logall.co.uk` and `www.logall.co.uk`
-2. In Google Cloud Console → OAuth → Authorised JavaScript origins: add `https://logall.co.uk` and `https://www.logall.co.uk`
-3. Update `VITE_SUPABASE_URL` allowed origins if needed in Supabase dashboard
-4. Test Google Drive connect/disconnect on the new domain
+## Custom Domain — LIVE ✅
+Domain `logall.co.uk` is registered at **IONOS**, DNS managed by **Cloudflare**.
+- `logall.co.uk` and `www.logall.co.uk` both point to `logall.pages.dev` via Cloudflare
+- Nameservers: `keenan.ns.cloudflare.com` and `nia.ns.cloudflare.com`
+- Google OAuth authorised origins and redirect URIs updated to include both new domains
+- Passkey/biometric login can now be implemented (tied to `logall.co.uk`)
 
 ## Supabase Auth Settings
 - **New user signups: DISABLED** (deliberately, while app is in development) — to re-enable: Supabase dashboard → Authentication → Sign In / Providers → toggle "Enable new user signups" ON → Save
