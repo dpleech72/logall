@@ -711,11 +711,9 @@ export default function Profile() {
 
               {/* QR code */}
               <div className="flex justify-center">
-                <div
-                  className="bg-white p-3 rounded-xl border border-gray-200"
-                  dangerouslySetInnerHTML={{ __html: mfaQR }}
-                  style={{ width: 180, height: 180 }}
-                />
+                <div className="bg-white p-3 rounded-xl border border-gray-200">
+                  <img src={mfaQR} alt="2FA QR code" width={160} height={160} />
+                </div>
               </div>
 
               {/* Manual entry */}
