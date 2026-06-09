@@ -5,9 +5,10 @@ const FIRED_KEY  = 'logall_notif_fired'
 const CHECK_KEY  = 'logall_notif_last_check'
 
 const DEFAULT_PREFS = {
-  expenses:    true,
-  sa_deadline: true,
-  outstanding: true,
+  expenses:         true,
+  sa_deadline:      true,
+  outstanding:      true,
+  outstanding_days: 3,
 }
 
 export function getPrefs() {
@@ -118,20 +119,21 @@ export async function checkNotifications() {
     }
   }
 
-  // 3. Outstanding payments — any overdue 14+ days
+  // 3. Outstanding payments — any overdue beyond user-configured threshold
   if (prefs.outstanding) {
-    const fourteenDaysAgo = new Date(today)
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14)
+    const days = Math.max(1, parseInt(prefs.outstanding_days) || 3)
+    const cutoff = new Date(today)
+    cutoff.setDate(cutoff.getDate() - days)
     const { data } = await supabase
       .from('schedule')
       .select('id')
       .eq('status', 'completed')
       .eq('paid', false)
-      .lte('scheduled_date', fourteenDaysAgo.toISOString().slice(0, 10))
+      .lte('scheduled_date', cutoff.toISOString().slice(0, 10))
     if (data?.length) {
       fire(
         `💰 ${data.length} overdue payment${data.length > 1 ? 's' : ''}`,
-        `${data.length} client${data.length > 1 ? 's have' : ' has'} outstanding payments older than 14 days.`,
+        `${data.length} client${data.length > 1 ? 's have' : ' has'} outstanding payments older than ${days} day${days === 1 ? '' : 's'}.`,
         'outstanding_payments'
       )
     }
