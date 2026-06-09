@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, Printer, Download } from 'lucide-react'
 
 const PERSONAL_ALLOWANCE = 12570
 const BASIC_RATE = 0.20
@@ -9,6 +9,21 @@ const CLASS4_RATE = 0.09
 const CLASS4_LOWER = 12570
 const CLASS4_UPPER = 50270
 const CLASS2_WEEKLY = 3.45
+
+function downloadCSV(rows, headers, filename) {
+  const lines = [
+    headers.join(','),
+    ...rows.map(r => r.map(cell => {
+      const s = String(cell ?? '')
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+    }).join(','))
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
 
 const CATEGORY_LABELS = {
   cleaning_products: 'Cleaning products',
@@ -118,21 +133,55 @@ export default function TaxReport() {
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
       {/* Screen-only toolbar */}
-      <div className="print:hidden sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 flex items-center justify-between z-10">
-        <button
-          onClick={() => navigate('/tax')}
-          className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 dark:text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm active:text-gray-700 dark:text-gray-200"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-xl text-sm active:bg-green-700"
-        >
-          <Printer size={15} />
-          Print / Save as PDF
-        </button>
+      <div className="print:hidden sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 z-10">
+        <div className="flex items-center justify-between mb-2">
+          <button
+            onClick={() => navigate('/tax')}
+            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-sm active:text-gray-700 dark:text-gray-200"
+          >
+            <ArrowLeft size={18} />
+            Back
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-xl text-sm active:bg-green-700"
+          >
+            <Printer size={15} />
+            Print / Save PDF
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => downloadCSV(
+              income.map(i => [i.received_date, i.description || '', i.payment_method || '', parseFloat(i.amount).toFixed(2)]),
+              ['Date', 'Description', 'Payment Method', 'Amount (£)'],
+              `income-${taxYearLabel.replace('/', '-')}.csv`
+            )}
+            className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-2 rounded-xl text-xs active:bg-gray-50"
+          >
+            <Download size={13} /> Income CSV
+          </button>
+          <button
+            onClick={() => downloadCSV(
+              expenses.map(e => [e.expense_date, CATEGORY_LABELS[e.category] || e.category, e.description || '', parseFloat(e.amount).toFixed(2), e.is_aia ? 'Yes' : 'No', e.recurring || 'One-off', e.notes || '']),
+              ['Date', 'Category', 'Description', 'Amount (£)', 'AIA', 'Recurring', 'Notes'],
+              `expenses-${taxYearLabel.replace('/', '-')}.csv`
+            )}
+            className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-2 rounded-xl text-xs active:bg-gray-50"
+          >
+            <Download size={13} /> Expenses CSV
+          </button>
+          <button
+            onClick={() => downloadCSV(
+              mileage.map(m => [m.journey_date, m.from_location || '', m.to_location || '', parseFloat(m.miles).toFixed(1), m.rate_per_mile || 0.55, parseFloat(m.claimable_amount).toFixed(2), m.notes || '']),
+              ['Date', 'From', 'To', 'Miles', 'Rate (£/mile)', 'Claimable (£)', 'Notes'],
+              `mileage-${taxYearLabel.replace('/', '-')}.csv`
+            )}
+            className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-2 rounded-xl text-xs active:bg-gray-50"
+          >
+            <Download size={13} /> Mileage CSV
+          </button>
+        </div>
       </div>
 
       {/* Report body */}
@@ -210,6 +259,35 @@ export default function TaxReport() {
           )}
         </section>
 
+        {/* Income itemised */}
+        {income.length > 0 && (
+          <section className="mb-8 print:break-inside-avoid">
+            <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Income — Full Detail</h2>
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
+              <div className="grid grid-cols-[auto_1fr_auto_auto] gap-0 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <span className="w-24">Date</span>
+                <span>Description</span>
+                <span className="w-24 text-center hidden sm:block">Method</span>
+                <span className="w-20 text-right">Amount</span>
+              </div>
+              {income.map((i, idx) => (
+                <div key={i.id} className={`grid grid-cols-[auto_1fr_auto_auto] items-center px-4 py-2.5 ${idx > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}`}>
+                  <span className="w-24 text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(i.received_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                  </span>
+                  <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{i.description || '—'}</span>
+                  <span className="w-24 text-xs text-gray-400 dark:text-gray-500 text-center hidden sm:block capitalize">{i.payment_method || '—'}</span>
+                  <span className="w-20 text-sm font-semibold text-gray-900 dark:text-white text-right">£{parseFloat(i.amount).toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Total</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">£{totalIncome.toFixed(2)}</span>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Expenses by category */}
         <section className="mb-8 print:break-inside-avoid">
           <div className="flex items-baseline justify-between mb-3">
@@ -234,6 +312,38 @@ export default function TaxReport() {
           )}
         </section>
 
+        {/* Expenses itemised */}
+        {expenses.length > 0 && (
+          <section className="mb-8 print:break-inside-avoid">
+            <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Expenses — Full Detail</h2>
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
+              <div className="grid grid-cols-[auto_auto_1fr_auto] gap-0 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <span className="w-24">Date</span>
+                <span className="w-28 hidden sm:block">Category</span>
+                <span>Description</span>
+                <span className="w-20 text-right">Amount</span>
+              </div>
+              {expenses.map((e, idx) => (
+                <div key={e.id} className={`grid grid-cols-[auto_auto_1fr_auto] items-center px-4 py-2.5 ${idx > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}`}>
+                  <span className="w-24 text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(e.expense_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                  </span>
+                  <span className="w-28 text-xs text-gray-400 dark:text-gray-500 hidden sm:block">{CATEGORY_LABELS[e.category] || e.category}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                    {e.description}
+                    {e.is_aia && <span className="ml-1.5 text-xs bg-purple-50 text-purple-600 px-1 py-0.5 rounded font-medium">AIA</span>}
+                  </span>
+                  <span className="w-20 text-sm font-semibold text-gray-900 dark:text-white text-right">£{parseFloat(e.amount).toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Total</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">£{totalExpenses.toFixed(2)}</span>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Mileage */}
         <section className="mb-8 print:break-inside-avoid">
           <div className="flex items-baseline justify-between mb-3">
@@ -244,17 +354,27 @@ export default function TaxReport() {
             <p className="text-sm text-gray-400 dark:text-gray-500 italic px-1">No mileage recorded this tax year.</p>
           ) : (
             <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
-              <div className="flex justify-between px-4 py-2.5">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Journeys logged</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{mileage.length}</span>
+              <div className="grid grid-cols-[auto_1fr_auto_auto] gap-0 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <span className="w-24">Date</span>
+                <span>Route</span>
+                <span className="w-16 text-center">Miles</span>
+                <span className="w-20 text-right">Claim</span>
               </div>
+              {mileage.map((m, idx) => (
+                <div key={m.id} className={`grid grid-cols-[auto_1fr_auto_auto] items-center px-4 py-2.5 ${idx > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}`}>
+                  <span className="w-24 text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(m.journey_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                  </span>
+                  <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                    {m.from_location}{m.to_location ? ` → ${m.to_location}` : ''}
+                  </span>
+                  <span className="w-16 text-sm text-gray-500 dark:text-gray-400 text-center">{parseFloat(m.miles).toFixed(1)}</span>
+                  <span className="w-20 text-sm font-semibold text-gray-900 dark:text-white text-right">£{parseFloat(m.claimable_amount).toFixed(2)}</span>
+                </div>
+              ))}
               <div className="flex justify-between px-4 py-2.5 border-t border-gray-100 dark:border-gray-700">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Total miles</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{totalMiles.toFixed(1)} miles</span>
-              </div>
-              <div className="flex justify-between px-4 py-2.5 border-t border-gray-100 dark:border-gray-700">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Rate (HMRC approved)</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">55p per mile</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Rate (HMRC approved)</span>
+                <span className="text-sm text-gray-700 dark:text-gray-200">55p per mile · {totalMiles.toFixed(1)} miles total</span>
               </div>
               <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Claimable amount</span>

@@ -461,18 +461,6 @@ export default function Expenses() {
           <button onClick={() => setShowGuide(true)} className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50">
             <Info size={18} />
           </button>
-          <button
-            onClick={async () => {
-              const { data } = await supabase.from('expenses').select('*')
-                .gte('expense_date', `${selectedYear}-01-01`)
-                .lte('expense_date', `${selectedYear}-12-31`)
-                .order('expense_date', { ascending: true })
-              if (data?.length) exportToCSV(data, `expenses-${selectedYear}.csv`)
-            }}
-            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50"
-            title="Export year to CSV">
-            <Download size={18} />
-          </button>
           <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-xs active:bg-green-700 transition-colors">
             <Plus size={14} />
             Add
