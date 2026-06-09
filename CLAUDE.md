@@ -124,6 +124,9 @@ Domain `logall.co.uk` is registered at **IONOS**. DNS is being transferred to Cl
 3. Update `VITE_SUPABASE_URL` allowed origins if needed in Supabase dashboard
 4. Test Google Drive connect/disconnect on the new domain
 
+## Supabase Auth Settings
+- **New user signups: DISABLED** (deliberately, while app is in development) — to re-enable: Supabase dashboard → Authentication → Sign In / Providers → toggle "Enable new user signups" ON → Save
+
 ## Planned Features (not yet started)
 - **Stripe** — subscription billing for LogAll users (or client payment acceptance — TBD)
 - **HMRC Make Tax Digital (MTD)** — quarterly digital submissions to HMRC for Income Tax Self Assessment; requires HMRC developer registration and OAuth with HMRC API; mandated from April 2026 for sole traders earning £50k+
