@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Plus, X, Check, AlertCircle, Trash2, Receipt, Info, ChevronLeft, ChevronRight, ArrowLeft, ExternalLink } from 'lucide-react'
+import { Plus, X, Check, AlertCircle, Trash2, Receipt, Info, ChevronLeft, ChevronRight, ArrowLeft, ExternalLink, Download, RefreshCw } from 'lucide-react'
 import ReceiptUpload from '../components/ui/ReceiptUpload'
 
 const CATEGORIES = [
@@ -57,6 +57,7 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
     is_aia: expense?.is_aia || false,
     notes: expense?.notes || '',
     receipt_url: expense?.receipt_url || null,
+    recurring: expense?.recurring || null,
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -86,6 +87,7 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
       is_aia: form.is_aia,
       notes: form.notes || null,
       receipt_url: form.receipt_url || null,
+      recurring: form.recurring || null,
     }
     const { error } = expense
       ? await supabase.from('expenses').update(payload).eq('id', expense.id)
@@ -177,6 +179,23 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Repeats</label>
+            <div className="flex gap-2">
+              {[{ value: null, label: 'One-off' }, { value: 'monthly', label: 'Monthly' }, { value: 'annual', label: 'Annual' }].map(opt => (
+                <button key={String(opt.value)} type="button"
+                  onClick={() => setForm(f => ({ ...f, recurring: opt.value }))}
+                  className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                    form.recurring === opt.value
+                      ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                  }`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Receipt photo (optional)</label>
             <ReceiptUpload
               value={form.receipt_url}
@@ -207,6 +226,31 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
   )
 }
 
+function exportToCSV(rows, filename) {
+  const headers = ['Date', 'Category', 'Description', 'Amount (£)', 'AIA', 'Recurring', 'Notes', 'Receipt URL']
+  const catLabel = v => CATEGORIES.find(c => c.value === v)?.label || v
+  const lines = [
+    headers.join(','),
+    ...rows.map(e => [
+      e.expense_date,
+      catLabel(e.category),
+      `"${(e.description || '').replace(/"/g, '""')}"`,
+      parseFloat(e.amount).toFixed(2),
+      e.is_aia ? 'Yes' : 'No',
+      e.recurring || 'One-off',
+      `"${(e.notes || '').replace(/"/g, '""')}"`,
+      e.receipt_url || '',
+    ].join(','))
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function Expenses() {
   const now = new Date()
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
@@ -221,8 +265,10 @@ export default function Expenses() {
   const [showGuide, setShowGuide] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
   const [editExpense, setEditExpense] = useState(null)
+  const [recurringExpenses, setRecurringExpenses] = useState([])
+  const [logRecurring, setLogRecurring] = useState(null)
 
-  useEffect(() => { fetchTaxYearTotals() }, [])
+  useEffect(() => { fetchTaxYearTotals(); fetchRecurring() }, [])
   useEffect(() => { fetchYearSummary() }, [selectedYear])
   useEffect(() => { if (selectedMonth !== null) fetchMonthExpenses() }, [selectedMonth, selectedYear])
 
@@ -236,6 +282,13 @@ export default function Expenses() {
     const total = (data || []).reduce((s, e) => s + parseFloat(e.amount), 0)
     setTaxYearTotal(total)
     setTaxYearTaxSaved(total * TAX_RATE)
+  }
+
+  async function fetchRecurring() {
+    const { data } = await supabase.from('expenses').select('*')
+      .not('recurring', 'is', null)
+      .order('description', { ascending: true })
+    setRecurringExpenses(data || [])
   }
 
   async function fetchYearSummary() {
@@ -284,6 +337,7 @@ export default function Expenses() {
     setRecent7(prev => prev.filter(e => e.id !== id))
     fetchYearSummary()
     fetchTaxYearTotals()
+    fetchRecurring()
     setDeleteId(null)
   }
 
@@ -301,11 +355,21 @@ export default function Expenses() {
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{MONTH_NAMES[selectedMonth]} {selectedYear}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">{expenses.length} expense{expenses.length !== 1 ? 's' : ''}</p>
           </div>
-          <button onClick={() => setShowForm(true)}
-            className="ml-auto flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700">
-            <Plus size={16} />
-            Add
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            {expenses.length > 0 && (
+              <button
+                onClick={() => exportToCSV(expenses, `expenses-${MONTH_NAMES[selectedMonth].toLowerCase()}-${selectedYear}.csv`)}
+                className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50"
+                title="Export to CSV">
+                <Download size={18} />
+              </button>
+            )}
+            <button onClick={() => setShowForm(true)}
+              className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700">
+              <Plus size={16} />
+              Add
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -376,7 +440,7 @@ export default function Expenses() {
           <LogExpenseSheet
             expense={editExpense}
             onClose={() => { setShowForm(false); setEditExpense(null) }}
-            onSaved={() => { setShowForm(false); setEditExpense(null); fetchMonthExpenses(); fetchYearSummary(); fetchTaxYearTotals() }}
+            onSaved={() => { setShowForm(false); setEditExpense(null); fetchMonthExpenses(); fetchYearSummary(); fetchTaxYearTotals(); fetchRecurring() }}
             onDelete={(id) => { setEditExpense(null); setDeleteId(id) }}
           />
         )}
@@ -396,6 +460,18 @@ export default function Expenses() {
         <div className="flex items-center gap-2">
           <button onClick={() => setShowGuide(true)} className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50">
             <Info size={18} />
+          </button>
+          <button
+            onClick={async () => {
+              const { data } = await supabase.from('expenses').select('*')
+                .gte('expense_date', `${selectedYear}-01-01`)
+                .lte('expense_date', `${selectedYear}-12-31`)
+                .order('expense_date', { ascending: true })
+              if (data?.length) exportToCSV(data, `expenses-${selectedYear}.csv`)
+            }}
+            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50"
+            title="Export year to CSV">
+            <Download size={18} />
           </button>
           <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-xs active:bg-green-700 transition-colors">
             <Plus size={14} />
@@ -427,6 +503,42 @@ export default function Expenses() {
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-xs text-amber-700">
         ⚠️ If you claim mileage at 55p/mile you cannot also claim fuel or car running costs.
       </div>
+
+      {/* Recurring expenses */}
+      {recurringExpenses.length > 0 && (
+        <div className="mb-5">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Recurring</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {recurringExpenses.map(expense => {
+              const cat = CATEGORIES.find(c => c.value === expense.category)
+              return (
+                <div key={expense.id}
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-3.5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-lg">
+                    {cat?.emoji || '📦'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{expense.description}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-medium capitalize">{expense.recurring}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{cat?.label}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">£{parseFloat(expense.amount).toFixed(2)}</p>
+                    <button
+                      onClick={() => setLogRecurring(expense)}
+                      className="flex items-center gap-1 text-xs bg-green-600 text-white font-medium px-2.5 py-1.5 rounded-lg active:bg-green-700">
+                      <RefreshCw size={11} />
+                      Log for {MONTH_NAMES[now.getMonth()].slice(0, 3)}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Year picker */}
       <div className="flex items-center justify-between mb-3">
@@ -536,7 +648,7 @@ export default function Expenses() {
       {showForm && (
         <LogExpenseSheet
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); fetchYearSummary(); fetchTaxYearTotals() }}
+          onSaved={() => { setShowForm(false); fetchYearSummary(); fetchTaxYearTotals(); fetchRecurring() }}
           onDelete={(id) => { setShowForm(false); setDeleteId(id) }}
         />
       )}
@@ -544,8 +656,21 @@ export default function Expenses() {
         <LogExpenseSheet
           expense={editExpense}
           onClose={() => setEditExpense(null)}
-          onSaved={() => { setEditExpense(null); fetchYearSummary(); fetchTaxYearTotals() }}
+          onSaved={() => { setEditExpense(null); fetchYearSummary(); fetchTaxYearTotals(); fetchRecurring() }}
           onDelete={(id) => { setEditExpense(null); setDeleteId(id) }}
+        />
+      )}
+      {logRecurring && (
+        <LogExpenseSheet
+          expense={{
+            ...logRecurring,
+            id: undefined,
+            expense_date: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
+            receipt_url: null,
+          }}
+          onClose={() => setLogRecurring(null)}
+          onSaved={() => { setLogRecurring(null); fetchYearSummary(); fetchTaxYearTotals(); fetchRecurring() }}
+          onDelete={() => setLogRecurring(null)}
         />
       )}
       {showGuide && <WhatCanIClaimSheet onClose={() => setShowGuide(false)} />}
