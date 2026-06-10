@@ -744,10 +744,9 @@ export default function Schedule() {
             {capacitySlots && (
               <div className="flex gap-1.5 flex-wrap mb-2">
                 {[
-                  { key: 'oneOff',    label: 'One-off',   color: 'bg-blue-50 text-blue-700 border-blue-200'   },
-                  { key: 'weekly',    label: 'Weekly',    color: 'bg-green-50 text-green-700 border-green-200' },
-                  { key: 'biweekly',  label: 'Bi-weekly', color: 'bg-violet-50 text-violet-700 border-violet-200' },
-                  { key: 'freeHours', label: 'Free hrs',  color: 'bg-amber-50 text-amber-700 border-amber-200'  },
+                  { key: 'oneOff',   label: 'One-off',   color: 'bg-blue-50 text-blue-700 border-blue-200'   },
+                  { key: 'weekly',   label: 'Weekly',    color: 'bg-green-50 text-green-700 border-green-200' },
+                  { key: 'biweekly', label: 'Bi-weekly', color: 'bg-violet-50 text-violet-700 border-violet-200' },
                 ].map(({ key, label, color }) => {
                   const slot = capacitySlots[key]
                   const clickable = slot.dates.length > 0
