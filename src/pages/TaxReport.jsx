@@ -213,8 +213,9 @@ export default function TaxReport() {
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
       {/* Screen-only toolbar */}
-      <div className="print:hidden sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 z-10">
-        <div className="flex items-center justify-between mb-2">
+      <div className="print:hidden sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 z-10 space-y-2">
+        {/* Row 1: Back + Print */}
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate('/tax')}
             className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-sm active:text-gray-700 dark:text-gray-200"
@@ -222,59 +223,40 @@ export default function TaxReport() {
             <ArrowLeft size={18} />
             Back
           </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                downloadCSV(
-                  income.map(i => [i.received_date, i.description || '', i.payment_method || '', parseFloat(i.amount).toFixed(2)]),
-                  ['Date', 'Description', 'Payment Method', 'Amount (£)'],
-                  `income-${taxYearLabel.replace('/', '-')}.csv`
-                )
-                setTimeout(() => downloadCSV(
-                  expenses.map(e => [e.expense_date, CATEGORY_LABELS[e.category] || e.category, e.description || '', parseFloat(e.amount).toFixed(2), e.is_aia ? 'Yes' : 'No', e.recurring || 'One-off', e.notes || '']),
-                  ['Date', 'Category', 'Description', 'Amount (£)', 'AIA', 'Recurring', 'Notes'],
-                  `expenses-${taxYearLabel.replace('/', '-')}.csv`
-                ), 300)
-                setTimeout(() => downloadCSV(
-                  mileage.map(m => [m.journey_date, m.from_location || '', m.to_location || '', parseFloat(m.miles).toFixed(1), m.rate_per_mile || 0.55, parseFloat(m.claimable_amount).toFixed(2), m.notes || '']),
-                  ['Date', 'From', 'To', 'Miles', 'Rate (£/mile)', 'Claimable (£)', 'Notes'],
-                  `mileage-${taxYearLabel.replace('/', '-')}.csv`
-                ), 600)
-              }}
-              className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold px-4 py-2 rounded-xl text-sm active:bg-gray-50"
-            >
-              <Download size={15} />
-              Download All
-            </button>
-            <div className="flex items-center gap-1.5">
-              <div className="flex gap-1">
-                {MTD_QUARTERS.map(qtr => (
-                  <button key={qtr.q} onClick={() => setSelectedQuarter(selectedQuarter === qtr.q ? null : qtr.q)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${selectedQuarter === qtr.q ? 'bg-blue-600 text-white' : 'border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400'}`}
-                    title={`${qtr.period} · Due ${qtr.deadline}`}>
-                    {qtr.label}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={exportMTD}
-                className="flex items-center gap-2 border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-2 rounded-xl text-sm active:bg-blue-50"
-                title="Export SA103S figures for MTD bridging software"
-              >
-                <Download size={15} />
-                {selectedQuarter ? `MTD Q${selectedQuarter}` : 'MTD Export'}
-              </button>
-            </div>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-xl text-sm active:bg-green-700"
-            >
-              <Printer size={15} />
-              Print / Save PDF
-            </button>
-          </div>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-xl text-sm active:bg-green-700"
+          >
+            <Printer size={15} />
+            Print / Save PDF
+          </button>
         </div>
+
+        {/* Row 2: Download All + individual CSVs */}
         <div className="flex gap-2">
+          <button
+            onClick={() => {
+              downloadCSV(
+                income.map(i => [i.received_date, i.description || '', i.payment_method || '', parseFloat(i.amount).toFixed(2)]),
+                ['Date', 'Description', 'Payment Method', 'Amount (£)'],
+                `income-${taxYearLabel.replace('/', '-')}.csv`
+              )
+              setTimeout(() => downloadCSV(
+                expenses.map(e => [e.expense_date, CATEGORY_LABELS[e.category] || e.category, e.description || '', parseFloat(e.amount).toFixed(2), e.is_aia ? 'Yes' : 'No', e.recurring || 'One-off', e.notes || '']),
+                ['Date', 'Category', 'Description', 'Amount (£)', 'AIA', 'Recurring', 'Notes'],
+                `expenses-${taxYearLabel.replace('/', '-')}.csv`
+              ), 300)
+              setTimeout(() => downloadCSV(
+                mileage.map(m => [m.journey_date, m.from_location || '', m.to_location || '', parseFloat(m.miles).toFixed(1), m.rate_per_mile || 0.55, parseFloat(m.claimable_amount).toFixed(2), m.notes || '']),
+                ['Date', 'From', 'To', 'Miles', 'Rate (£/mile)', 'Claimable (£)', 'Notes'],
+                `mileage-${taxYearLabel.replace('/', '-')}.csv`
+              ), 600)
+            }}
+            className="flex items-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold px-3 py-2 rounded-xl text-xs active:bg-gray-50 flex-shrink-0"
+          >
+            <Download size={13} />
+            All
+          </button>
           <button
             onClick={() => downloadCSV(
               income.map(i => [i.received_date, i.description || '', i.payment_method || '', parseFloat(i.amount).toFixed(2)]),
@@ -283,7 +265,7 @@ export default function TaxReport() {
             )}
             className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-2 rounded-xl text-xs active:bg-gray-50"
           >
-            <Download size={13} /> Income CSV
+            <Download size={13} /> Income
           </button>
           <button
             onClick={() => downloadCSV(
@@ -293,7 +275,7 @@ export default function TaxReport() {
             )}
             className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-2 rounded-xl text-xs active:bg-gray-50"
           >
-            <Download size={13} /> Expenses CSV
+            <Download size={13} /> Expenses
           </button>
           <button
             onClick={() => downloadCSV(
@@ -303,7 +285,28 @@ export default function TaxReport() {
             )}
             className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium px-3 py-2 rounded-xl text-xs active:bg-gray-50"
           >
-            <Download size={13} /> Mileage CSV
+            <Download size={13} /> Mileage
+          </button>
+        </div>
+
+        {/* Row 3: MTD quarter picker + export */}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {MTD_QUARTERS.map(qtr => (
+              <button key={qtr.q} onClick={() => setSelectedQuarter(selectedQuarter === qtr.q ? null : qtr.q)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${selectedQuarter === qtr.q ? 'bg-blue-600 text-white' : 'border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400'}`}
+                title={`${qtr.period} · Due ${qtr.deadline}`}>
+                {qtr.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={exportMTD}
+            className="flex items-center gap-1.5 border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-2 rounded-xl text-xs active:bg-blue-50"
+            title="Export SA103S figures for MTD bridging software"
+          >
+            <Download size={13} />
+            {selectedQuarter ? `MTD Q${selectedQuarter}` : 'MTD Export'}
           </button>
         </div>
       </div>
