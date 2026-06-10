@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
+import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowLeft } from 'lucide-react'
 
 const RATE = 0.55
 const THRESHOLD = 10000
@@ -38,16 +38,15 @@ async function getCurrentCoords() {
   })
 }
 
-function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClose, onSaved, onDelete }) {
+function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initialForm, onClose, onSaved, onDelete }) {
+  const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
   const [form, setForm] = useState({
-    client_id: journey?.client_id || prefillClientId || '',
-    journey_date: journey?.journey_date || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })(),
-    from_location: journey?.from_location || '',
-    to_locations: journey?.to_location
-      ? journey.to_location.split(' → ').filter(Boolean)
-      : [''],
-    miles: journey?.miles ? String(journey.miles) : '',
-    notes: journey?.notes || '',
+    client_id:    initialForm?.client_id    ?? journey?.client_id    ?? prefillClientId ?? '',
+    journey_date: initialForm?.journey_date ?? journey?.journey_date ?? todayStr,
+    from_location: initialForm?.from_location ?? journey?.from_location ?? '',
+    to_locations: initialForm?.to_locations ?? (journey?.to_location ? journey.to_location.split(' → ').filter(Boolean) : ['']),
+    miles: initialForm?.miles ?? (journey?.miles ? String(journey.miles) : ''),
+    notes: initialForm?.notes ?? journey?.notes ?? '',
   })
   const [coordsCache, setCoordsCache] = useState({})
   const [error, setError] = useState('')
@@ -61,6 +60,13 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
     ...f, to_locations: f.to_locations.filter((_, idx) => idx !== i)
   }))
   const addStop = () => setForm(f => ({ ...f, to_locations: [...f.to_locations, ''] }))
+  const moveStop = (i, dir) => setForm(f => {
+    const locs = [...f.to_locations]
+    const j = i + dir
+    if (j < 0 || j >= locs.length) return f
+    ;[locs[i], locs[j]] = [locs[j], locs[i]]
+    return { ...f, to_locations: locs }
+  })
 
   const quickFillStop = (val) => setForm(f => {
     const locs = [...f.to_locations]
@@ -278,6 +284,18 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, onClo
                       className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                     {form.to_locations.length > 1 && (
+                      <div className="flex flex-col gap-0.5 flex-shrink-0">
+                        <button type="button" onClick={() => moveStop(i, -1)} disabled={i === 0}
+                          className="p-1 text-gray-400 active:text-gray-600 disabled:opacity-20">
+                          <ChevronUp size={14} />
+                        </button>
+                        <button type="button" onClick={() => moveStop(i, 1)} disabled={i === form.to_locations.length - 1}
+                          className="p-1 text-gray-400 active:text-gray-600 disabled:opacity-20">
+                          <ChevronDown size={14} />
+                        </button>
+                      </div>
+                    )}
+                    {form.to_locations.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeStop(i)}
@@ -416,6 +434,8 @@ export default function Mileage() {
   const [showForm, setShowForm] = useState(!!prefillClientId)
   const [deleteId, setDeleteId] = useState(null)
   const [editJourney, setEditJourney] = useState(null)
+  const [todayForm, setTodayForm] = useState(null)
+  const [todayLoading, setTodayLoading] = useState(false)
 
   useEffect(() => { fetchClients() }, [])
   useEffect(() => { fetchTaxYearTotals() }, [])
@@ -488,6 +508,35 @@ export default function Mileage() {
       .order('journey_date', { ascending: false })
     setJourneys(data || [])
     setLoading(false)
+  }
+
+  async function buildTodaysMileage() {
+    setTodayLoading(true)
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+    const { data: todayVisits } = await supabase
+      .from('visits')
+      .select('client_id, scheduled_time')
+      .eq('scheduled_date', todayStr)
+      .neq('status', 'cancelled')
+      .order('scheduled_time')
+
+    const stops = (todayVisits || [])
+      .map(v => clients.find(c => c.id === v.client_id))
+      .filter(Boolean)
+      .map(c => c.postcode || c.address || '')
+      .filter(Boolean)
+
+    if (homeAddress) stops.push(homeAddress)
+
+    setTodayForm({
+      client_id: '',
+      journey_date: todayStr,
+      from_location: homeAddress || '',
+      to_locations: stops.length > 0 ? stops : [''],
+      miles: '',
+      notes: '',
+    })
+    setTodayLoading(false)
   }
 
   async function handleDelete(id) {
@@ -591,10 +640,20 @@ export default function Mileage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mileage</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">55p/mile — HMRC approved</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-xs active:bg-green-700 transition-colors">
-          <Plus size={14} />
-          Log journey
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={buildTodaysMileage}
+            disabled={todayLoading}
+            className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-600 font-semibold px-3 py-2 rounded-xl text-xs active:bg-blue-100 disabled:opacity-60 transition-colors"
+          >
+            {todayLoading ? <Loader size={13} className="animate-spin" /> : <Car size={13} />}
+            Today's jobs
+          </button>
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-3 py-2 rounded-xl text-xs active:bg-green-700 transition-colors">
+            <Plus size={14} />
+            Log journey
+          </button>
+        </div>
       </div>
 
       {(() => {
@@ -743,6 +802,16 @@ export default function Mileage() {
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); fetchYearSummary(); fetchTaxYearTotals() }}
           onDelete={(id) => { setShowForm(false); setDeleteId(id) }}
+        />
+      )}
+      {todayForm && (
+        <LogJourneySheet
+          clients={clients}
+          homeAddress={homeAddress}
+          initialForm={todayForm}
+          onClose={() => setTodayForm(null)}
+          onSaved={() => { setTodayForm(null); fetchYearSummary(); fetchTaxYearTotals() }}
+          onDelete={(id) => { setTodayForm(null); setDeleteId(id) }}
         />
       )}
       {editJourney && (
