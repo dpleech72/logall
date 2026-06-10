@@ -26,6 +26,10 @@ import TaxReport from './pages/TaxReport'
 import SelfAssessmentChecklist from './pages/SelfAssessmentChecklist'
 import HomeOfficeCalculator from './pages/HomeOfficeCalculator'
 import Profile from './pages/Profile'
+import ProfilePersonal from './pages/ProfilePersonal'
+import ProfileWorkingHours from './pages/ProfileWorkingHours'
+import ProfileNotifications from './pages/ProfileNotifications'
+import ProfileAccount from './pages/ProfileAccount'
 import BulkVisits from './pages/BulkVisits'
 import Outstanding from './pages/Outstanding'
 import Help from './pages/Help'
@@ -54,6 +58,10 @@ function AppShell() {
             <Route path="/clients/:id/edit" element={<ClientForm />} />
             <Route path="/tax" element={<TaxSummary />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/personal" element={<ProfilePersonal />} />
+            <Route path="/profile/working-hours" element={<ProfileWorkingHours />} />
+            <Route path="/profile/notifications" element={<ProfileNotifications />} />
+            <Route path="/profile/account" element={<ProfileAccount />} />
             <Route path="/schedule/bulk" element={<BulkVisits />} />
             <Route path="/outstanding" element={<Outstanding />} />
             <Route path="/help" element={<Help />} />
