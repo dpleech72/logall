@@ -1079,7 +1079,7 @@ export default function Schedule() {
                       <Car size={14} />
                       Log mileage
                     </button>
-                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors">
+                    <button onClick={() => navigate(`/schedule/${visit.id}/edit`)} className="col-span-2 flex items-center justify-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold py-2.5 rounded-xl text-xs active:bg-gray-50 transition-colors">
                       <Pencil size={14} />
                       Edit visit
                     </button>
