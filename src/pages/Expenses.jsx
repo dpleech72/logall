@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Plus, X, Check, AlertCircle, Trash2, Receipt, Info, ChevronLeft, ChevronRight, ArrowLeft, ExternalLink, Download, RefreshCw } from 'lucide-react'
+import { Plus, X, Check, AlertCircle, Trash2, Receipt, Info, ChevronLeft, ChevronRight, ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react'
 import ReceiptUpload from '../components/ui/ReceiptUpload'
 
 const CATEGORIES = [
@@ -226,31 +226,6 @@ function LogExpenseSheet({ expense, onClose, onSaved, onDelete }) {
   )
 }
 
-function exportToCSV(rows, filename) {
-  const headers = ['Date', 'Category', 'Description', 'Amount (£)', 'AIA', 'Recurring', 'Notes', 'Receipt URL']
-  const catLabel = v => CATEGORIES.find(c => c.value === v)?.label || v
-  const lines = [
-    headers.join(','),
-    ...rows.map(e => [
-      e.expense_date,
-      catLabel(e.category),
-      `"${(e.description || '').replace(/"/g, '""')}"`,
-      parseFloat(e.amount).toFixed(2),
-      e.is_aia ? 'Yes' : 'No',
-      e.recurring || 'One-off',
-      `"${(e.notes || '').replace(/"/g, '""')}"`,
-      e.receipt_url || '',
-    ].join(','))
-  ]
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 export default function Expenses() {
   const now = new Date()
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
@@ -356,14 +331,6 @@ export default function Expenses() {
             <p className="text-gray-500 dark:text-gray-400 text-sm">{expenses.length} expense{expenses.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {expenses.length > 0 && (
-              <button
-                onClick={() => exportToCSV(expenses, `expenses-${MONTH_NAMES[selectedMonth].toLowerCase()}-${selectedYear}.csv`)}
-                className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 active:bg-gray-50"
-                title="Export to CSV">
-                <Download size={18} />
-              </button>
-            )}
             <button onClick={() => setShowForm(true)}
               className="flex items-center gap-1.5 bg-green-600 text-white font-semibold px-4 py-2.5 rounded-xl text-sm active:bg-green-700">
               <Plus size={16} />
