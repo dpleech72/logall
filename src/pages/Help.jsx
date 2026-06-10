@@ -12,7 +12,28 @@ const sections = [
       },
       {
         heading: 'Set up your profile',
-        text: 'Go to Profile and fill in your home address and postcode — LogAll uses this to calculate mileage automatically. Add your National Insurance number and UTR for tax purposes.',
+        text: 'Open Profile → Personal & HMRC and fill in your home address and postcode — LogAll uses this to calculate mileage automatically. Add your National Insurance number and UTR for tax purposes.',
+      },
+      {
+        heading: 'Set your working hours',
+        text: 'In Profile → Working hours, set your working days, start and finish times, and how long you travel between jobs. LogAll uses these to work out how many free slots you have each month, shown on the Schedule.',
+      },
+    ],
+  },
+  {
+    title: '👥 Clients',
+    content: [
+      {
+        heading: 'Adding a client',
+        text: 'Tap "Add client" and enter their name, payment method and hourly rate. You can also add their address and mobile number — the address is used for mileage and the mobile for quick WhatsApp messages.',
+      },
+      {
+        heading: 'Quick WhatsApp messages',
+        text: 'Open a client (with a mobile number saved) and tap one of the Quick messages — "Coming tomorrow", "On my way", "Running late" or a payment reminder. WhatsApp opens with the message already written, including the time or amount where relevant.',
+      },
+      {
+        heading: 'Log a visit or mileage',
+        text: 'From a client\'s page you can jump straight to logging a visit or a mileage journey for that client.',
       },
     ],
   },
@@ -26,6 +47,14 @@ const sections = [
       {
         heading: 'Recurring jobs',
         text: 'When adding a job, set "How often?" to Weekly, Bi-weekly or Monthly. LogAll will automatically create the next 8 weeks of visits for you — you\'ll never need to add them one by one.',
+      },
+      {
+        heading: 'How much capacity have I got?',
+        text: 'In the month view you\'ll see pills showing how many One-off, Weekly and Bi-weekly slots you have free, worked out from your working hours and existing jobs. Tap a pill to see exactly which dates are available, then tap a date to add a job there.',
+      },
+      {
+        heading: 'Recurring time off',
+        text: 'Set regular time off in Profile → Working hours — a whole day, or just mornings or afternoons (for example, every Friday afternoon). It shows on the calendar (half-shaded for part days) and is taken into account when working out your free capacity.',
       },
       {
         heading: 'Marking a job as done',
@@ -63,11 +92,19 @@ const sections = [
     content: [
       {
         heading: 'Why log mileage?',
-        text: 'Every mile you drive to a client\'s home is worth 55p off your tax bill (the HMRC approved rate). If you drive 5,000 miles a year for work, that\'s £2,750 you can deduct from your income before tax is calculated.',
+        text: 'Every mile you drive to a client\'s home comes off your tax bill at the HMRC approved rate — 55p per mile for the first 10,000 business miles in the year, then 25p after that. Drive 5,000 miles for work and that\'s £2,750 you can deduct from your income before tax.',
       },
       {
         heading: 'Logging a journey',
         text: 'Go to Mileage and tap "Log journey". Enter where you\'re going from and to, then tap "Calculate distance automatically". LogAll works out the miles using your postcode. Your home address fills in automatically from your Profile.',
+      },
+      {
+        heading: 'Journeys with several stops',
+        text: 'Add more than one destination with "Add stop" — handy for a day visiting several clients. Each stop has its own Home and client buttons, and you can shuffle the order with the up/down arrows to match the order you actually drove.',
+      },
+      {
+        heading: 'Today\'s jobs in one tap',
+        text: 'Tap "Today\'s jobs" and LogAll builds a route for you: from home, round all of today\'s scheduled clients in time order, and back home again. Just tap calculate to get the miles.',
       },
       {
         heading: 'Quick fill buttons',
@@ -75,7 +112,7 @@ const sections = [
       },
       {
         heading: 'Electric vehicles',
-        text: 'You still claim 55p/mile if you drive an electric vehicle — but you cannot also claim charging costs. It\'s one or the other.',
+        text: 'You still claim the same mileage rate if you drive an electric vehicle — but you cannot also claim charging costs. It\'s one or the other.',
       },
     ],
   },
@@ -91,8 +128,20 @@ const sections = [
         text: 'Go to Expenses, tap "+ Add expense", pick a category and enter the amount. LogAll shows you how much tax you\'re saving as you go — usually 20p for every £1 you spend on allowable expenses.',
       },
       {
+        heading: 'Attach a receipt photo',
+        text: 'When logging an expense you can snap or upload a photo of the receipt. It\'s saved to your own Google Drive (connect it in Profile → Account), and expenses with a receipt show a 🧾 badge so you know it\'s backed up.',
+      },
+      {
+        heading: 'Recurring expenses',
+        text: 'Mark an expense as monthly or annual and LogAll gives you a one-tap "Log for [month]" button — so regular costs like insurance or your phone bill take seconds to record each time.',
+      },
+      {
         heading: 'AIA for equipment',
         text: 'For equipment (like a new hoover), toggle on "Annual Investment Allowance" to claim the full cost in year one rather than spreading it.',
+      },
+      {
+        heading: 'Export a month',
+        text: 'Tap the export button while viewing a month to download a CSV of that month\'s expenses — handy for your own records or your accountant.',
       },
       {
         heading: 'What can\'t I claim?',
@@ -116,8 +165,20 @@ const sections = [
         text: 'Use the slider to see what your tax bill would be if your income changes — useful for planning whether to take on more clients.',
       },
       {
+        heading: 'Self Assessment checklist',
+        text: 'The SA Checklist walks you through everything you need before filing, grouped into stages with a progress bar that remembers what you\'ve ticked off.',
+      },
+      {
+        heading: 'Home office calculator',
+        text: 'If you do paperwork from home, the Home Office calculator compares HMRC\'s simple flat rate against working out your actual costs, and shows which one saves you more.',
+      },
+      {
         heading: 'Tax report for your accountant',
-        text: 'Tap "Download tax report" to open a print-ready page showing all your figures for the tax year. Tap "Print / Save as PDF" and share it with your accountant.',
+        text: 'Open the Tax Report for a print-ready summary of your year. Tap "Print / Save as PDF" to share it, or download your income, expenses and mileage as separate CSV files.',
+      },
+      {
+        heading: 'Making Tax Digital (MTD)',
+        text: 'MTD for Income Tax starts for many sole traders from April 2026. The Tax Report\'s "MTD Export" produces your SA103S figures — for the whole year or a single quarter — ready to drop into bridging software.',
       },
       {
         heading: 'Self Assessment deadline',
@@ -143,6 +204,40 @@ const sections = [
     ],
   },
   {
+    title: '👤 Profile & account',
+    content: [
+      {
+        heading: 'Four areas',
+        text: 'Your profile is split into four sections: Personal & HMRC (your details and tax numbers), Working hours (days, hours and time off), Notifications, and Account.',
+      },
+      {
+        heading: 'Connect Google Drive',
+        text: 'In Profile → Account, connect Google Drive so receipt photos are saved to your own Drive. You can disconnect again at any time.',
+      },
+      {
+        heading: 'Dark mode',
+        text: 'Switch between light and dark mode in Profile → Account — handy for logging jobs in the evening.',
+      },
+      {
+        heading: 'Extra security',
+        text: 'Turn on two-factor authentication in Profile → Account to protect your account with a code from an authenticator app each time you sign in.',
+      },
+    ],
+  },
+  {
+    title: '🔔 Notifications',
+    content: [
+      {
+        heading: 'Turning them on',
+        text: 'Allow notifications in Profile → Notifications, then switch each type on or off to suit you. They\'re reminders only — nothing is shared with anyone.',
+      },
+      {
+        heading: 'What you can be reminded about',
+        text: 'Expense reminders (if you haven\'t logged anything in a while), the Self Assessment deadline (30, 7 and 1 day before 31 January), MTD quarterly deadlines, and overdue payments.',
+      },
+    ],
+  },
+  {
     title: '💡 Tips & tricks',
     content: [
       {
@@ -151,15 +246,11 @@ const sections = [
       },
       {
         heading: 'Bank holidays on the calendar',
-        text: 'UK bank holidays are automatically highlighted in red on the calendar. Add your own holidays in Profile — they show in purple.',
+        text: 'UK bank holidays are automatically highlighted in red on the calendar. Add your own holidays in Profile → Working hours — they show in purple.',
       },
       {
         heading: 'Adding past jobs in bulk',
         text: 'Go to Schedule and tap "Add past jobs in bulk" at the bottom. Pick a client, date range and frequency. LogAll creates all the visits and logs the income in one go.',
-      },
-      {
-        heading: 'Daily payment reminder',
-        text: 'If you have overdue payments, LogAll will send a notification once a day reminding you to chase them up. Allow notifications when prompted.',
       },
       {
         heading: 'Postcode only for mileage',
