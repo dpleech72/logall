@@ -4,11 +4,15 @@ import { supabase } from '../lib/supabase'
 import { ArrowLeft, Printer, Download } from 'lucide-react'
 
 const PERSONAL_ALLOWANCE = 12570
+const BASIC_RATE_LIMIT = 50270           // top of the 20% band (taxable income £37,700 above the allowance)
+const ADDITIONAL_RATE_THRESHOLD = 125140 // 45% applies above this
 const BASIC_RATE = 0.20
-const CLASS4_RATE = 0.09
+const HIGHER_RATE = 0.40
+const ADDITIONAL_RATE = 0.45
 const CLASS4_LOWER = 12570
 const CLASS4_UPPER = 50270
-const CLASS2_WEEKLY = 3.45
+const CLASS4_MAIN_RATE = 0.06            // 2024/25 onwards (reduced from 9%)
+const CLASS4_UPPER_RATE = 0.02           // on profits above the upper limit
 
 function downloadCSV(rows, headers, filename) {
   const lines = [
@@ -35,16 +39,34 @@ const CATEGORY_LABELS = {
 }
 
 function calcTax(profit) {
-  if (profit <= 0) return { incomeTax: 0, class4: 0, class2: 0, total: 0 }
-  const taxableIncome = Math.max(0, profit - PERSONAL_ALLOWANCE)
-  const incomeTax = taxableIncome * BASIC_RATE
-  const class4 = Math.min(Math.max(0, profit - CLASS4_LOWER), CLASS4_UPPER - CLASS4_LOWER) * CLASS4_RATE
-  const class2 = profit > PERSONAL_ALLOWANCE ? CLASS2_WEEKLY * 52 : 0
+  if (profit <= 0) return { incomeTax: 0, class4: 0, total: 0 }
+
+  // Personal allowance tapers by £1 for every £2 of profit over £100,000
+  const personalAllowance = profit > 100000
+    ? Math.max(0, PERSONAL_ALLOWANCE - (profit - 100000) / 2)
+    : PERSONAL_ALLOWANCE
+  const taxable = Math.max(0, profit - personalAllowance)
+
+  // Income tax bands (measured on taxable income above the allowance)
+  const basicBand  = Math.max(0, BASIC_RATE_LIMIT - PERSONAL_ALLOWANCE)              // £37,700 wide
+  const higherBand = Math.max(0, (ADDITIONAL_RATE_THRESHOLD - personalAllowance) - basicBand)
+  const basic      = Math.min(taxable, basicBand) * BASIC_RATE
+  const higher     = Math.min(Math.max(0, taxable - basicBand), higherBand) * HIGHER_RATE
+  const additional = Math.max(0, taxable - basicBand - higherBand) * ADDITIONAL_RATE
+  const incomeTax  = basic + higher + additional
+
+  // Class 4 NIC: 6% between the lower and upper limits, 2% above the upper limit
+  const class4Main  = Math.min(Math.max(0, profit - CLASS4_LOWER), CLASS4_UPPER - CLASS4_LOWER) * CLASS4_MAIN_RATE
+  const class4Upper = Math.max(0, profit - CLASS4_UPPER) * CLASS4_UPPER_RATE
+  const class4      = class4Main + class4Upper
+
+  // Class 2 NIC is no longer payable from 2024/25 — anyone above the Small Profits
+  // Threshold is treated as having paid it, so it adds nothing to the bill.
+
   return {
     incomeTax: Math.round(incomeTax * 100) / 100,
     class4:    Math.round(class4 * 100) / 100,
-    class2:    Math.round(class2 * 100) / 100,
-    total:     Math.round((incomeTax + class4 + class2) * 100) / 100,
+    total:     Math.round((incomeTax + class4) * 100) / 100,
   }
 }
 
@@ -355,9 +377,8 @@ export default function TaxReport() {
         <section className="mb-8">
           <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Estimated Tax Bill</h2>
           <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden dark:bg-gray-800">
-            <Row label="Income Tax (20% basic rate)" value={tax.incomeTax} />
-            <Row label="Class 4 National Insurance (9%)" value={tax.class4} />
-            <Row label="Class 2 National Insurance (£3.45/week)" value={tax.class2} />
+            <Row label="Income Tax" value={tax.incomeTax} />
+            <Row label="Class 4 National Insurance (6%)" value={tax.class4} />
             <Row label="Total estimated tax" value={tax.total} bold topBorder />
           </div>
           <div className="flex justify-between mt-2 px-1">
@@ -522,7 +543,7 @@ export default function TaxReport() {
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
           <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
             This report is an estimate based on data recorded in LogAll for tax year {taxYearLabel} (6 April {tyStart} to 5 April {tyStart + 1}).
-            Calculations assume the basic rate tax band and do not account for other income sources, pension contributions, or additional reliefs.
+            It applies {taxYearLabel} Income Tax and Class 4 NIC rates to your self-employment profit alone, and does not account for other income sources, pension contributions, student loans, or additional reliefs.
             Please consult a qualified accountant or tax adviser before filing your Self Assessment return.
             LogAll is not a substitute for professional tax advice.
           </p>
