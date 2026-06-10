@@ -82,6 +82,9 @@ export default function Schedule() {
   const [userHolidays, setUserHolidays] = useState([])
   const [dailyIncome, setDailyIncome] = useState({})
   const [showIncome, setShowIncome] = useState(() => localStorage.getItem('logall_show_income') === 'true')
+  const [capSettings, setCapSettings] = useState(null)
+  const [capacitySlots, setCapacitySlots] = useState(null)
+  const [capacityModal, setCapacityModal] = useState(null) // { type, label, dates }
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -92,11 +95,18 @@ export default function Schedule() {
   useEffect(() => {
     generateRecurringVisits()
     fetchUserHolidays()
+    fetchCapSettings()
   }, [])
 
   useEffect(() => {
     localStorage.setItem('logall_view_mode', viewMode)
   }, [viewMode])
+
+  useEffect(() => {
+    if (viewMode === 'month' && capSettings && userHolidays !== null) {
+      setCapacitySlots(computeCapacity(visits, capSettings, userHolidays))
+    }
+  }, [visits, capSettings, userHolidays, monthDate, viewMode])
 
   async function fetchData() {
     setLoading(true)
@@ -136,6 +146,103 @@ export default function Schedule() {
   async function fetchUserHolidays() {
     const { data } = await supabase.from('holidays').select('date, end_date, name')
     setUserHolidays(data || [])
+  }
+
+  async function fetchCapSettings() {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase.from('profiles').select(
+      'working_days, work_start, work_end, travel_buffer_mins, job_dur_one_off, job_dur_weekly, job_dur_biweekly, job_dur_monthly'
+    ).eq('id', user.id).single()
+    if (data) {
+      setCapSettings({
+        working_days:       JSON.parse(data.working_days || '["Mon","Tue","Wed","Thu","Fri"]'),
+        work_start:         data.work_start         || '08:00',
+        work_end:           data.work_end           || '17:00',
+        travel_buffer_mins: data.travel_buffer_mins ?? 30,
+        job_dur_one_off:    data.job_dur_one_off    ?? 120,
+        job_dur_weekly:     data.job_dur_weekly     ?? 90,
+        job_dur_biweekly:   data.job_dur_biweekly   ?? 90,
+        job_dur_monthly:    data.job_dur_monthly    ?? 120,
+      })
+    }
+  }
+
+  function computeCapacity(monthVisits, cap, holidays) {
+    if (!cap) return null
+    const { working_days, work_start, work_end, travel_buffer_mins: tBuf,
+      job_dur_one_off, job_dur_weekly, job_dur_biweekly, job_dur_monthly } = cap
+    const [sh, sm] = work_start.split(':').map(Number)
+    const [eh, em] = work_end.split(':').map(Number)
+    const workMins = (eh * 60 + em) - (sh * 60 + sm)
+    const year = monthDate.getFullYear()
+    const month = monthDate.getMonth()
+    const lastDay = new Date(year, month + 1, 0).getDate()
+
+    const freeMap = {}
+    for (let d = 1; d <= lastDay; d++) {
+      const date = new Date(year, month, d)
+      const dayName = DAY_LABELS[(date.getDay() + 6) % 7]
+      const dateStr = formatDate(date)
+      if (!working_days.includes(dayName)) continue
+      const isHoliday = holidays.some(h => dateStr >= h.date && dateStr <= (h.end_date || h.date))
+        || !!BANK_HOLIDAYS[dateStr]
+      if (isHoliday) continue
+      const busy = monthVisits
+        .filter(v => v.scheduled_date === dateStr && v.status !== 'cancelled')
+        .reduce((sum, v) => sum + (v.duration_minutes || 0) + tBuf, 0)
+      freeMap[dateStr] = { free: Math.max(0, workMins - busy), dow: date.getDay() }
+    }
+
+    const dates = Object.keys(freeMap).sort()
+
+    // One-off available dates
+    const oneOffDates = dates.filter(ds => freeMap[ds].free >= job_dur_one_off + tBuf)
+
+    // Monthly available dates
+    const monthlyDates = dates.filter(ds => freeMap[ds].free >= job_dur_monthly + tBuf)
+
+    // Group by day-of-week for weekly/biweekly
+    const byDow = {}
+    for (const ds of dates) {
+      const dow = freeMap[ds].dow
+      if (!byDow[dow]) byDow[dow] = []
+      byDow[dow].push(ds)
+    }
+
+    const weeklyDates = []
+    const biweeklyDates = []
+    for (const dowDates of Object.values(byDow)) {
+      if (dowDates.every(ds => freeMap[ds].free >= job_dur_weekly + tBuf)) {
+        weeklyDates.push(...dowDates)
+      }
+      const p1 = dowDates.filter((_, i) => i % 2 === 0)
+      const p2 = dowDates.filter((_, i) => i % 2 === 1)
+      if (p1.length && p1.every(ds => freeMap[ds].free >= job_dur_biweekly + tBuf)) {
+        biweeklyDates.push(...p1)
+      }
+      if (p2.length && p2.every(ds => freeMap[ds].free >= job_dur_biweekly + tBuf)) {
+        biweeklyDates.push(...p2)
+      }
+    }
+
+    // Weekly count = qualifying weekdays (each weekday = 1 recurring client slot)
+    const weeklyCount = Object.values(byDow).filter(dowDates =>
+      dowDates.every(ds => freeMap[ds].free >= job_dur_weekly + tBuf)
+    ).length
+
+    // Biweekly count = qualifying patterns
+    let biweeklyCount = 0
+    for (const dowDates of Object.values(byDow)) {
+      if (dowDates.filter((_, i) => i % 2 === 0).every(ds => freeMap[ds].free >= job_dur_biweekly + tBuf)) biweeklyCount++
+      if (dowDates.filter((_, i) => i % 2 === 1).every(ds => freeMap[ds].free >= job_dur_biweekly + tBuf)) biweeklyCount++
+    }
+
+    return {
+      oneOff:   { count: oneOffDates.length,  dates: oneOffDates },
+      weekly:   { count: weeklyCount,          dates: [...new Set(weeklyDates)].sort() },
+      biweekly: { count: biweeklyCount,        dates: [...new Set(biweeklyDates)].sort() },
+      monthly:  { count: monthlyDates.length,  dates: monthlyDates },
+    }
   }
 
   async function generateRecurringVisits() {
@@ -560,6 +667,27 @@ export default function Schedule() {
               </button>
             </div>
 
+            {/* Capacity pills */}
+            {capacitySlots && (
+              <div className="flex gap-1.5 flex-wrap mb-2">
+                {[
+                  { key: 'oneOff',   label: 'One-off',   color: 'bg-blue-50 text-blue-700 border-blue-200'   },
+                  { key: 'weekly',   label: 'Weekly',    color: 'bg-green-50 text-green-700 border-green-200' },
+                  { key: 'biweekly', label: 'Bi-weekly', color: 'bg-violet-50 text-violet-700 border-violet-200' },
+                  { key: 'monthly',  label: 'Monthly',   color: 'bg-amber-50 text-amber-700 border-amber-200'  },
+                ].map(({ key, label, color }) => (
+                  <button
+                    key={key}
+                    onClick={() => setCapacityModal({ type: key, label, dates: capacitySlots[key].dates })}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${color} active:opacity-70`}
+                  >
+                    <span className="font-bold">{capacitySlots[key].count}</span>
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Day of week headers */}
             <div className="grid grid-cols-7 gap-0.5 mb-0.5">
               {DAY_LABELS.map(d => (
@@ -913,6 +1041,52 @@ export default function Schedule() {
                 {confirmBulkDelete === 'delete' ? 'Delete' : 'Cancel'} jobs
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Capacity available dates modal */}
+      {capacityModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={() => setCapacityModal(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 w-full max-w-sm max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white">
+                  {capacityModal.dates.length} {capacityModal.label} slot{capacityModal.dates.length !== 1 ? 's' : ''} available
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  {MONTH_NAMES[monthDate.getMonth()]} {monthDate.getFullYear()}
+                </p>
+              </div>
+              <button onClick={() => setCapacityModal(null)} className="p-1.5 text-gray-400 active:text-gray-600">
+                <X size={18} />
+              </button>
+            </div>
+            {capacityModal.dates.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No available dates this month.</p>
+            ) : (
+              <div className="overflow-y-auto flex-1 space-y-1.5">
+                {capacityModal.dates.map(ds => {
+                  const d = new Date(ds + 'T12:00:00')
+                  return (
+                    <button
+                      key={ds}
+                      onClick={() => {
+                        setSelectedDay(d)
+                        setCapacityModal(null)
+                        navigate(`/schedule/add?date=${ds}`)
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600"
+                    >
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                        {d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </span>
+                      <span className="text-xs text-green-600 font-semibold">+ Add job</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

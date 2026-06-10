@@ -69,6 +69,20 @@ export default function Profile() {
     utr: '',
     vat_number: '',
   })
+
+  const ALL_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+  const [capacity, setCapacity] = useState({
+    working_days:       ['Mon','Tue','Wed','Thu','Fri'],
+    work_start:         '08:00',
+    work_end:           '17:00',
+    travel_buffer_mins: 30,
+    job_dur_one_off:    120,
+    job_dur_weekly:     90,
+    job_dur_biweekly:   90,
+    job_dur_monthly:    120,
+  })
+  const [capacitySaving, setCapacitySaving] = useState(false)
+  const [capacitySaved,  setCapacitySaved]  = useState(false)
   const [googleEmail, setGoogleEmail]     = useState(null)
   const [providerConnecting, setProviderConnecting] = useState(false)
   const [providerError, setProviderError] = useState('')
@@ -137,8 +151,46 @@ export default function Profile() {
         vat_number: data.vat_number || '',
       })
       setGoogleEmail(data.google_drive_email || null)
+      setCapacity({
+        working_days:       JSON.parse(data.working_days || '["Mon","Tue","Wed","Thu","Fri"]'),
+        work_start:         data.work_start         || '08:00',
+        work_end:           data.work_end           || '17:00',
+        travel_buffer_mins: data.travel_buffer_mins ?? 30,
+        job_dur_one_off:    data.job_dur_one_off    ?? 120,
+        job_dur_weekly:     data.job_dur_weekly     ?? 90,
+        job_dur_biweekly:   data.job_dur_biweekly   ?? 90,
+        job_dur_monthly:    data.job_dur_monthly    ?? 120,
+      })
     }
     setLoading(false)
+  }
+
+  async function saveCapacity() {
+    setCapacitySaving(true)
+    const { error } = await supabase.from('profiles').update({
+      working_days:       JSON.stringify(capacity.working_days),
+      work_start:         capacity.work_start,
+      work_end:           capacity.work_end,
+      travel_buffer_mins: Number(capacity.travel_buffer_mins),
+      job_dur_one_off:    Number(capacity.job_dur_one_off),
+      job_dur_weekly:     Number(capacity.job_dur_weekly),
+      job_dur_biweekly:   Number(capacity.job_dur_biweekly),
+      job_dur_monthly:    Number(capacity.job_dur_monthly),
+    }).eq('id', user.id)
+    setCapacitySaving(false)
+    if (!error) {
+      setCapacitySaved(true)
+      setTimeout(() => setCapacitySaved(false), 3000)
+    }
+  }
+
+  function toggleWorkDay(day) {
+    setCapacity(c => {
+      const days = c.working_days.includes(day)
+        ? c.working_days.filter(d => d !== day)
+        : [...c.working_days, day]
+      return { ...c, working_days: days }
+    })
   }
 
   async function fetchHolidays() {
@@ -770,6 +822,109 @@ export default function Profile() {
             </button>
           )
         )}
+      </div>
+
+      {/* Working hours & capacity */}
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Working hours &amp; capacity</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Used on the Schedule screen to calculate how many new jobs you can take on each month.
+          </p>
+        </div>
+
+        {/* Working days */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Working days</label>
+          <div className="flex gap-2 flex-wrap">
+            {ALL_DAYS.map(day => (
+              <button
+                key={day}
+                type="button"
+                onClick={() => toggleWorkDay(day)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                  capacity.working_days.includes(day)
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600'
+                }`}
+              >
+                {day}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Start / end time */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Work start</label>
+            <input
+              type="time"
+              value={capacity.work_start}
+              onChange={e => setCapacity(c => ({ ...c, work_start: e.target.value }))}
+              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Work end</label>
+            <input
+              type="time"
+              value={capacity.work_end}
+              onChange={e => setCapacity(c => ({ ...c, work_end: e.target.value }))}
+              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Travel buffer */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Travel time between jobs (minutes)</label>
+          <input
+            type="number" min="0" max="120" step="5"
+            value={capacity.travel_buffer_mins}
+            onChange={e => setCapacity(c => ({ ...c, travel_buffer_mins: e.target.value }))}
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+
+        {/* Job durations */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Typical job duration (minutes)</label>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: 'job_dur_one_off',  label: 'One-off' },
+              { key: 'job_dur_weekly',   label: 'Weekly' },
+              { key: 'job_dur_biweekly', label: 'Bi-weekly' },
+              { key: 'job_dur_monthly',  label: 'Monthly' },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</label>
+                <input
+                  type="number" min="15" max="480" step="15"
+                  value={capacity[key]}
+                  onChange={e => setCapacity(c => ({ ...c, [key]: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {capacitySaved && (
+          <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl p-3 text-sm text-green-700">
+            <Check size={15} />Capacity settings saved!
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={saveCapacity}
+          disabled={capacitySaving}
+          className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+        >
+          <Check size={16} />
+          {capacitySaving ? 'Saving...' : 'Save capacity settings'}
+        </button>
       </div>
 
       {/* Notifications */}
