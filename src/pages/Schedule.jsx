@@ -429,6 +429,12 @@ export default function Schedule() {
     return null
   }
 
+  // Returns 'morning' | 'afternoon' | null for partial recurring blocks
+  const getPartialBlock = (dateStr) => {
+    const bt = recurringBlockMap[dateStr]
+    return (bt === 'morning' || bt === 'afternoon') ? bt : null
+  }
+
   const holidayBg = (holiday, isSelected, isToday) => {
     if (isSelected) return 'bg-green-600'
     if (holiday?.type === 'bank') return 'bg-red-100'
@@ -632,21 +638,25 @@ export default function Schedule() {
                   const isToday = isSameDay(day, today)
                   const dots = dotsForDay(day)
                   const holiday = getHolidayInfo(formatDate(day))
+                  const partial = getPartialBlock(formatDate(day))
                   return (
                     <button
                       key={i}
                       onClick={() => setSelectedDay(day)}
-                      className={`flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
+                      className={`relative overflow-hidden flex flex-col items-center py-2 px-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
-                      <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400 dark:text-gray-500'}`}>
+                      {partial && !isSelected && (
+                        <div className={`absolute inset-x-0 h-1/2 bg-violet-300/40 ${partial === 'morning' ? 'top-0 rounded-t-xl' : 'bottom-0 rounded-b-xl'}`} />
+                      )}
+                      <span className={`relative text-xs font-medium mb-1 ${isSelected ? 'text-green-100' : 'text-gray-400 dark:text-gray-500'}`}>
                         {DAY_LABELS[i]}
                       </span>
-                      <span className={`text-sm font-bold ${
+                      <span className={`relative text-sm font-bold ${
                         isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800 dark:text-gray-100'
                       }`}>
                         {day.getDate()}
                       </span>
-                      <div className="flex gap-0.5 mt-1 h-2">
+                      <div className="relative flex gap-0.5 mt-1 h-2">
                         {dots.slice(0, 3).map((dot, j) => (
                           <div key={j} className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white opacity-90' : dot}`} />
                         ))}
@@ -787,19 +797,23 @@ export default function Schedule() {
                   const isToday = isSameDay(day, today)
                   const dots = dotsForDay(day)
                   const holiday = getHolidayInfo(formatDate(day))
+                  const partial = getPartialBlock(formatDate(day))
                   const dayIncome = dailyIncome[formatDate(day)]
                   return (
                     <button
                       key={i}
                       onClick={() => { setSelectedDay(day) }}
-                      className={`flex flex-col items-center py-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
+                      className={`relative overflow-hidden flex flex-col items-center py-1 rounded-xl transition-colors ${holidayBg(holiday, isSelected, isToday)}`}
                     >
-                      <span className={`text-xs font-bold ${
+                      {partial && !isSelected && (
+                        <div className={`absolute inset-x-0 h-1/2 bg-violet-300/40 ${partial === 'morning' ? 'top-0 rounded-t-xl' : 'bottom-0 rounded-b-xl'}`} />
+                      )}
+                      <span className={`relative text-xs font-bold ${
                         isSelected ? 'text-white' : isToday ? 'text-green-600' : 'text-gray-800 dark:text-gray-100'
                       }`}>
                         {day.getDate()}
                       </span>
-                      <div className="flex gap-0.5 mt-0.5 h-1.5">
+                      <div className="relative flex gap-0.5 mt-0.5 h-1.5">
                         {dots.slice(0, 3).map((dot, j) => (
                           <div key={j} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white opacity-90' : dot}`} />
                         ))}
