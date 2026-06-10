@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, Pencil, Phone, Mail, MapPin, CreditCard, FileText } from 'lucide-react'
+import { ArrowLeft, Pencil, Phone, Mail, MapPin, CreditCard, FileText, MessageCircle } from 'lucide-react'
 
 const paymentLabel = {
   cash: 'Cash',
@@ -176,6 +176,59 @@ export default function ClientDetail() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp templates */}
+      {client.mobile && (
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Quick messages</h2>
+          <div className="space-y-2">
+            {(() => {
+              const first = client.name.split(' ')[0]
+              const phone = `44${client.mobile.replace(/^0/, '').replace(/\s/g, '')}`
+              const nextVisit = visits[0]
+              const nextDateStr = nextVisit
+                ? new Date(nextVisit.scheduled_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+                : null
+              const nextTime = nextVisit?.scheduled_time ? nextVisit.scheduled_time.slice(0, 5) : null
+              const nextAmount = nextVisit?.amount ? `£${parseFloat(nextVisit.amount).toFixed(2)}` : null
+
+              const templates = [
+                {
+                  label: 'Reminder — coming tomorrow',
+                  message: `Hi ${first}, just a reminder I'll be coming tomorrow${nextTime ? ` at ${nextTime}` : ''}. See you then! 😊`,
+                },
+                {
+                  label: 'On my way',
+                  message: `Hi ${first}, I'm on my way to you now. See you shortly! 😊`,
+                },
+                {
+                  label: 'Running late',
+                  message: `Hi ${first}, so sorry — I'm running a little late today. I'll be with you as soon as I can!`,
+                },
+                {
+                  label: 'Payment reminder',
+                  message: nextAmount && nextDateStr
+                    ? `Hi ${first}, just a friendly reminder that ${nextAmount} is due for your visit on ${nextDateStr}. Thank you! 😊`
+                    : `Hi ${first}, just a friendly reminder that payment is due. Thank you! 😊`,
+                },
+              ]
+
+              return templates.map(({ label, message }) => (
+                <a
+                  key={label}
+                  href={`https://wa.me/${phone}?text=${encodeURIComponent(message)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-medium px-4 py-3 rounded-xl text-sm active:bg-gray-50 transition-colors"
+                >
+                  <MessageCircle size={16} className="text-green-500 flex-shrink-0" />
+                  {label}
+                </a>
+              ))
+            })()}
           </div>
         </div>
       )}
