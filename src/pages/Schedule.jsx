@@ -742,7 +742,7 @@ export default function Schedule() {
 
             {/* Capacity pills */}
             {capacitySlots && (
-              <div className="flex gap-1.5 flex-wrap mb-2">
+              <div className="flex gap-1.5 flex-wrap justify-center mb-2">
                 {[
                   { key: 'oneOff',   label: 'One-off',   color: 'bg-blue-50 text-blue-700 border-blue-200'   },
                   { key: 'weekly',   label: 'Weekly',    color: 'bg-green-50 text-green-700 border-green-200' },
