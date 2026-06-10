@@ -14,6 +14,17 @@ const CLASS4_UPPER = 50270
 const CLASS4_MAIN_RATE = 0.06            // 2024/25 onwards (reduced from 9%)
 const CLASS4_UPPER_RATE = 0.02           // on profits above the upper limit
 
+// HMRC approved mileage allowance (cars/vans), 2026/27: 55p for the first
+// 10,000 business miles in the tax year, then 25p for each mile above that.
+const MILEAGE_RATE_HIGH = 0.55
+const MILEAGE_RATE_LOW = 0.25
+const MILEAGE_THRESHOLD = 10000
+
+function mileageClaim(miles) {
+  if (miles <= MILEAGE_THRESHOLD) return miles * MILEAGE_RATE_HIGH
+  return MILEAGE_THRESHOLD * MILEAGE_RATE_HIGH + (miles - MILEAGE_THRESHOLD) * MILEAGE_RATE_LOW
+}
+
 function downloadCSV(rows, headers, filename) {
   const lines = [
     headers.join(','),
@@ -145,7 +156,8 @@ export default function TaxReport() {
     const filteredExpenses = qtr ? expenses.filter(e => e.expense_date >= qtr.start && e.expense_date <= qtr.end) : expenses
     const filteredMileage  = qtr ? mileage.filter(m => m.journey_date >= qtr.start && m.journey_date <= qtr.end) : mileage
 
-    const box14Travel   = filteredMileage.reduce((s, m) => s + parseFloat(m.claimable_amount), 0)
+    const milesInPeriod = filteredMileage.reduce((s, m) => s + parseFloat(m.miles), 0)
+    const box14Travel   = mileageClaim(milesInPeriod)
     const box15Premises = filteredExpenses.filter(e => e.category === 'insurance').reduce((s, e) => s + parseFloat(e.amount), 0)
     const box17Phone    = filteredExpenses.filter(e => e.category === 'phone').reduce((s, e) => s + parseFloat(e.amount), 0)
     const box27AIA      = filteredExpenses.filter(e => e.category === 'equipment' && e.is_aia).reduce((s, e) => s + parseFloat(e.amount), 0)
@@ -193,7 +205,7 @@ export default function TaxReport() {
       ['', ''],
       ['MILEAGE DETAIL', ''],
       ['Total miles', filteredMileage.reduce((s, m) => s + parseFloat(m.miles), 0).toFixed(1)],
-      ['Rate', '55p per mile (HMRC approved mileage allowance)'],
+      ['Rate', '55p per mile for the first 10,000 business miles, then 25p (HMRC approved mileage allowance)'],
       ['Total mileage claim', box14Travel.toFixed(2)],
       ['', ''],
       ['NOTES', ''],
@@ -207,8 +219,8 @@ export default function TaxReport() {
 
   const totalIncome   = income.reduce((s, i) => s + parseFloat(i.amount), 0)
   const totalExpenses = expenses.reduce((s, e) => s + parseFloat(e.amount), 0)
-  const totalMileage  = mileage.reduce((s, m) => s + parseFloat(m.claimable_amount), 0)
   const totalMiles    = mileage.reduce((s, m) => s + parseFloat(m.miles), 0)
+  const totalMileage  = mileageClaim(totalMiles)
   const totalDeductions = totalExpenses + totalMileage
   const profit = Math.max(0, totalIncome - totalDeductions)
   const tax = calcTax(profit)
@@ -529,7 +541,9 @@ export default function TaxReport() {
               ))}
               <div className="flex justify-between px-4 py-2.5 border-t border-gray-100 dark:border-gray-700">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Rate (HMRC approved)</span>
-                <span className="text-sm text-gray-700 dark:text-gray-200">55p per mile · {totalMiles.toFixed(1)} miles total</span>
+                <span className="text-sm text-gray-700 dark:text-gray-200">
+                  {totalMiles > MILEAGE_THRESHOLD ? '55p to 10,000 mi, then 25p' : '55p per mile'} · {totalMiles.toFixed(1)} miles total
+                </span>
               </div>
               <div className="flex justify-between px-4 py-2.5 border-t-2 border-gray-700 dark:border-gray-500 bg-gray-50 dark:bg-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Claimable amount</span>
