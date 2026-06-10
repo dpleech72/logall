@@ -198,8 +198,8 @@ export default function Schedule() {
     // One-off available dates
     const oneOffDates = dates.filter(ds => freeMap[ds].free >= job_dur_one_off + tBuf)
 
-    // Monthly available dates
-    const monthlyDates = dates.filter(ds => freeMap[ds].free >= job_dur_monthly + tBuf)
+    // Total free hours across the month
+    const totalFreeHours = Math.round(dates.reduce((sum, ds) => sum + freeMap[ds].free, 0) / 60)
 
     // Group by day-of-week for weekly/biweekly
     const byDow = {}
@@ -238,10 +238,10 @@ export default function Schedule() {
     }
 
     return {
-      oneOff:   { count: oneOffDates.length,  dates: oneOffDates },
-      weekly:   { count: weeklyCount,          dates: [...new Set(weeklyDates)].sort() },
-      biweekly: { count: biweeklyCount,        dates: [...new Set(biweeklyDates)].sort() },
-      monthly:  { count: monthlyDates.length,  dates: monthlyDates },
+      oneOff:    { count: oneOffDates.length,             dates: oneOffDates },
+      weekly:    { count: weeklyCount,                    dates: [...new Set(weeklyDates)].sort() },
+      biweekly:  { count: biweeklyCount,                  dates: [...new Set(biweeklyDates)].sort() },
+      freeHours: { count: totalFreeHours,                 dates: [] },
     }
   }
 
@@ -671,20 +671,32 @@ export default function Schedule() {
             {capacitySlots && (
               <div className="flex gap-1.5 flex-wrap mb-2">
                 {[
-                  { key: 'oneOff',   label: 'One-off',   color: 'bg-blue-50 text-blue-700 border-blue-200'   },
-                  { key: 'weekly',   label: 'Weekly',    color: 'bg-green-50 text-green-700 border-green-200' },
-                  { key: 'biweekly', label: 'Bi-weekly', color: 'bg-violet-50 text-violet-700 border-violet-200' },
-                  { key: 'monthly',  label: 'Monthly',   color: 'bg-amber-50 text-amber-700 border-amber-200'  },
-                ].map(({ key, label, color }) => (
-                  <button
-                    key={key}
-                    onClick={() => setCapacityModal({ type: key, label, dates: capacitySlots[key].dates })}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${color} active:opacity-70`}
-                  >
-                    <span className="font-bold">{capacitySlots[key].count}</span>
-                    <span>{label}</span>
-                  </button>
-                ))}
+                  { key: 'oneOff',    label: 'One-off',   color: 'bg-blue-50 text-blue-700 border-blue-200'   },
+                  { key: 'weekly',    label: 'Weekly',    color: 'bg-green-50 text-green-700 border-green-200' },
+                  { key: 'biweekly',  label: 'Bi-weekly', color: 'bg-violet-50 text-violet-700 border-violet-200' },
+                  { key: 'freeHours', label: 'Free hrs',  color: 'bg-amber-50 text-amber-700 border-amber-200'  },
+                ].map(({ key, label, color }) => {
+                  const slot = capacitySlots[key]
+                  const clickable = slot.dates.length > 0
+                  return clickable ? (
+                    <button
+                      key={key}
+                      onClick={() => setCapacityModal({ type: key, label, dates: slot.dates })}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${color} active:opacity-70`}
+                    >
+                      <span className="font-bold">{slot.count}</span>
+                      <span>{label}</span>
+                    </button>
+                  ) : (
+                    <span
+                      key={key}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${color}`}
+                    >
+                      <span className="font-bold">{slot.count}</span>
+                      <span>{label}</span>
+                    </span>
+                  )
+                })}
               </div>
             )}
 
