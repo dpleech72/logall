@@ -85,6 +85,7 @@ export default function Schedule() {
   const [capSettings, setCapSettings] = useState(null)
   const [capacitySlots, setCapacitySlots] = useState(null)
   const [capacityModal, setCapacityModal] = useState(null) // { type, label, dates }
+  const [recurringBlocks, setRecurringBlocks] = useState([])
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -96,6 +97,7 @@ export default function Schedule() {
     generateRecurringVisits()
     fetchUserHolidays()
     fetchCapSettings()
+    fetchRecurringBlocks()
   }, [])
 
   useEffect(() => {
@@ -104,9 +106,9 @@ export default function Schedule() {
 
   useEffect(() => {
     if (viewMode === 'month' && capSettings && userHolidays !== null) {
-      setCapacitySlots(computeCapacity(visits, capSettings, userHolidays))
+      setCapacitySlots(computeCapacity(visits, capSettings, userHolidays, recurringBlocks))
     }
-  }, [visits, capSettings, userHolidays, monthDate, viewMode])
+  }, [visits, capSettings, userHolidays, recurringBlocks, monthDate, viewMode])
 
   async function fetchData() {
     setLoading(true)
@@ -148,6 +150,44 @@ export default function Schedule() {
     setUserHolidays(data || [])
   }
 
+  async function fetchRecurringBlocks() {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase.from('recurring_blocks').select('*').eq('user_id', user.id)
+    setRecurringBlocks(data || [])
+  }
+
+  // Expand recurring blocks into a map of dateStr -> block_type ('full'|'morning'|'afternoon')
+  // For fortnightly, uses start_date as the anchor week.
+  function expandBlocks(blocks, fromDate, toDate) {
+    const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    const result = {} // dateStr -> block_type (full takes precedence)
+    const ANCHOR = new Date('2024-01-01T12:00:00') // Monday anchor for fortnightly
+
+    for (const block of blocks) {
+      const startD = block.start_date ? new Date(block.start_date + 'T12:00:00') : new Date('2000-01-01')
+      const endD   = block.end_date   ? new Date(block.end_date   + 'T12:00:00') : new Date('2100-01-01')
+      const dowIdx = DOW.indexOf(block.day_of_week) // 0=Mon..6=Sun
+      const jsDow  = dowIdx === 6 ? 0 : dowIdx + 1  // js: 0=Sun,1=Mon..6=Sat
+
+      let d = new Date(fromDate)
+      while (d <= toDate) {
+        if (d.getDay() === jsDow && d >= startD && d <= endD) {
+          if (block.recurrence === 'fortnightly') {
+            const diffDays = Math.round((d - ANCHOR) / (24 * 60 * 60 * 1000))
+            if (Math.floor(diffDays / 7) % 2 !== 0) { d = addDays(d, 1); continue }
+          }
+          const ds = formatDate(d)
+          // full takes priority over partial
+          if (!result[ds] || result[ds] !== 'full') {
+            result[ds] = block.block_type
+          }
+        }
+        d = addDays(d, 1)
+      }
+    }
+    return result
+  }
+
   async function fetchCapSettings() {
     const { data: { user } } = await supabase.auth.getUser()
     const { data } = await supabase.from('profiles').select(
@@ -167,16 +207,21 @@ export default function Schedule() {
     }
   }
 
-  function computeCapacity(monthVisits, cap, holidays) {
+  function computeCapacity(monthVisits, cap, holidays, blocks = []) {
     if (!cap) return null
     const { working_days, work_start, work_end, travel_buffer_mins: tBuf,
-      job_dur_one_off, job_dur_weekly, job_dur_biweekly, job_dur_monthly } = cap
+      job_dur_one_off, job_dur_weekly, job_dur_biweekly } = cap
     const [sh, sm] = work_start.split(':').map(Number)
     const [eh, em] = work_end.split(':').map(Number)
     const workMins = (eh * 60 + em) - (sh * 60 + sm)
+    const halfMins = Math.floor(workMins / 2)
     const year = monthDate.getFullYear()
     const month = monthDate.getMonth()
     const lastDay = new Date(year, month + 1, 0).getDate()
+
+    const fromDate = new Date(year, month, 1)
+    const toDate   = new Date(year, month, lastDay)
+    const blockMap = expandBlocks(blocks, fromDate, toDate)
 
     const freeMap = {}
     for (let d = 1; d <= lastDay; d++) {
@@ -187,10 +232,18 @@ export default function Schedule() {
       const isHoliday = holidays.some(h => dateStr >= h.date && dateStr <= (h.end_date || h.date))
         || !!BANK_HOLIDAYS[dateStr]
       if (isHoliday) continue
+
+      const blockType = blockMap[dateStr]
+      if (blockType === 'full') continue // full-day block — skip entirely
+
+      // Partial block reduces available work minutes
+      const blockedMins = blockType === 'morning' || blockType === 'afternoon' ? halfMins : 0
+      const effectiveWork = workMins - blockedMins
+
       const busy = monthVisits
         .filter(v => v.scheduled_date === dateStr && v.status !== 'cancelled')
         .reduce((sum, v) => sum + (v.duration_minutes || 0) + tBuf, 0)
-      freeMap[dateStr] = { free: Math.max(0, workMins - busy), dow: date.getDay() }
+      freeMap[dateStr] = { free: Math.max(0, effectiveWork - busy), dow: date.getDay() }
     }
 
     const dates = Object.keys(freeMap).sort()
@@ -359,10 +412,20 @@ export default function Schedule() {
       (selecting && selectedVisits.has(v.id)) ? 'bg-red-500' : STATUS[v.status]?.dot || 'bg-gray-300'
     )
 
+  // Expand recurring full-day blocks for the visible range (week or month)
+  const visibleFrom = viewMode === 'month'
+    ? new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
+    : weekStart
+  const visibleTo = viewMode === 'month'
+    ? new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
+    : addDays(weekStart, 6)
+  const recurringBlockMap = expandBlocks(recurringBlocks, visibleFrom, visibleTo)
+
   const getHolidayInfo = (dateStr) => {
     const match = userHolidays.find(h => dateStr >= h.date && dateStr <= (h.end_date || h.date))
     if (match) return { type: 'personal', name: match.name }
     if (BANK_HOLIDAYS[dateStr]) return { type: 'bank', name: BANK_HOLIDAYS[dateStr] }
+    if (recurringBlockMap[dateStr] === 'full') return { type: 'personal', name: 'Time off' }
     return null
   }
 

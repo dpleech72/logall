@@ -115,9 +115,15 @@ export default function Profile() {
   const [holidayAdding, setHolidayAdding] = useState(false)
   const [holidayError, setHolidayError] = useState('')
 
+  const [recurringBlocks, setRecurringBlocks] = useState([])
+  const [newBlock, setNewBlock] = useState({ name: '', day_of_week: 'Fri', block_type: 'full', recurrence: 'weekly', start_date: '', end_date: '' })
+  const [blockAdding, setBlockAdding] = useState(false)
+  const [blockError, setBlockError] = useState('')
+
   useEffect(() => {
     fetchProfile()
     fetchHolidays()
+    fetchRecurringBlocks()
     checkMfa()
     // Complete a mobile OAuth redirect if we just came back from Google
     completeMobileConnect()
@@ -237,6 +243,38 @@ export default function Profile() {
   async function deleteHoliday(id) {
     await supabase.from('holidays').delete().eq('id', id)
     setHolidays(h => h.filter(x => x.id !== id))
+  }
+
+  async function fetchRecurringBlocks() {
+    const { data } = await supabase.from('recurring_blocks').select('*').order('day_of_week')
+    setRecurringBlocks(data || [])
+  }
+
+  async function addRecurringBlock() {
+    if (!newBlock.name.trim()) { setBlockError('Please enter a name for this block.'); return }
+    if (newBlock.end_date && newBlock.start_date && newBlock.end_date < newBlock.start_date) {
+      setBlockError('End date must be after start date.'); return
+    }
+    setBlockAdding(true)
+    setBlockError('')
+    const { error } = await supabase.from('recurring_blocks').insert({
+      user_id:    user.id,
+      name:       newBlock.name.trim(),
+      day_of_week: newBlock.day_of_week,
+      block_type: newBlock.block_type,
+      recurrence: newBlock.recurrence,
+      start_date: newBlock.start_date || null,
+      end_date:   newBlock.end_date   || null,
+    })
+    setBlockAdding(false)
+    if (error) { setBlockError(error.message); return }
+    setNewBlock({ name: '', day_of_week: 'Fri', block_type: 'full', recurrence: 'weekly', start_date: '', end_date: '' })
+    fetchRecurringBlocks()
+  }
+
+  async function deleteRecurringBlock(id) {
+    await supabase.from('recurring_blocks').delete().eq('id', id)
+    setRecurringBlocks(b => b.filter(x => x.id !== id))
   }
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
@@ -635,6 +673,125 @@ export default function Profile() {
           </div>
         ) : (
           <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-1">No personal holidays added yet</p>
+        )}
+      </div>
+
+      {/* Recurring time off */}
+      <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Recurring time off</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Block out regular time — e.g. every Friday afternoon. Full-day blocks show on your schedule calendar; partial blocks reduce your available capacity.
+          </p>
+        </div>
+
+        {blockError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />{blockError}
+          </div>
+        )}
+
+        {/* Add form */}
+        <div className="space-y-2">
+          <input
+            type="text"
+            placeholder="Name, e.g. Friday afternoons off"
+            value={newBlock.name}
+            onChange={e => { setNewBlock(b => ({ ...b, name: e.target.value })); setBlockError('') }}
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ml-1">Day</label>
+              <select
+                value={newBlock.day_of_week}
+                onChange={e => setNewBlock(b => ({ ...b, day_of_week: e.target.value }))}
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              >
+                {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ml-1">Time</label>
+              <select
+                value={newBlock.block_type}
+                onChange={e => setNewBlock(b => ({ ...b, block_type: e.target.value }))}
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="full">Full day</option>
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ml-1">Repeat</label>
+              <select
+                value={newBlock.recurrence}
+                onChange={e => setNewBlock(b => ({ ...b, recurrence: e.target.value }))}
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="weekly">Every week</option>
+                <option value="fortnightly">Every 2 weeks</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ml-1">From (optional)</label>
+              <input
+                type="date"
+                value={newBlock.start_date}
+                onChange={e => setNewBlock(b => ({ ...b, start_date: e.target.value }))}
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 ml-1">Until (optional — leave blank for indefinite)</label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={newBlock.end_date}
+                min={newBlock.start_date || undefined}
+                onChange={e => setNewBlock(b => ({ ...b, end_date: e.target.value }))}
+                className="flex-1 px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={addRecurringBlock}
+                disabled={blockAdding}
+                className="bg-green-600 text-white font-semibold px-3 py-2.5 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 flex items-center gap-1 flex-shrink-0"
+              >
+                <Plus size={14} />
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Block list */}
+        {recurringBlocks.length > 0 ? (
+          <div className="space-y-2">
+            {recurringBlocks.map(b => (
+              <div key={b.id} className="flex items-center justify-between bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-800 rounded-xl px-3 py-2.5">
+                <div>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{b.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {b.recurrence === 'fortnightly' ? 'Every 2 weeks' : 'Every week'} · {b.day_of_week} · {b.block_type === 'full' ? 'Full day' : b.block_type === 'morning' ? 'Morning' : 'Afternoon'}
+                    {b.start_date && ` · from ${new Date(b.start_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                    {b.end_date   && ` · until ${new Date(b.end_date   + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteRecurringBlock(b.id)}
+                  className="p-2 text-red-400 active:text-red-600 -mr-1 flex-shrink-0"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-1">No recurring blocks added yet</p>
         )}
       </div>
 
