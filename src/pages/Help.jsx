@@ -109,7 +109,7 @@ const sections = [
       },
       {
         heading: 'How it\'s calculated',
-        text: 'LogAll takes your total income, deducts your expenses and mileage claims, then calculates Income Tax (20%) and National Insurance (Class 4 at 9%, Class 2 at £3.45/week). These are estimates based on the basic rate band.',
+        text: 'LogAll takes your total income, deducts your expenses and mileage claims, then calculates Income Tax (20%, rising to 40% and 45% on higher profits) and Class 4 National Insurance (6%). Class 2 National Insurance is no longer payable for most sole traders. These are estimates.',
       },
       {
         heading: 'The income slider',

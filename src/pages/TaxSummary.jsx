@@ -2,37 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { ChevronDown, ChevronUp, ExternalLink, Info, FileText, CheckSquare, Home } from 'lucide-react'
-
-// UK 2025/26 tax constants
-const PERSONAL_ALLOWANCE = 12570
-const BASIC_RATE = 0.20
-const CLASS4_RATE = 0.09
-const CLASS4_LOWER = 12570
-const CLASS4_UPPER = 50270
-const CLASS2_WEEKLY = 3.45
-const WEEKS_IN_YEAR = 52
-
-function calcTax(profit) {
-  if (profit <= 0) return { incomeTax: 0, class4: 0, class2: 0, total: 0 }
-
-  // Income Tax
-  const taxableIncome = Math.max(0, profit - PERSONAL_ALLOWANCE)
-  const incomeTax = taxableIncome * BASIC_RATE
-
-  // Class 4 NI
-  const class4Base = Math.min(Math.max(0, profit - CLASS4_LOWER), CLASS4_UPPER - CLASS4_LOWER)
-  const class4 = class4Base * CLASS4_RATE
-
-  // Class 2 NI (only if profit over threshold)
-  const class2 = profit > PERSONAL_ALLOWANCE ? CLASS2_WEEKLY * WEEKS_IN_YEAR : 0
-
-  return {
-    incomeTax: Math.round(incomeTax * 100) / 100,
-    class4: Math.round(class4 * 100) / 100,
-    class2: Math.round(class2 * 100) / 100,
-    total: Math.round((incomeTax + class4 + class2) * 100) / 100,
-  }
-}
+import { calcTax, PERSONAL_ALLOWANCE } from '../lib/tax'
+import { mileageClaim } from '../lib/mileage'
 
 function TaxBar({ label, amount, total, colour }) {
   const pct = total > 0 ? (amount / total) * 100 : 0
@@ -67,12 +38,13 @@ export default function TaxSummary() {
     const [{ data: incomeData }, { data: expenseData }, { data: mileageData }] = await Promise.all([
       supabase.from('income').select('amount').gte('received_date', start),
       supabase.from('expenses').select('amount').gte('expense_date', start),
-      supabase.from('mileage').select('claimable_amount').gte('journey_date', start),
+      supabase.from('mileage').select('miles').gte('journey_date', start),
     ])
 
     const totalIncome = (incomeData || []).reduce((s, i) => s + parseFloat(i.amount), 0)
     const totalExpenses = (expenseData || []).reduce((s, i) => s + parseFloat(i.amount), 0)
-    const totalMileage = (mileageData || []).reduce((s, i) => s + parseFloat(i.claimable_amount), 0)
+    const totalMiles = (mileageData || []).reduce((s, i) => s + parseFloat(i.miles), 0)
+    const totalMileage = mileageClaim(totalMiles)
 
     setIncome(totalIncome)
     setExpenses(totalExpenses)
@@ -147,13 +119,12 @@ export default function TaxSummary() {
           <div className="space-y-2.5 mb-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
             <TaxBar label="Income Tax" amount={tax.incomeTax} total={tax.total} colour="bg-blue-400" />
             <TaxBar label="Class 4 NI" amount={tax.class4} total={tax.total} colour="bg-purple-400" />
-            <TaxBar label="Class 2 NI" amount={tax.class2} total={tax.total} colour="bg-amber-400" />
           </div>
         )}
 
         <div className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-          Deadline: <span className="font-medium text-gray-600 dark:text-gray-300">31 January {tyStart + 2}</span> · 
-          Based on 20% basic rate Income Tax + Class 4 NI (9%) + Class 2 NI (£3.45/week)
+          Deadline: <span className="font-medium text-gray-600 dark:text-gray-300">31 January {tyStart + 2}</span> ·
+          Based on Income Tax (20–45%) + Class 4 NI (6%)
         </div>
       </div>
 

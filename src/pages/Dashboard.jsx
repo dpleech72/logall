@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { checkNotifications } from '../lib/notifications'
+import { mileageClaim } from '../lib/mileage'
+import { calcTax } from '../lib/tax'
 import { PoundSterling, TrendingUp, Car, Users, ChevronRight, X, UserCircle, HelpCircle } from 'lucide-react'
 
 const paymentColour = {
@@ -102,7 +104,7 @@ export default function Dashboard() {
       supabase.from('visits').select('amount').eq('status', 'awaiting_payment'),
       supabase.from('income').select('amount').gte('received_date', taxYearStart),
       supabase.from('expenses').select('amount').gte('expense_date', taxYearStart),
-      supabase.from('mileage').select('claimable_amount').gte('journey_date', taxYearStart),
+      supabase.from('mileage').select('miles').gte('journey_date', taxYearStart),
       supabase.from('visits').select('id, scheduled_time, duration_minutes, status')
         .eq('scheduled_date', today).in('status', ['scheduled', 'awaiting_payment']),
       supabase.from('income')
@@ -127,12 +129,10 @@ export default function Dashboard() {
 
     const totalIncome   = (incomeYear   || []).reduce((s, i) => s + parseFloat(i.amount), 0)
     const totalExpenses = (expensesYear || []).reduce((s, i) => s + parseFloat(i.amount), 0)
-    const totalMileage  = (mileageYear  || []).reduce((s, i) => s + parseFloat(i.claimable_amount), 0)
+    const totalMiles    = (mileageYear  || []).reduce((s, i) => s + parseFloat(i.miles), 0)
+    const totalMileage  = mileageClaim(totalMiles)
     const profit        = Math.max(0, totalIncome - totalExpenses - totalMileage)
-    const taxableIncome = Math.max(0, profit - 12570)
-    const estimatedTax  = (taxableIncome * 0.20) +
-      (Math.min(Math.max(0, profit - 12570), 37700) * 0.09) +
-      (profit > 12570 ? 3.45 * 52 : 0)
+    const estimatedTax  = calcTax(profit).total
 
     setStats({
       incomeThisMonth:  (incomeMonth     || []).reduce((s, i) => s + parseFloat(i.amount), 0),

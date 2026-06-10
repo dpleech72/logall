@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Plus, Car, X, Check, AlertCircle, Trash2, Navigation, Loader, ArrowLeftRight, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowLeft } from 'lucide-react'
+import { mileageClaim, MILEAGE_RATE_HIGH as RATE, MILEAGE_THRESHOLD as THRESHOLD } from '../lib/mileage'
 
-const RATE = 0.55
-const THRESHOLD = 10000
 const ORS_KEY = import.meta.env.VITE_ORS_API_KEY
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
@@ -449,8 +448,9 @@ export default function Mileage() {
     const { data } = await supabase.from('mileage').select('miles, claimable_amount')
       .gte('journey_date', taxYearStartDate)
       .lte('journey_date', todayStr)
-    setTaxYearMiles((data || []).reduce((s, j) => s + parseFloat(j.miles), 0))
-    setTaxYearClaimable((data || []).reduce((s, j) => s + parseFloat(j.claimable_amount), 0))
+    const ytdMiles = (data || []).reduce((s, j) => s + parseFloat(j.miles), 0)
+    setTaxYearMiles(ytdMiles)
+    setTaxYearClaimable(mileageClaim(ytdMiles))
   }
 
   async function fetchClients() {
