@@ -140,10 +140,6 @@ const sections = [
         text: 'For equipment (like a new hoover), toggle on "Annual Investment Allowance" to claim the full cost in year one rather than spreading it.',
       },
       {
-        heading: 'Export a month',
-        text: 'Tap the export button while viewing a month to download a CSV of that month\'s expenses — handy for your own records or your accountant.',
-      },
-      {
         heading: 'What can\'t I claim?',
         text: 'Anything with a personal element — a new phone you also use personally can only be claimed partially. Food, travel clothing (not workwear), and anything not directly related to your work can\'t be claimed.',
       },
