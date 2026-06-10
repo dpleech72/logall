@@ -71,8 +71,11 @@ export default function TaxReport() {
   const [mileage, setMileage] = useState([])
 
   const now = new Date()
-  const tyStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+  // UK tax year runs 6 April – 5 April. Dates 1–5 April still belong to the year ending that 5 April.
+  const afterApr6 = now.getMonth() > 3 || (now.getMonth() === 3 && now.getDate() >= 6)
+  const tyStart = afterApr6 ? now.getFullYear() : now.getFullYear() - 1
   const taxYearStartDate = `${tyStart}-04-06`
+  const taxYearEndDate = `${tyStart + 1}-04-05`
   const taxYearLabel = `${tyStart}/${String(tyStart + 1).slice(2)}`
   const generatedDate = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -85,9 +88,9 @@ export default function TaxReport() {
       { data: mileageData },
       { data: profile },
     ] = await Promise.all([
-      supabase.from('income').select('*').gte('received_date', taxYearStartDate).order('received_date'),
-      supabase.from('expenses').select('*').gte('expense_date', taxYearStartDate).order('expense_date'),
-      supabase.from('mileage').select('*').gte('journey_date', taxYearStartDate).order('journey_date'),
+      supabase.from('income').select('*').gte('received_date', taxYearStartDate).lte('received_date', taxYearEndDate).order('received_date'),
+      supabase.from('expenses').select('*').gte('expense_date', taxYearStartDate).lte('expense_date', taxYearEndDate).order('expense_date'),
+      supabase.from('mileage').select('*').gte('journey_date', taxYearStartDate).lte('journey_date', taxYearEndDate).order('journey_date'),
       supabase.from('profiles').select('full_name, trade, utr, national_insurance').single(),
     ])
     setIncome(incomeData || [])
@@ -101,10 +104,10 @@ export default function TaxReport() {
   }
 
   const MTD_QUARTERS = [
-    { q: 1, label: 'Q1', period: `6 Apr – 5 Jul ${tyStart}`,      start: `${tyStart}-04-06`,     end: `${tyStart}-07-05`,     deadline: `5 Aug ${tyStart}` },
-    { q: 2, label: 'Q2', period: `6 Jul – 5 Oct ${tyStart}`,      start: `${tyStart}-07-06`,     end: `${tyStart}-10-05`,     deadline: `5 Nov ${tyStart}` },
-    { q: 3, label: 'Q3', period: `6 Oct ${tyStart} – 5 Jan ${tyStart+1}`, start: `${tyStart}-10-06`, end: `${tyStart+1}-01-05`, deadline: `5 Feb ${tyStart+1}` },
-    { q: 4, label: 'Q4', period: `6 Jan – 5 Apr ${tyStart+1}`,    start: `${tyStart+1}-01-06`,   end: `${tyStart+1}-04-05`,   deadline: `5 May ${tyStart+1}` },
+    { q: 1, label: 'Q1', period: `6 Apr – 5 Jul ${tyStart}`,      start: `${tyStart}-04-06`,     end: `${tyStart}-07-05`,     deadline: `7 Aug ${tyStart}` },
+    { q: 2, label: 'Q2', period: `6 Jul – 5 Oct ${tyStart}`,      start: `${tyStart}-07-06`,     end: `${tyStart}-10-05`,     deadline: `7 Nov ${tyStart}` },
+    { q: 3, label: 'Q3', period: `6 Oct ${tyStart} – 5 Jan ${tyStart+1}`, start: `${tyStart}-10-06`, end: `${tyStart+1}-01-05`, deadline: `7 Feb ${tyStart+1}` },
+    { q: 4, label: 'Q4', period: `6 Jan – 5 Apr ${tyStart+1}`,    start: `${tyStart+1}-01-06`,   end: `${tyStart+1}-04-05`,   deadline: `7 May ${tyStart+1}` },
   ]
 
   const [selectedQuarter, setSelectedQuarter] = useState(null)
@@ -130,7 +133,8 @@ export default function TaxReport() {
 
     const totalInc  = filteredIncome.reduce((s, i) => s + parseFloat(i.amount), 0)
     const totalExp  = box14Travel + box15Premises + box17Phone + box23Other
-    const netProfit = Math.max(0, totalInc - totalExp - box27AIA)
+    const netProfit     = Math.max(0, totalInc - totalExp)          // Box 25 — before capital allowances
+    const taxableProfit = Math.max(0, totalInc - totalExp - box27AIA) // Box 31 — after AIA
 
     const rows = [
       ['HMRC Self Employment (Short) — SA103S', ''],
@@ -161,6 +165,9 @@ export default function TaxReport() {
       ['', ''],
       ['CAPITAL ALLOWANCES', ''],
       ['Box 27 — Annual Investment Allowance (AIA) on equipment', box27AIA.toFixed(2)],
+      ['', ''],
+      ['TAXABLE PROFIT', ''],
+      ['Box 31 — Total taxable profit (Net profit minus capital allowances)', taxableProfit.toFixed(2)],
       ['', ''],
       ['MILEAGE DETAIL', ''],
       ['Total miles', filteredMileage.reduce((s, m) => s + parseFloat(m.miles), 0).toFixed(1)],
