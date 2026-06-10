@@ -160,10 +160,10 @@ export default function ProfileWorkingHours() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Working days</label>
-          <div className="flex gap-2 flex-wrap">
+          <div className="grid grid-cols-7 gap-1.5">
             {ALL_DAYS.map(day => (
               <button key={day} type="button" onClick={() => toggleWorkDay(day)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                className={`py-1.5 rounded-lg text-xs font-semibold border transition-colors text-center ${
                   capacity.working_days.includes(day)
                     ? 'bg-green-600 text-white border-green-600'
                     : 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600'
