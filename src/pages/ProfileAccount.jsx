@@ -64,32 +64,46 @@ export default function ProfileAccount() {
     setMfaFactor(verified || null)
   }
 
+  function isCancellation(err) {
+    const msg = (err?.message || '').toLowerCase()
+    return err?.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')
+  }
+
   async function loadPasskeys() {
-    const { data } = await supabase.auth.passkey.list()
-    setPasskeys(data || [])
+    try {
+      const { data } = await supabase.auth.passkey.list()
+      setPasskeys(data || [])
+    } catch (_) { /* passkeys unavailable — leave list empty */ }
   }
 
   async function enrollPasskey() {
     setPkError(''); setPkBusy(true)
-    const { error } = await supabase.auth.registerPasskey()
-    setPkBusy(false)
-    if (error) {
-      const msg = (error.message || '').toLowerCase()
-      // User dismissed the system prompt — not a real error
-      if (error.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
-      setPkError(error.message || 'Could not set up a passkey. Please try again.')
-      return
+    try {
+      const { error } = await supabase.auth.registerPasskey()
+      if (error) {
+        if (!isCancellation(error)) setPkError(error.message || 'Could not set up a passkey. Please try again.')
+        return
+      }
+      setPkJustAdded(true); setTimeout(() => setPkJustAdded(false), 5000)
+      loadPasskeys()
+    } catch (err) {
+      if (!isCancellation(err)) setPkError(err?.message || 'Could not set up a passkey on this device.')
+    } finally {
+      setPkBusy(false)
     }
-    setPkJustAdded(true); setTimeout(() => setPkJustAdded(false), 5000)
-    loadPasskeys()
   }
 
   async function removePasskey(id) {
     setPkError('')
-    const { error } = await supabase.auth.passkey.delete({ passkeyId: id })
-    setPkConfirmDelete(null)
-    if (error) { setPkError(error.message || 'Could not remove that passkey.'); return }
-    loadPasskeys()
+    try {
+      const { error } = await supabase.auth.passkey.delete({ passkeyId: id })
+      if (error) { setPkError(error.message || 'Could not remove that passkey.'); return }
+      loadPasskeys()
+    } catch (err) {
+      setPkError(err?.message || 'Could not remove that passkey.')
+    } finally {
+      setPkConfirmDelete(null)
+    }
   }
 
   async function startMfaEnroll() {

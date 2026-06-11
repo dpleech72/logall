@@ -18,22 +18,28 @@ export default function SignIn() {
   const handlePasskeySignIn = async () => {
     setError('')
     setPasskeyLoading(true)
-    const { error } = await supabase.auth.signInWithPasskey()
-    if (error) {
-      setPasskeyLoading(false)
-      const msg = (error.message || '').toLowerCase()
-      // User dismissed the system prompt — not a real error, stay quiet
-      if (error.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
+    try {
+      const { error } = await supabase.auth.signInWithPasskey()
+      if (error) {
+        const msg = (error.message || '').toLowerCase()
+        // User dismissed the system prompt — not a real error, stay quiet
+        if (error.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
+        setError('Could not sign in with a fingerprint or Face ID. Use your email and password, or try again.')
+        return
+      }
+      // A passkey satisfies sign-in; check whether a 2FA step is still required
+      const aal = await getMfaLevel()
+      if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
+        setMfaRequired(true)
+      } else {
+        navigate('/dashboard')
+      }
+    } catch (err) {
+      const msg = (err?.message || '').toLowerCase()
+      if (err?.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
       setError('Could not sign in with a fingerprint or Face ID. Use your email and password, or try again.')
-      return
-    }
-    // A passkey satisfies sign-in; check whether a 2FA step is still required
-    const aal = await getMfaLevel()
-    setPasskeyLoading(false)
-    if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
-      setMfaRequired(true)
-    } else {
-      navigate('/dashboard')
+    } finally {
+      setPasskeyLoading(false)
     }
   }
 
