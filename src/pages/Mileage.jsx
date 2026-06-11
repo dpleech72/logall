@@ -39,53 +39,69 @@ async function getCurrentCoords() {
 
 function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initialForm, onClose, onSaved, onDelete }) {
   const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` })()
-  const [form, setForm] = useState({
-    client_id:    initialForm?.client_id    ?? journey?.client_id    ?? prefillClientId ?? '',
-    journey_date: initialForm?.journey_date ?? journey?.journey_date ?? todayStr,
-    from_location: initialForm?.from_location ?? journey?.from_location ?? '',
-    to_locations: initialForm?.to_locations ?? (journey?.to_location ? journey.to_location.split(' → ').filter(Boolean) : ['']),
-    miles: initialForm?.miles ?? (journey?.miles ? String(journey.miles) : ''),
-    notes: initialForm?.notes ?? journey?.notes ?? '',
+  const [form, setForm] = useState(() => {
+    const toLocs = initialForm?.to_locations ?? (journey?.to_location ? journey.to_location.split(' → ').filter(Boolean) : [''])
+    return {
+      client_id:    initialForm?.client_id    ?? journey?.client_id    ?? prefillClientId ?? '',
+      journey_date: initialForm?.journey_date ?? journey?.journey_date ?? todayStr,
+      from_location: initialForm?.from_location ?? journey?.from_location ?? '',
+      from_client_id: initialForm?.from_client_id ?? '',
+      to_locations: toLocs,
+      to_client_ids: initialForm?.to_client_ids ?? toLocs.map(() => ''),
+      miles: initialForm?.miles ?? (journey?.miles ? String(journey.miles) : ''),
+      notes: initialForm?.notes ?? journey?.notes ?? '',
+    }
   })
   const [coordsCache, setCoordsCache] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [calculating, setCalculating] = useState(false)
 
+  // Typing a stop manually clears any client tied to it (the location no longer matches a picked client)
   const updateStop = (i, val) => setForm(f => {
-    const locs = [...f.to_locations]; locs[i] = val; return { ...f, to_locations: locs }
+    const locs = [...f.to_locations]; locs[i] = val
+    const ids = [...f.to_client_ids]; ids[i] = ''
+    return { ...f, to_locations: locs, to_client_ids: ids }
   })
   const removeStop = (i) => setForm(f => ({
-    ...f, to_locations: f.to_locations.filter((_, idx) => idx !== i)
+    ...f,
+    to_locations: f.to_locations.filter((_, idx) => idx !== i),
+    to_client_ids: f.to_client_ids.filter((_, idx) => idx !== i),
   }))
-  const addStop = () => setForm(f => ({ ...f, to_locations: [...f.to_locations, ''] }))
+  const addStop = () => setForm(f => ({ ...f, to_locations: [...f.to_locations, ''], to_client_ids: [...f.to_client_ids, ''] }))
   const moveStop = (i, dir) => setForm(f => {
-    const locs = [...f.to_locations]
     const j = i + dir
-    if (j < 0 || j >= locs.length) return f
-    ;[locs[i], locs[j]] = [locs[j], locs[i]]
-    return { ...f, to_locations: locs }
+    if (j < 0 || j >= f.to_locations.length) return f
+    const locs = [...f.to_locations]; [locs[i], locs[j]] = [locs[j], locs[i]]
+    const ids = [...f.to_client_ids]; [ids[i], ids[j]] = [ids[j], ids[i]]
+    return { ...f, to_locations: locs, to_client_ids: ids }
   })
 
   const quickFillStop = (val) => setForm(f => {
     const locs = [...f.to_locations]
-    const emptyIdx = locs.findIndex(l => !l.trim())
-    if (emptyIdx !== -1) locs[emptyIdx] = val
-    else locs[locs.length - 1] = val
-    return { ...f, to_locations: locs }
+    const ids = [...f.to_client_ids]
+    let idx = locs.findIndex(l => !l.trim())
+    if (idx === -1) idx = locs.length - 1
+    locs[idx] = val; ids[idx] = ''
+    return { ...f, to_locations: locs, to_client_ids: ids }
   })
 
   const handleClientChange = (e) => {
     const client = clients.find(c => c.id === e.target.value)
-    const dest = client?.postcode || client?.address || ''
     setForm(f => {
       const locs = [...f.to_locations]
-      const emptyIdx = locs.findIndex(l => !l.trim())
-      if (emptyIdx !== -1) locs[emptyIdx] = dest
-      else locs[locs.length - 1] = dest
-      return { ...f, client_id: e.target.value, to_locations: locs }
+      const ids = [...f.to_client_ids]
+      if (client) {
+        let idx = locs.findIndex(l => !l.trim())
+        if (idx === -1) idx = locs.length - 1
+        locs[idx] = client.postcode || client.address || ''
+        ids[idx] = client.id
+      }
+      return { ...f, client_id: e.target.value, to_locations: locs, to_client_ids: ids }
     })
   }
+
+  const handleFromChange = (e) => setForm(f => ({ ...f, from_location: e.target.value, from_client_id: '' }))
 
   async function handleCalculateDistance() {
     const stops = form.to_locations.filter(l => l.trim())
@@ -109,7 +125,7 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initi
               props.postalcode,
             ].filter(Boolean)
             const name = parts.join(', ')
-            if (name) setForm(f => ({ ...f, from_location: name }))
+            if (name) setForm(f => ({ ...f, from_location: name, from_client_id: '' }))
           }
         } catch (_) {}
       } else if (coordsCache[form.from_location.trim()]) {
@@ -223,22 +239,26 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initi
               type="text"
               placeholder="e.g. Home, or leave blank for current location"
               value={form.from_location}
-              onChange={set('from_location')}
+              onChange={handleFromChange}
               className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
             />
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setForm(f => ({ ...f, from_location: homeAddress || 'Home' }))}
+                onClick={() => setForm(f => ({ ...f, from_location: homeAddress || 'Home', from_client_id: '' }))}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border-2 border-green-200 bg-green-50 text-green-700 active:bg-green-100 transition-colors flex-shrink-0"
               >
                 🏠 Home
               </button>
               <select
-                value=""
+                value={form.from_client_id}
                 onChange={e => {
                   const client = clients.find(c => c.id === e.target.value)
-                  if (client) setForm(f => ({ ...f, from_location: client.postcode || client.address || '' }))
+                  setForm(f => ({
+                    ...f,
+                    from_client_id: e.target.value,
+                    from_location: client ? (client.postcode || client.address || '') : f.from_location,
+                  }))
                 }}
                 className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
               >
@@ -255,7 +275,14 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initi
               type="button"
               onClick={() => setForm(f => {
                 const firstTo = f.to_locations[0] || ''
-                return { ...f, from_location: firstTo, to_locations: [f.from_location, ...f.to_locations.slice(1)] }
+                const firstToId = f.to_client_ids[0] || ''
+                return {
+                  ...f,
+                  from_location: firstTo,
+                  from_client_id: firstToId,
+                  to_locations: [f.from_location, ...f.to_locations.slice(1)],
+                  to_client_ids: [f.from_client_id, ...f.to_client_ids.slice(1)],
+                }
               })}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 dark:text-gray-400 text-xs font-medium active:bg-gray-200 transition-colors"
             >
@@ -312,14 +339,20 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initi
                       🏠 Home
                     </button>
                     <select
-                      value=""
+                      value={form.to_client_ids[i] || ''}
                       onChange={e => {
                         const client = clients.find(c => c.id === e.target.value)
-                        if (!client) return
-                        const dest = client.postcode || client.address || ''
                         setForm(f => {
-                          const locs = [...f.to_locations]; locs[i] = dest
-                          return { ...f, to_locations: locs, client_id: f.client_id || client.id }
+                          const locs = [...f.to_locations]
+                          const ids = [...f.to_client_ids]
+                          ids[i] = e.target.value
+                          if (client) locs[i] = client.postcode || client.address || ''
+                          return {
+                            ...f,
+                            to_locations: locs,
+                            to_client_ids: ids,
+                            client_id: client ? (f.client_id || client.id) : f.client_id,
+                          }
                         })
                       }}
                       className="flex-1 px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
@@ -518,19 +551,23 @@ export default function Mileage() {
       .neq('status', 'cancelled')
       .order('scheduled_time')
 
-    const stops = (todayVisits || [])
+    const clientStops = (todayVisits || [])
       .map(v => clients.find(c => c.id === v.client_id))
       .filter(Boolean)
-      .map(c => c.postcode || c.address || '')
-      .filter(Boolean)
+      .filter(c => c.postcode || c.address)
 
-    if (homeAddress) stops.push(homeAddress)
+    const stops   = clientStops.map(c => c.postcode || c.address || '')
+    const stopIds = clientStops.map(c => c.id)
+
+    if (homeAddress) { stops.push(homeAddress); stopIds.push('') }
 
     setTodayForm({
-      client_id: '',
+      client_id: clientStops[0]?.id || '',
       journey_date: todayStr,
       from_location: homeAddress || '',
-      to_locations: stops.length > 0 ? stops : [''],
+      from_client_id: '',
+      to_locations:   stops.length   > 0 ? stops   : [''],
+      to_client_ids:  stopIds.length > 0 ? stopIds : [''],
       miles: '',
       notes: '',
     })
