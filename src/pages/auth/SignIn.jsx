@@ -27,13 +27,9 @@ export default function SignIn() {
         setError('Could not sign in with a fingerprint or Face ID. Use your email and password, or try again.')
         return
       }
-      // A passkey satisfies sign-in; check whether a 2FA step is still required
-      const aal = await getMfaLevel()
-      if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
-        setMfaRequired(true)
-      } else {
-        navigate('/dashboard')
-      }
+      // A passkey is already strong, phishing-resistant MFA, so we don't ask for
+      // a TOTP code on top — go straight in. (The password path still does.)
+      navigate('/dashboard')
     } catch (err) {
       const msg = (err?.message || '').toLowerCase()
       if (err?.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
