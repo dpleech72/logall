@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
-import { LogIn, Mail, Lock, AlertCircle, ShieldCheck } from 'lucide-react'
+import { LogIn, Mail, Lock, AlertCircle, ShieldCheck, Fingerprint } from 'lucide-react'
+
+const passkeysSupported = typeof window !== 'undefined' && !!window.PublicKeyCredential
 
 export default function SignIn() {
   const { signIn, getMfaLevel } = useAuth()
@@ -11,6 +13,29 @@ export default function SignIn() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [passkeyLoading, setPasskeyLoading] = useState(false)
+
+  const handlePasskeySignIn = async () => {
+    setError('')
+    setPasskeyLoading(true)
+    const { error } = await supabase.auth.signInWithPasskey()
+    if (error) {
+      setPasskeyLoading(false)
+      const msg = (error.message || '').toLowerCase()
+      // User dismissed the system prompt — not a real error, stay quiet
+      if (error.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
+      setError('Could not sign in with a fingerprint or Face ID. Use your email and password, or try again.')
+      return
+    }
+    // A passkey satisfies sign-in; check whether a 2FA step is still required
+    const aal = await getMfaLevel()
+    setPasskeyLoading(false)
+    if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
+      setMfaRequired(true)
+    } else {
+      navigate('/dashboard')
+    }
+  }
 
   // MFA step
   const [mfaRequired, setMfaRequired] = useState(false)
@@ -207,6 +232,25 @@ export default function SignIn() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        {passkeysSupported && (
+          <>
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-gray-100 dark:bg-gray-700" />
+              <span className="text-xs text-gray-400 dark:text-gray-500">or</span>
+              <div className="flex-1 h-px bg-gray-100 dark:bg-gray-700" />
+            </div>
+            <button
+              type="button"
+              onClick={handlePasskeySignIn}
+              disabled={passkeyLoading}
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold py-3 rounded-xl text-sm active:bg-gray-50 dark:active:bg-gray-700 disabled:opacity-60 transition-colors"
+            >
+              <Fingerprint size={18} className="text-green-600" />
+              {passkeyLoading ? 'Waiting for fingerprint…' : 'Sign in with fingerprint or Face ID'}
+            </button>
+          </>
+        )}
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-6">
           Don't have an account?{' '}

@@ -130,10 +130,22 @@ Domain `logall.co.uk` is registered at **IONOS**, DNS managed by **Cloudflare**.
 ## Supabase Auth Settings
 - **New user signups: DISABLED** (deliberately, while app is in development) — to re-enable: Supabase dashboard → Authentication → Sign In / Providers → toggle "Enable new user signups" ON → Save
 
+## Passkeys / Biometric login (WebAuthn) — IMPLEMENTED ✅
+- Uses Supabase Auth Passkeys (beta). Requires `@supabase/supabase-js` ≥ 2.105.0 (on 2.106.2).
+- Dashboard config: Authentication → Passkeys → enabled. **Relying Party ID = `logall.co.uk`** (covers `www.` subdomain too); Origins = `https://logall.co.uk, https://www.logall.co.uk`. Because RP ID is the live domain, passkeys do **not** work on `localhost` — test on the deployed site.
+- SDK methods used: `supabase.auth.registerPasskey()` (enrol), `supabase.auth.signInWithPasskey()` (login), `supabase.auth.passkey.list()` / `.delete({ passkeyId })` (manage). All run the WebAuthn ceremony internally.
+- UI: enrol + manage in `src/pages/ProfileAccount.jsx` (Fingerprint & Face ID card); "Sign in with fingerprint or Face ID" button in `src/pages/auth/SignIn.jsx`. Both feature-detect `window.PublicKeyCredential` and sit alongside email/password (not a replacement). Per-device — each user enrols on their own device.
+
 ## Planned Features (not yet started)
 - **Bank statement CSV import** — parse a CSV exported from a UK bank (Monzo, Starling, generic), auto-suggest expense categories per transaction, user reviews and confirms before saving; priority banks: Monzo, Starling, generic column-mapping fallback
 - **Receipt OCR** — auto-extract amount, date, and vendor from receipt photos to pre-fill the expense form
 - **Simple invoicing** — generate a PDF invoice from a client record and log it as income in one step
 - **Stripe** — subscription billing for LogAll users (or client payment acceptance — TBD)
 - **HMRC Make Tax Digital (MTD)** — quarterly digital submissions to HMRC for Income Tax Self Assessment; requires HMRC developer registration and OAuth with HMRC API; mandated from April 2026 for sole traders earning £50k+
-- **Passkey / Biometric login (WebAuthn)** — fingerprint (Touch ID) and face scan (Face ID / Windows Hello) login using Supabase's WebAuthn beta; works on iPhone, Android, Mac, Windows; ⚠️ must be implemented AFTER `logall.co.uk` custom domain is live as passkeys are tied to the domain — registering on `logall.pages.dev` first would require users to re-register after domain switch
+
+## Planned Features (not yet started)
+- **Bank statement CSV import** — parse a CSV exported from a UK bank (Monzo, Starling, generic), auto-suggest expense categories per transaction, user reviews and confirms before saving; priority banks: Monzo, Starling, generic column-mapping fallback
+- **Receipt OCR** — auto-extract amount, date, and vendor from receipt photos to pre-fill the expense form
+- **Simple invoicing** — generate a PDF invoice from a client record and log it as income in one step
+- **Stripe** — subscription billing for LogAll users (or client payment acceptance — TBD)
+- **HMRC Make Tax Digital (MTD)** — quarterly digital submissions to HMRC for Income Tax Self Assessment; requires HMRC developer registration and OAuth with HMRC API; mandated from April 2026 for sole traders earning £50k+

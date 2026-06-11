@@ -4,7 +4,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useDarkMode } from '../hooks/useDarkMode'
 import { connectGoogleDrive, completeMobileConnect, clearProviderToken } from '../lib/cloudStorage'
-import { ArrowLeft, Check, AlertCircle, Loader2, Mail, Link, Unlink, ShieldCheck, ShieldOff, QrCode, Sun, Moon, LogOut } from 'lucide-react'
+import { ArrowLeft, Check, AlertCircle, Loader2, Mail, Link, Unlink, ShieldCheck, ShieldOff, QrCode, Sun, Moon, LogOut, Fingerprint, Trash2 } from 'lucide-react'
+
+const passkeysSupported = typeof window !== 'undefined' && !!window.PublicKeyCredential
 
 export default function ProfileAccount() {
   const { user, signOut } = useAuth()
@@ -32,9 +34,16 @@ export default function ProfileAccount() {
   const [mfaDisabling, setMfaDisabling]       = useState(false)
   const [mfaConfirm, setMfaConfirm]           = useState(false)
 
+  const [passkeys, setPasskeys]               = useState([])
+  const [pkBusy, setPkBusy]                   = useState(false)
+  const [pkError, setPkError]                 = useState('')
+  const [pkJustAdded, setPkJustAdded]         = useState(false)
+  const [pkConfirmDelete, setPkConfirmDelete] = useState(null)
+
   useEffect(() => {
     fetchGoogleEmail()
     checkMfa()
+    if (passkeysSupported) loadPasskeys()
     completeMobileConnect()
       .then(async result => {
         if (!result) return
@@ -53,6 +62,34 @@ export default function ProfileAccount() {
     const { data } = await supabase.auth.mfa.listFactors()
     const verified = (data?.totp || []).find(f => f.status === 'verified')
     setMfaFactor(verified || null)
+  }
+
+  async function loadPasskeys() {
+    const { data } = await supabase.auth.passkey.list()
+    setPasskeys(data || [])
+  }
+
+  async function enrollPasskey() {
+    setPkError(''); setPkBusy(true)
+    const { error } = await supabase.auth.registerPasskey()
+    setPkBusy(false)
+    if (error) {
+      const msg = (error.message || '').toLowerCase()
+      // User dismissed the system prompt — not a real error
+      if (error.name === 'NotAllowedError' || msg.includes('cancel') || msg.includes('not allowed') || msg.includes('abort')) return
+      setPkError(error.message || 'Could not set up a passkey. Please try again.')
+      return
+    }
+    setPkJustAdded(true); setTimeout(() => setPkJustAdded(false), 5000)
+    loadPasskeys()
+  }
+
+  async function removePasskey(id) {
+    setPkError('')
+    const { error } = await supabase.auth.passkey.delete({ passkeyId: id })
+    setPkConfirmDelete(null)
+    if (error) { setPkError(error.message || 'Could not remove that passkey.'); return }
+    loadPasskeys()
   }
 
   async function startMfaEnroll() {
@@ -261,6 +298,67 @@ export default function ProfileAccount() {
           )
         )}
       </div>
+
+      {/* Fingerprint / Face ID (passkeys) */}
+      {passkeysSupported && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">Fingerprint &amp; Face ID login</h2>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Sign in with your fingerprint, face, or device PIN instead of typing your password. Set one up on each device you use.</p>
+            </div>
+            {passkeys.length > 0 && (
+              <span className="flex-shrink-0 flex items-center gap-1 text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-medium">
+                <Fingerprint size={12} /> On
+              </span>
+            )}
+          </div>
+
+          {pkError && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+              <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />{pkError}
+            </div>
+          )}
+          {pkJustAdded && (
+            <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl p-3 text-sm text-green-700">
+              <Check size={15} />Fingerprint login is set up on this device!
+            </div>
+          )}
+
+          {passkeys.length > 0 && (
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {passkeys.map(pk => (
+                <div key={pk.id} className="flex items-center gap-3 py-2.5">
+                  <Fingerprint size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-700 dark:text-gray-200 truncate">{pk.friendly_name || 'Passkey'}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      Added {new Date(pk.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {pk.last_used_at && ` · last used ${new Date(pk.last_used_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                    </p>
+                  </div>
+                  {pkConfirmDelete === pk.id ? (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button onClick={() => removePasskey(pk.id)} className="text-xs text-red-500 font-medium">Remove</button>
+                      <button onClick={() => setPkConfirmDelete(null)} className="text-xs text-gray-400 font-medium">Cancel</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setPkConfirmDelete(pk.id)} className="p-1.5 text-gray-400 active:text-red-500 flex-shrink-0">
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button type="button" onClick={enrollPasskey} disabled={pkBusy}
+            className="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-3 rounded-xl text-sm active:bg-green-700 w-full justify-center disabled:opacity-60">
+            {pkBusy ? <Loader2 size={16} className="animate-spin" /> : <Fingerprint size={16} />}
+            {pkBusy ? 'Waiting for fingerprint…' : passkeys.length > 0 ? 'Add another device' : 'Set up fingerprint login'}
+          </button>
+        </div>
+      )}
 
       {/* Dark mode */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
