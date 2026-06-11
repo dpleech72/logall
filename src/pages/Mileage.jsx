@@ -235,18 +235,16 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initi
                 🏠 Home
               </button>
               <select
-                value={(() => {
-                  const match = clients.find(c => (c.postcode || c.address) === form.from_location)
-                  return match ? (match.postcode || match.address) : ''
-                })()}
+                value=""
                 onChange={e => {
-                  if (e.target.value) setForm(f => ({ ...f, from_location: e.target.value }))
+                  const client = clients.find(c => c.id === e.target.value)
+                  if (client) setForm(f => ({ ...f, from_location: client.postcode || client.address || '' }))
                 }}
                 className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
               >
                 <option value="">Select a client…</option>
                 {clients.filter(c => c.address || c.postcode).map(c => (
-                  <option key={c.id} value={c.postcode || c.address}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -314,21 +312,21 @@ function LogJourneySheet({ clients, journey, homeAddress, prefillClientId, initi
                       🏠 Home
                     </button>
                     <select
-                      value={(() => {
-                        const match = clients.find(c => (c.postcode || c.address) === loc)
-                        return match ? (match.postcode || match.address) : ''
-                      })()}
+                      value=""
                       onChange={e => {
-                        if (!e.target.value) return
-                        const client = clients.find(c => (c.postcode || c.address) === e.target.value)
-                        updateStop(i, e.target.value)
-                        if (client) setForm(f => ({ ...f, client_id: f.client_id || client.id }))
+                        const client = clients.find(c => c.id === e.target.value)
+                        if (!client) return
+                        const dest = client.postcode || client.address || ''
+                        setForm(f => {
+                          const locs = [...f.to_locations]; locs[i] = dest
+                          return { ...f, to_locations: locs, client_id: f.client_id || client.id }
+                        })
                       }}
                       className="flex-1 px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
                     >
                       <option value="">Select a client…</option>
                       {clients.filter(c => c.address || c.postcode).map(c => (
-                        <option key={c.id} value={c.postcode || c.address}>{c.name}</option>
+                        <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
                   </div>
