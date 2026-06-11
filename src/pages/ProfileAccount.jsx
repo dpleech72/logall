@@ -184,7 +184,7 @@ export default function ProfileAccount() {
           <div className="flex gap-2">
             <input type="email" placeholder="New email address" value={newEmail}
               onChange={e => { setNewEmail(e.target.value); setEmailError('') }}
-              className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" />
+              className="flex-1 min-w-0 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" />
             <button type="button" onClick={handleEmailChange} disabled={emailSaving || !newEmail.trim()}
               className="bg-green-600 text-white font-semibold px-4 py-3 rounded-xl text-sm active:bg-green-700 disabled:opacity-60 flex items-center gap-1.5 flex-shrink-0">
               {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
